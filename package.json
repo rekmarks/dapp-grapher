@@ -1,0 +1,35 @@
+{
+  "name": "dapp-grapher",
+  "version": "0.0.0",
+  "description": "Takes one or several smart contracts as inputs and represents their relationships as a graph",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rekmarks/dapp-grapher.git"
+  },
+  "keywords": [
+    "Ethereum",
+    "smart",
+    "contracts",
+    "Solidity",
+    "dapp",
+    "decentralized",
+    "graph",
+    "graphical",
+    "GUI"
+  ],
+  "author": "Erik Marks <rekmarks@icloud.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rekmarks/dapp-grapher/issues"
+  },
+  "homepage": "https://github.com/rekmarks/dapp-grapher#readme",
+  "dependencies": {
+    "chai": "^4.1.2",
+    "mocha": "^5.2.0",
+    "smart-contract-deployment-manager": "^0.1.0"
+  }
+}
