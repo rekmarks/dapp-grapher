@@ -4,7 +4,8 @@
   "description": "Takes one or several smart contracts as inputs and represents their relationships as a graph",
   "main": "index.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "test:debug": "mocha --inspect-brk --inspect"
   },
   "repository": {
     "type": "git",
