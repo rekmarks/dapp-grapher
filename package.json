@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Takes one or several smart contracts as inputs and represents their relationships as a graph",
   "private": true,
-    "scripts": {
+  "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
@@ -33,6 +33,7 @@
   "dependencies": {
     "chai": "^4.1.2",
     "cytoscape": "^3.2.14",
+    "cytoscape-dagre": "^2.2.1",
     "mocha": "^5.2.0",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
