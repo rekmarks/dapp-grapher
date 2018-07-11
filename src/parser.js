@@ -71,9 +71,9 @@ function getNode(contractName, entry) {
     data.id = entry.name
   }
   data.parent = contractName
-  entry.type ? data.abi.type = entry.type : 'function' // type defaults to function if omitted
+  entry.type ? data.type = entry.type : data.type = 'function' // abi type defaults to function if omitted
 
-  data.abi = Object.assign(data.abi, entry)
+  data.abi = Object.assign(data.abi, entry) // abi may or may not have the type property
 
   return {
     data: data,
@@ -81,7 +81,6 @@ function getNode(contractName, entry) {
   }
 }
 
-// these two may be more complicated
 function getEdges(abiJSON) {
   // TODO
   return {}
@@ -92,8 +91,8 @@ function getEdge(param) {
 }
 
 
-// const StandardERC20_JSON = require('./dev-temp/StandardERC20.json')
-// const elements = getElements(StandardERC20_JSON)
-// console.log(util.inspect(elements, {showHidden: false, depth: null}))
+const StandardERC20_JSON = require('./dev-temp/StandardERC20.json')
+const elements = parse(StandardERC20_JSON)
+console.log(util.inspect(elements, {showHidden: false, depth: null}))
 
 module.exports = parse
