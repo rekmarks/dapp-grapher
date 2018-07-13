@@ -28,8 +28,8 @@ const config = {
       css: {
         'content': 'data(id)',
         'text-valign': 'center',
-        'text-halign': 'center'
-      }
+        'text-halign': 'center',
+      },
     },
     {
       selector: '$node > node',
@@ -40,14 +40,14 @@ const config = {
         'padding-right': '10px',
         'text-valign': 'top',
         'text-halign': 'center',
-        'background-color': '#bbb'
-      }
+        'background-color': '#bbb',
+      },
     },
     {
       selector: 'edge',
       css: {
-        'target-arrow-shape': 'triangle'
-      }
+        'target-arrow-shape': 'triangle',
+      },
     },
     {
       selector: ':selected',
@@ -55,17 +55,17 @@ const config = {
         'background-color': 'black',
         'line-color': 'black',
         'target-arrow-color': 'black',
-        'source-arrow-color': 'black'
-      }
-    }
+        'source-arrow-color': 'black',
+      },
+    },
   ],
 
   elements: {},
 
   layout: {
     name: 'preset',
-    padding: 5
-  }
+    padding: 5,
+  },
 }
 
 const style = {
@@ -79,7 +79,7 @@ const style = {
 
 const template = {
   config: config,
-  style: style
+  style: style,
 }
 
 module.exports = template

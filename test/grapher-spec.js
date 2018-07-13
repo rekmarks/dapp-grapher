@@ -1,4 +1,5 @@
 
+/*eslint-disable */
 const assert = require('assert')
 const util = require('util')
 

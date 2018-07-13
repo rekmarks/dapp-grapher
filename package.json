@@ -34,10 +34,23 @@
     "chai": "^4.1.2",
     "cytoscape": "^3.2.14",
     "cytoscape-dagre": "^2.2.1",
+    "immutable": "^3.8.2",
     "mocha": "^5.2.0",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
+    "react-redux": "^5.0.7",
     "react-scripts": "1.1.4",
-    "smart-contract-deployment-manager": "^0.1.0"
+    "redux": "^4.0.0",
+    "redux-loop": "^4.3.3",
+    "smart-contract-deployment-manager": "^0.1.0",
+    "web3": "^1.0.0-beta.34"
+  },
+  "devDependencies": {
+    "eslint": "^5.1.0",
+    "eslint-plugin-chai": "0.0.1",
+    "eslint-plugin-json": "^1.2.0",
+    "eslint-plugin-mocha": "^5.1.0",
+    "eslint-plugin-react": "^7.10.0",
+    "prop-types": "^15.6.2"
   }
 }

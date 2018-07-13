@@ -2,18 +2,26 @@
   text-align: center;
 }*/
 
-.App-header {
+.Header {
   background-color: #222;
   height: 70px;
   padding: 20px;
   color: white;
-  /*z-index: 10;*/
+  display: flex;
+  justify-content: space-between;
 }
 
-.App-title {
+.Header-title {
   font-size: 1.5em;
+  align-self: center;
+}
+
+.Header-info {
+  font-size: 1.0em;
+  align-self: center;
 }
 
 .App-intro {
   font-size: large;
 }
+

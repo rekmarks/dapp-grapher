@@ -27,8 +27,8 @@ const compoundConfig = {
       css: {
         'content': 'data(id)',
         'text-valign': 'center',
-        'text-halign': 'center'
-      }
+        'text-halign': 'center',
+      },
     },
     {
       selector: '$node > node',
@@ -39,14 +39,14 @@ const compoundConfig = {
         'padding-right': '10px',
         'text-valign': 'top',
         'text-halign': 'center',
-        'background-color': '#bbb'
-      }
+        'background-color': '#bbb',
+      },
     },
     {
       selector: 'edge',
       css: {
-        'target-arrow-shape': 'triangle'
-      }
+        'target-arrow-shape': 'triangle',
+      },
     },
     {
       selector: ':selected',
@@ -54,9 +54,9 @@ const compoundConfig = {
         'background-color': 'black',
         'line-color': 'black',
         'target-arrow-color': 'black',
-        'source-arrow-color': 'black'
-      }
-    }
+        'source-arrow-color': 'black',
+      },
+    },
   ],
 
   elements: {
@@ -66,19 +66,19 @@ const compoundConfig = {
       { data: { id: 'c', parent: 'b' }, position: { x: 300, y: 85 } },
       { data: { id: 'd' }, position: { x: 215, y: 175 } },
       { data: { id: 'e' } },
-      { data: { id: 'f', parent: 'e' }, position: { x: 300, y: 175 } }
+      { data: { id: 'f', parent: 'e' }, position: { x: 300, y: 175 } },
     ],
     edges: [
       { data: { id: 'ad', source: 'a', target: 'd' } },
-      { data: { id: 'eb', source: 'e', target: 'b' } }
+      { data: { id: 'eb', source: 'e', target: 'b' } },
 
-    ]
+    ],
   },
 
   layout: {
     name: 'preset',
-    padding: 5
-  }
+    padding: 5,
+  },
 }
 
 const compoundStyle = {
@@ -92,11 +92,11 @@ const compoundStyle = {
 
 const compound = {
   config: compoundConfig,
-  style: compoundStyle
+  style: compoundStyle,
 }
 
-const graphs = {
-  compound: compound
-}
+// const graphs = {
+//   compound: compound
+// }
 
 export default compound
