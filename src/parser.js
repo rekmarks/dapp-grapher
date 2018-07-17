@@ -99,6 +99,7 @@ function getConstructorNodes (contractName, abi) {
 
   const constructorAbi = filtered[0]
 
+  // in case of parameter-less constructor
   if (!constructorAbi.inputs || constructorAbi.inputs.length < 1) return []
 
   const inputNodes = []
