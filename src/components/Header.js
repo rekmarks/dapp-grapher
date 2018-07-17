@@ -4,7 +4,7 @@ import './App.css'
 
 class Header extends Component {
   render () {
-    console.log('Header render')
+    // console.log('Header render', this.props.version)
     return (
       <div>
         <header className="Header">

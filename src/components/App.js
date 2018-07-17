@@ -16,8 +16,13 @@ class App extends Component {
     this.props.getWeb3()
   }
 
+  // componentWillReceiveProps (nextProps) {
+  //   debugger
+  //   console.log(nextProps)
+  // }
+
   render () {
-    console.log('App render', this.props)
+    // console.log('App render', this.props.web3 && this.props.web3.version)
     return (
       <div className="App">
         <Header version={this.props.web3 ? this.props.web3.version : 'nil'}/>
@@ -28,14 +33,20 @@ class App extends Component {
 }
 
 App.propTypes = {
-  web3: PropTypes.object,
-  getWeb3: PropTypes.function,
+  web3: (props, propName, componentName) => {
+    if (props[propName] !== null && typeof props[propName] !== 'object') {
+      return new Error(
+        'Invalid ' + propName + ': Neither null nor an object for component ' + componentName
+      )
+    }
+  },
+  getWeb3: PropTypes.func,
 }
 
 const mapStateToProps = state => {
-  console.log('mapStateToProps', state)
+  // console.log('mapStateToProps', state)
   return {
-    web3: state.web3,
+    web3: state.web3.injected,
   }
 }
 

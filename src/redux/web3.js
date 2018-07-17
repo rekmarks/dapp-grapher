@@ -15,7 +15,7 @@ function getWeb3Action () {
 function getWeb3SuccessAction (web3) {
   return {
     type: ACTIONS.GET_WEB3_SUCCESS,
-    web3: web3,
+    injectedWeb3: web3,
   }
 }
 
@@ -28,7 +28,7 @@ function getWeb3FailureAction (error) {
 
 const initialState = {
   ready: false,
-  web3: null,
+  injected: null,
 }
 
 export default function reducer (state = initialState, action) {
@@ -39,7 +39,7 @@ export default function reducer (state = initialState, action) {
       return {
         ...state,
         ready: false,
-        web3: null,
+        injected: null,
       }
     case ACTIONS.GET_WEB3_SUCCESS:
       // console.log(state)
@@ -47,7 +47,7 @@ export default function reducer (state = initialState, action) {
       return {
         ...state,
         ready: true,
-        web3: action.web3,
+        injected: action.injectedWeb3,
       }
     case ACTIONS.GET_WEB3_FAILURE:
       return {
