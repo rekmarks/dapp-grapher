@@ -1,14 +1,15 @@
+
 import React, { Component } from 'react'
 import cytoscape from 'cytoscape'
 
 // import compound from '../dev-temp/compound'
-import parse from '../parser'
-import graphTemplate from '../dev-temp/graphTemplate'
+import parseContract from '../graphing/contractParser'
+import graphTemplate from '../graphing/graphTemplate'
 
 const StandardERC20JSON = require('../dev-temp/StandardERC20.json')
 
 const testGraph = Object.assign({}, graphTemplate)
-testGraph.config.elements = parse(StandardERC20JSON, 1)
+testGraph.config.elements = parseContract(StandardERC20JSON, 1)
 
 class Grapher extends Component {
 

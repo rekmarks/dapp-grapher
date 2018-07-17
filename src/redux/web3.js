@@ -1,3 +1,4 @@
+
 import Web3 from 'web3'
 
 const ACTIONS = {
@@ -52,6 +53,8 @@ function getAccountFailureAction (error) {
 const initialState = {
   ready: false,
   injected: null,
+  account: null,
+  web3Error: null,
 }
 
 export default function reducer (state = initialState, action) {
@@ -63,10 +66,10 @@ export default function reducer (state = initialState, action) {
         ...state,
         ready: false,
         injected: null,
+        web3Error: null,
+        account: null,
       }
     case ACTIONS.GET_WEB3_SUCCESS:
-      // console.log(state)
-      // console.log(action)
       return {
         ...state,
         ready: true,
@@ -75,7 +78,6 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.GET_WEB3_FAILURE:
       return {
         ...state,
-        ready: false,
         web3Error: action.error,
       }
     case ACTIONS.GET_ACCOUNT:
@@ -83,6 +85,7 @@ export default function reducer (state = initialState, action) {
         ...state,
         ready: false,
         account: null,
+        web3Error: null,
       }
     case ACTIONS.GET_ACCOUNT_SUCCESS:
       return {
@@ -93,7 +96,6 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.GET_ACCOUNT_FAILURE:
       return {
         ...state,
-        ready: false,
         web3Error: action.error,
       }
     default:

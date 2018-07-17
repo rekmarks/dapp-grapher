@@ -34,7 +34,7 @@ const util = require('util')
  * @param  {object} contractJSON the compiled contract to parse
  * @return {object}              the elements for a Cytoscape graph
  */
-function parse (contractJSON, mode) {
+export default function parseContract (contractJSON, mode) {
   return {
     nodes: getNodes(contractJSON.contractName, contractJSON.abi, mode),
     edges: getEdges(contractJSON.contractName, contractJSON.abi, mode),
@@ -46,7 +46,13 @@ function getNodes (contractName, abi, mode) {
   let nodes = []
 
   // contract node (parent of all others)
-  const contractNode = {data: { id: contractName}, position: {x: 0, y: 0}}
+  const contractNode = {
+    data: {
+      id: contractName,
+      name: getFormattedName(contractName),
+    },
+    position: {x: 0, y: 0},
+  }
 
   switch (mode) {
     case 0:
@@ -77,9 +83,11 @@ function getNodeAll (contractName, entry) {
   const data = { abi: {} }
   if (entry.type === 'constructor') {
     data.id = contractName + ':constructor'
+    data.name = 'Constructor'
   } else {
     if (!entry.name) throw new Error('getNode: invalid ABI entry: missing name')
     data.id = contractName + ':' + entry.name
+    data.name = getFormattedName(entry.name)
   }
   data.parent = contractName
   entry.type ? data.type = entry.type : data.type = 'function' // abi type defaults to function if omitted
@@ -107,6 +115,7 @@ function getConstructorNodes (contractName, abi) {
     inputNodes.push({
       data: {
         id: contractName + ':constructor:' + input.name,
+        name: getFormattedName(input.name),
         parent: contractName,
         type: 'parameter',
         abi: input,
@@ -127,9 +136,13 @@ function getEdges (abiJSON) {
 //   // TODO
 // }
 
+/* helpers */
+
+function getFormattedName (name) {
+  const formattedName = name.substring(name.search(/[a-z]/i))
+  return formattedName.charAt(0).toUpperCase() + formattedName.slice(1)
+}
 
 // const StandardErc20Json = require('./dev-temp/StandardERC20.json')
-// const elements = parse(StandardErc20Json, 0)
+// const elements = parse(StandardErc20Json, 1)
 // console.log(util.inspect(elements, {showHidden: false, depth: null}))
-
-module.exports = parse

@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import './App.css'
+import './style/App.css'
 
 class Header extends Component {
   render () {
@@ -9,7 +9,12 @@ class Header extends Component {
       <div>
         <header className="Header">
           <h1 className="Header-title">Dapp Grapher</h1>
-          <p className="Header-info">{this.props.version}</p>
+          <p className="Header-info">
+            { this.props.version
+              ? 'Logged in with MetaMask'
+              : 'Please log in with MetaMask'
+            }
+          </p>
         </header>
       </div>
     )

@@ -3,7 +3,7 @@ import { createStore, applyMiddleware } from 'redux'
 import thunkMiddleware from 'redux-thunk'
 import { createLogger } from 'redux-logger'
 
-import dappGrapher from './reducer'
+import dappGrapher from './rootReducer'
 
 const initialState = {}
 const loggerMiddleware = createLogger()

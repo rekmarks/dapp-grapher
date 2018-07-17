@@ -26,7 +26,7 @@ const config = {
     {
       selector: 'node',
       css: {
-        'content': 'data(id)',
+        'content': 'data(name)', // usually data(id), but we want the name
         'text-valign': 'center',
         'text-halign': 'center',
       },

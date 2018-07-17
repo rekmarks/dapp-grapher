@@ -5,7 +5,7 @@ import PropTypes from 'prop-types'
 
 import Grapher from './Grapher'
 import Header from './Header'
-import './App.css'
+import './style/App.css'
 
 import { getWeb3 } from '../redux/web3'
 
