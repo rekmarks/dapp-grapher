@@ -1,5 +1,4 @@
 import Web3 from 'web3'
-import { Cmd, loop } from 'redux-loop'
 
 const ACTIONS = {
   GET_WEB3: 'WEB3:GET_WEB3',
@@ -7,20 +6,20 @@ const ACTIONS = {
   GET_WEB3_FAILURE: 'WEB3:GET_WEB3_FAILURE',
 }
 
-function getGetWeb3Action () {
+function getWeb3Action () {
   return {
     type: ACTIONS.GET_WEB3,
   }
 }
 
-function getWeb3Success (web3) {
+function getWeb3SuccessAction (web3) {
   return {
     type: ACTIONS.GET_WEB3_SUCCESS,
     web3: web3,
   }
 }
 
-function getWeb3Failure (error) {
+function getWeb3FailureAction (error) {
   return {
     type: ACTIONS.GET_WEB3_SUCCESS,
     error: error,
@@ -28,8 +27,8 @@ function getWeb3Failure (error) {
 }
 
 const initialState = {
-  web3: null,
   ready: false,
+  web3: null,
 }
 
 export default function reducer (state = initialState, action) {
@@ -37,19 +36,11 @@ export default function reducer (state = initialState, action) {
   switch (action.type) {
 
     case ACTIONS.GET_WEB3:
-      return loop(
-        {
-          ...state,
-          ready: false,
-          web3: null,
-          account: null,
-          network: null,
-        },
-        Cmd.run(getWeb3, {
-          successActionCreator: getWeb3Success,
-          failureActionCreator: getWeb3Failure,
-        })
-      )
+      return {
+        ...state,
+        ready: false,
+        web3: null,
+      }
     case ACTIONS.GET_WEB3_SUCCESS:
       // console.log(state)
       // console.log(action)
@@ -69,9 +60,13 @@ export default function reducer (state = initialState, action) {
   }
 }
 
-async function getWeb3 () {
+function getWeb3 () {
 
-  // window.addEventListener('load', async () => {
+  return async dispatch => {
+
+    dispatch(getWeb3Action())
+
+    // window.addEventListener('load', async () => {
 
     let web3
 
@@ -85,11 +80,17 @@ async function getWeb3 () {
       web3 = await new Web3(new Web3.providers.HttpProvider('http://localhost:8545'))
     }
 
-    return web3
-  // })
+    if (web3) {
+      dispatch(getWeb3SuccessAction(web3))
+    } else {
+      dispatch(getWeb3FailureAction('no web3 retrieved'))
+    }
+
+    return web3 // to return something
+  }
 }
 
 export {
-  getGetWeb3Action,
+  getWeb3,
   ACTIONS,
 }

@@ -1,10 +1,20 @@
 
-import { createStore } from 'redux'
-import { install } from 'redux-loop'
+import { createStore, applyMiddleware } from 'redux'
+import thunkMiddleware from 'redux-thunk'
+import { createLogger } from 'redux-logger'
+
 import dappGrapher from './reducer'
 
 const initialState = {}
+const loggerMiddleware = createLogger()
 
 export default function configureStore () {
-  return createStore(dappGrapher, initialState, install())
+  return createStore(
+    dappGrapher,
+    initialState,
+    applyMiddleware(
+      thunkMiddleware,
+      loggerMiddleware
+    )
+  )
 }

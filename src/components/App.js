@@ -7,7 +7,7 @@ import Grapher from './Grapher'
 import Header from './Header'
 import './App.css'
 
-import { getGetWeb3Action } from '../redux/web3'
+import { getWeb3 } from '../redux/web3'
 
 class App extends Component {
 
@@ -17,10 +17,10 @@ class App extends Component {
   }
 
   render () {
-    // console.log(this.props)
+    console.log('App render', this.props)
     return (
       <div className="App">
-        <Header web3={this.props.web3}/>
+        <Header version={this.props.web3 ? this.props.web3.version : 'nil'}/>
         <Grapher />
       </div>
     )
@@ -32,11 +32,29 @@ App.propTypes = {
   getWeb3: PropTypes.function,
 }
 
-export default connect(
-  state => ({
+const mapStateToProps = state => {
+  console.log('mapStateToProps', state)
+  return {
     web3: state.web3,
-  }),
-  dispatch => ({
-    getWeb3: () => dispatch(getGetWeb3Action()),
-  })
+  }
+}
+
+const mapDispatchToProps = dispatch => {
+  return {
+    getWeb3: () => dispatch(getWeb3()),
+  }
+}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
 )(App)
+
+// export default connect(
+//   state => ({
+//     web3: state.web3,
+//   }),
+//   dispatch => ({
+//     getWeb3: () => dispatch(getWeb3Action()),
+//   })
+// )(App)

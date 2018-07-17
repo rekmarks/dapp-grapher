@@ -4,12 +4,12 @@ import './App.css'
 
 class Header extends Component {
   render () {
-    // console.log(this.props)
+    console.log('Header render')
     return (
       <div>
         <header className="Header">
           <h1 className="Header-title">Dapp Grapher</h1>
-          <p className="Header-info">Lorem Ipsum</p>
+          <p className="Header-info">{this.props.version}</p>
         </header>
       </div>
     )
@@ -17,7 +17,7 @@ class Header extends Component {
 }
 
 Header.propTypes = {
-  web3: PropTypes.object,
+  version: PropTypes.string,
 }
 
 export default Header
