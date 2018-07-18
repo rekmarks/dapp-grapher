@@ -1,7 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
-// import Web3 from 'web3'
 
 import configureStore from './redux/configureStore'
 

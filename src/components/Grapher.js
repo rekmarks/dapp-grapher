@@ -1,12 +1,13 @@
 
 import React, { Component } from 'react'
 import cytoscape from 'cytoscape'
+import { contracts } from 'chain-end'
 
 // import compound from '../dev-temp/compound'
 import parseContract from '../graphing/contractParser'
 import graphTemplate from '../graphing/graphTemplate'
 
-const StandardERC20JSON = require('../dev-temp/StandardERC20.json')
+const StandardERC20JSON = contracts.StandardERC20
 
 const testGraph = Object.assign({}, graphTemplate)
 testGraph.config.elements = parseContract(StandardERC20JSON, 1)

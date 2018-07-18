@@ -8,25 +8,6 @@
  * Relevant: https://solidity.readthedocs.io/en/develop/abi-spec.html#JSON
  */
 
-// example nodes and edges
-/**
- * elements: {
-    nodes: [
-      { data: { id: 'a', parent: 'b' }, position: { x: 215, y: 85 } },
-      { data: { id: 'b' } },
-      { data: { id: 'c', parent: 'b' }, position: { x: 300, y: 85 } },
-      { data: { id: 'd' }, position: { x: 215, y: 175 } },
-      { data: { id: 'e' } },
-      { data: { id: 'f', parent: 'e' }, position: { x: 300, y: 175 } }
-    ],
-    edges: [
-      { data: { id: 'ad', source: 'a', target: 'd' } },
-      { data: { id: 'eb', source: 'e', target: 'b' } }
-
-    ]
-  },
- */
-
 const util = require('util')
 
 /**
@@ -139,10 +120,10 @@ function getEdges (abiJSON) {
 /* helpers */
 
 function getFormattedName (name) {
-  const formattedName = name.substring(name.search(/[a-z]/i))
+  const formattedName = name.substring(name.search(/[a-z]/i)) // regex: /i indicates ignorecase
   return formattedName.charAt(0).toUpperCase() + formattedName.slice(1)
 }
 
-// const StandardErc20Json = require('./dev-temp/StandardERC20.json')
+// const StandardErc20Json = require('chain-end').contracts.StandardERC20
 // const elements = parse(StandardErc20Json, 1)
 // console.log(util.inspect(elements, {showHidden: false, depth: null}))
