@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
-import './style/App.css'
+import './style/Header.css'
 
 class Header extends Component {
   render () {
@@ -9,12 +9,26 @@ class Header extends Component {
       <div>
         <header className="Header">
           <h1 className="Header-title">Dapp Grapher</h1>
-          <p className="Header-info">
-            { this.props.version
-              ? 'Logged in with MetaMask'
-              : 'Please log in with MetaMask'
-            }
-          </p>
+          <div className = "Header-items">
+            <button
+              onClick={this.props.setCanvas.bind(this, 'Grapher')}
+              disabled={this.props.canvasComponent === 'Grapher'}
+            >
+              Graph
+            </button>
+            <button
+              onClick={this.props.setCanvas.bind(this, 'ContractForm')}
+              disabled={this.props.canvasComponent === 'ContractForm'}
+            >
+              Form
+            </button>
+            <p className="Header-info">
+              { this.props.web3Injected
+                ? 'Logged in with MetaMask'
+                : 'Please log in with MetaMask'
+              }
+            </p>
+          </div>
         </header>
       </div>
     )
@@ -22,7 +36,9 @@ class Header extends Component {
 }
 
 Header.propTypes = {
-  version: PropTypes.string,
+  web3Injected: PropTypes.bool,
+  setCanvas: PropTypes.func,
+  canvasComponent: PropTypes.string,
 }
 
 export default Header

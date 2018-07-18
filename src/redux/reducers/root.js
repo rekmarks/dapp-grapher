@@ -1,12 +1,16 @@
 
 import { combineReducers } from 'redux'
 
-import web3 from './web3'
+import renderErrors from './renderErrors'
 import parser from './parser'
+import ui from './ui'
+import web3 from './web3'
 
 const dappGrapher = combineReducers({
-  web3,
   parser,
+  renderErrors,
+  ui,
+  web3,
 })
 
 export default dappGrapher

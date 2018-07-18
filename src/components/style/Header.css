@@ -1,0 +1,25 @@
+
+.Header {
+  background-color: #222;
+  height: 70px;
+  padding: 20px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  /*position: fixed;*/
+}
+
+.Header-title {
+  font-size: 1.5em;
+  align-self: center;
+}
+
+.Header-items {
+  justify-content: space-between;
+  align-self: center;
+}
+
+.Header-info {
+  font-size: 1.0em;
+  /*align-self: center;*/
+}

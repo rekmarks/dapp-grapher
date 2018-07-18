@@ -1,6 +1,6 @@
 
-import parseContract from '../graphing/contractParser'
-import graphTemplate from '../graphing/graphTemplate'
+import parseContract from '../../graphing/contractParser'
+import graphTemplate from '../../graphing/graphTemplate'
 import { contracts } from 'chain-end'
 
 const StandardERC20JSON = contracts.StandardERC20
