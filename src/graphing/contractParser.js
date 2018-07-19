@@ -1,5 +1,8 @@
 
 /**
+ * Functions for converting smart contract ABIs into a more
+ * useable format. All functions pure.
+ *
  * TODO
  * 1. Parse contract ABI -- DONE (just use it)
  * 1a. Generate nodes -- DONE
@@ -8,20 +11,35 @@
  * Relevant: https://solidity.readthedocs.io/en/develop/abi-spec.html#JSON
  */
 
-const util = require('util')
+import util from 'util'
+import graphTemplate from './graphTemplate'
 
 /**
  * Parses a compiled Solidity contract for use in a Cytoscape graph
- * @param  {object} contractJSON the compiled contract to parse
+ * @param  {object} contract     the compiled contract to parse
+ * @param  {number} mode         determines the kind of data returned
+ *                               0: the complete ABI
+ *                               1: constructor parameters only
  * @return {object}              the elements for a Cytoscape graph
  */
-export default function parseContract (contractJSON, mode) {
-  return {
-    nodes: getNodes(contractJSON.contractName, contractJSON.abi, mode),
-    edges: getEdges(contractJSON.contractName, contractJSON.abi, mode),
+export default function parseContract (contract, mode) {
+
+  const graph = {...graphTemplate}
+  graph.name = contract.contractName
+  graph.config.elements = {
+    nodes: getNodes(contract.contractName, contract.abi, mode),
+    edges: getEdges(contract.contractName, contract.abi, mode),
   }
+  return graph
 }
 
+/**
+ * [getNodes description]
+ * @param  {[type]} contractName [description]
+ * @param  {[type]} abi          [description]
+ * @param  {[type]} mode         [description]
+ * @return {[type]}              [description]
+ */
 function getNodes (contractName, abi, mode) {
 
   let nodes = []
@@ -30,18 +48,18 @@ function getNodes (contractName, abi, mode) {
   const contractNode = {
     data: {
       id: contractName,
-      name: getFormattedName(contractName),
+      nodeName: getFormattedName(contractName),
     },
     position: {x: 0, y: 0},
   }
 
   switch (mode) {
     case 0:
-      contractNode.data.type = 'contract_completeAbi'
+      contractNode.data.type = 'contract:completeAbi'
       abi.forEach(entry => nodes.push(getNodeAll(contractName, entry)))
       break
     case 1:
-      contractNode.data.type = 'contract_constructor'
+      contractNode.data.type = 'contract:constructor'
       nodes = nodes.concat(getConstructorNodes(contractName, abi))
       break
     default:
@@ -53,6 +71,12 @@ function getNodes (contractName, abi, mode) {
   return nodes
 }
 
+/**
+ * [getNodeAll description]
+ * @param  {[type]} contractName [description]
+ * @param  {[type]} entry        [description]
+ * @return {[type]}              [description]
+ */
 function getNodeAll (contractName, entry) {
 
   if (!(entry.type === 'function') &&
@@ -64,11 +88,11 @@ function getNodeAll (contractName, entry) {
   const data = { abi: {} }
   if (entry.type === 'constructor') {
     data.id = contractName + ':constructor'
-    data.name = 'Constructor'
+    data.nodeName = 'Constructor'
   } else {
     if (!entry.name) throw new Error('getNode: invalid ABI entry: missing name')
     data.id = contractName + ':' + entry.name
-    data.name = getFormattedName(entry.name)
+    data.nodeName = getFormattedName(entry.name)
   }
   data.parent = contractName
   entry.type ? data.type = entry.type : data.type = 'function' // abi type defaults to function if omitted
@@ -81,6 +105,12 @@ function getNodeAll (contractName, entry) {
   }
 }
 
+/**
+ * [getConstructorNodes description]
+ * @param  {[type]} contractName [description]
+ * @param  {[type]} abi          [description]
+ * @return {[type]}              [description]
+ */
 function getConstructorNodes (contractName, abi) {
 
   const filtered = abi.filter(entry => entry.type === 'constructor')
@@ -96,7 +126,7 @@ function getConstructorNodes (contractName, abi) {
     inputNodes.push({
       data: {
         id: contractName + ':constructor:' + input.name,
-        name: getFormattedName(input.name),
+        nodeName: getFormattedName(input.name),
         parent: contractName,
         type: 'parameter',
         abi: input,
@@ -108,7 +138,7 @@ function getConstructorNodes (contractName, abi) {
   return inputNodes
 }
 
-function getEdges (abiJSON) {
+function getEdges (abi) {
   // TODO
   return {}
 }
@@ -124,6 +154,7 @@ function getFormattedName (name) {
   return formattedName.charAt(0).toUpperCase() + formattedName.slice(1)
 }
 
-// const StandardErc20Json = require('chain-end').contracts.StandardERC20
-// const elements = parse(StandardErc20Json, 1)
-// console.log(util.inspect(elements, {showHidden: false, depth: null}))
+// for testing
+// const StandardERC20 = require('chain-end').contracts.StandardERC20
+// const testGraph = parseContract(StandardERC20, 1)
+// console.log(util.inspect(testGraph.config.elements, {showHidden: false, depth: null}))

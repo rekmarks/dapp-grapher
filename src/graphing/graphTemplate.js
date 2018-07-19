@@ -21,7 +21,7 @@
 
 const config = {
 
-  container: null, // will be set to this.cyRef
+  // container: null, // will be set to this.cyRef
 
   // initial viewport state:
   // zoom: 1.5,
@@ -46,7 +46,7 @@ const config = {
     {
       selector: 'node',
       css: {
-        'content': 'data(name)', // usually data(id), but we want the name
+        'content': 'data(nodeName)', // usually data(id), but we want the name
         'text-valign': 'center',
         'text-halign': 'center',
       },
@@ -102,4 +102,4 @@ const template = {
   style: style,
 }
 
-module.exports = template
+export default template

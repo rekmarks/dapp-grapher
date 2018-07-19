@@ -23,3 +23,11 @@
   font-size: 1.0em;
   /*align-self: center;*/
 }
+
+.Header-nav {
+  color: white;
+}
+
+.Header-active-nav {
+  color: red;
+}

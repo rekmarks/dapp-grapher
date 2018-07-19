@@ -2,14 +2,12 @@
 import { combineReducers } from 'redux'
 
 import renderErrors from './renderErrors'
-import parser from './parser'
-import ui from './ui'
+import grapher from './grapher'
 import web3 from './web3'
 
 const dappGrapher = combineReducers({
-  parser,
+  grapher,
   renderErrors,
-  ui,
   web3,
 })
 

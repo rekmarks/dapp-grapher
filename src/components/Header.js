@@ -1,5 +1,8 @@
-import React, { Component } from 'react'
+
 import PropTypes from 'prop-types'
+import React, { Component } from 'react'
+import { NavLink } from 'react-router-dom'
+
 import './style/Header.css'
 
 class Header extends Component {
@@ -10,18 +13,28 @@ class Header extends Component {
         <header className="Header">
           <h1 className="Header-title">Dapp Grapher</h1>
           <div className = "Header-items">
-            <button
-              onClick={this.props.setCanvas.bind(this, 'Grapher')}
-              disabled={this.props.canvasComponent === 'Grapher'}
-            >
-              Graph
-            </button>
-            <button
-              onClick={this.props.setCanvas.bind(this, 'ContractForm')}
-              disabled={this.props.canvasComponent === 'ContractForm'}
-            >
-              Form
-            </button>
+            <div>
+              <NavLink
+                className="Header-nav"
+                activeClassName="Header-active-nav"
+                exact to="/" >
+                Home
+              </NavLink>
+              {' '}
+              <NavLink
+                className="Header-nav"
+                activeClassName="Header-active-nav"
+                to="/dapp-graph" >
+                Graph
+                </NavLink>
+              {' '}
+              <NavLink
+                className="Header-nav"
+                activeClassName="Header-active-nav"
+                to="/contract-form" >
+                Form
+              </NavLink>
+            </div>
             <p className="Header-info">
               { this.props.web3Injected
                 ? 'Logged in with MetaMask'

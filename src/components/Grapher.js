@@ -1,16 +1,12 @@
 
-import React, { Component } from 'react'
 import cytoscape from 'cytoscape'
-import { contracts } from 'chain-end'
+import PropTypes from 'prop-types'
+import React, { Component } from 'react'
 
-// import compound from '../dev-temp/compound'
-import parseContract from '../graphing/contractParser'
-import graphTemplate from '../graphing/graphTemplate'
-
-const StandardERC20JSON = contracts.StandardERC20
-
-const testGraph = Object.assign({}, graphTemplate)
-testGraph.config.elements = parseContract(StandardERC20JSON, 1)
+/**
+ * TODO
+ * - This re-renders on every route, make it stop, probably
+ */
 
 class Grapher extends Component {
 
@@ -21,18 +17,9 @@ class Grapher extends Component {
 
   componentDidMount () {
 
-    testGraph.config.container = this.cyRef
-    const cy = cytoscape(testGraph.config)
+    this.props.graph.config.container = this.cyRef
 
-    // cy.on('tap', (event) => {
-    //   console.log(cy.pan())
-    //   console.log(cy.zoom())
-    // })
-
-    // does not work, zoom and pan are reset afterwards
-    // cy.zoom(1.5)
-    // cy.pan(100, -200)
-
+    const cy = cytoscape(this.props.graph.config)
     this.setState({ cy: cy })
   }
 
@@ -42,21 +29,21 @@ class Grapher extends Component {
     }
   }
 
-  // unsure what to do with this; Cytoscape should re-render on its own
-  // shouldComponentUpdate() {
-  //   return false
-  // }
+  // Cytoscape has its own rendered, this decreases React re-renders
+  shouldComponentUpdate () {
+    return false
+  }
 
   render () {
 
-    // if (Object.keys(this.state.cy).length > 0) {
-    //   console.log(this.state.cy)
-    // }
-
-    return <div style={testGraph.style} ref={(cyRef) => {
+    return <div style={this.props.graph.style} ref={(cyRef) => {
       this.cyRef = cyRef
     }}/>
   }
+}
+
+Grapher.propTypes = {
+  graph: PropTypes.object,
 }
 
 export default Grapher
