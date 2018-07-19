@@ -31,8 +31,8 @@ export default class ContractForm extends Component {
 
     return (
       <div className="ContractForm-formContainer">
-        { 
-          this.state.formProps 
+        {
+          this.state.formProps
             ? <Form
                 className="ContractForm-form"
                 schema={this.state.formProps.schema}
@@ -78,11 +78,11 @@ function generateForm (nodes) {
   }
 
   nodes.forEach(node => {
-    
+
     if (node.data.type === 'contract') {
-      
+
       schema.title = node.data.nodeName
-    
+
     } else {
 
       const field = {
@@ -95,7 +95,7 @@ function generateForm (nodes) {
 
       uiSchema['ui:order'].push(field.parameterName)
       uiSchema[field.parameterName] = {}
-      uiSchema[field.parameterName]['ui:placeholder'] = 
+      uiSchema[field.parameterName]['ui:placeholder'] =
         node.data.abi.type + ': ' + node.data.abi.name
     }
   })
@@ -107,16 +107,16 @@ function generateForm (nodes) {
 }
 
 /**
- * Takes a Solidity function parameter type and ouputs the appropriate 
+ * Takes a Solidity function parameter type and ouputs the appropriate
  * type for a react-jsonschema-form field
- * @param  {string} parameterType a Solidity function parameter 
+ * @param  {string} parameterType a Solidity function parameter
  * @return {string}               the corresponding form field type
  */
 function parseSolidityType (parameterType) {
 
-  // TODO: 
+  // TODO:
   // - better array and address handling
-  // - other missing specific datatype cases 
+  // - other missing specific datatype cases
 
   switch (parameterType) {
 
@@ -126,16 +126,16 @@ function parseSolidityType (parameterType) {
     case 'bool':
       return 'boolean'
 
-    case 
+    case
       parameterType.slice(0, 4) === 'uint' ||
       parameterType.slice(0, 3) === 'int':
-        
+
         return 'integer'
 
-    case 
+    case
       parameterType.slice(0, 6) === 'fixed' ||
       parameterType.slice(0, 7) === 'ufixed':
-        
+
         return 'number'
 
     default:
