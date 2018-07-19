@@ -20,6 +20,8 @@ class Grapher extends Component {
     this.props.graph.config.container = this.cyRef
 
     const cy = cytoscape(this.props.graph.config)
+    cy.zoom(0.75)
+    cy.center()
     this.setState({ cy: cy })
   }
 

@@ -24,8 +24,8 @@ const config = {
   // container: null, // will be set to this.cyRef
 
   // initial viewport state:
-  // zoom: 1.5,
-  // pan: { x: 100, y: -75 },
+  // zoom: 1.0,
+  // pan:{ x: 100, y: -75 },
 
   // interaction options:
   autounselectify: false,
@@ -93,7 +93,7 @@ const style = {
   width: '100%',
   position: 'absolute',
   left: '0px',
-  top: '110px', // TODO: set dynamically to equal header height
+  top: '70px', // TODO: set dynamically to equal header height
   // 'zIndex': '-10',
 }
 

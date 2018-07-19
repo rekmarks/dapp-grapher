@@ -26,6 +26,7 @@
 
 .Header-nav {
   color: white;
+  text-decoration: underline;
 }
 
 .Header-active-nav {

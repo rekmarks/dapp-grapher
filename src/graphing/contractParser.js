@@ -17,9 +17,11 @@ import graphTemplate from './graphTemplate'
 /**
  * Parses a compiled Solidity contract for use in a Cytoscape graph
  * @param  {object} contract     the compiled contract to parse
- * @param  {number} mode         determines the kind of data returned
- *                               0: the complete ABI
- *                               1: constructor parameters only
+ * @param  {number} mode         determines the kind of data returned,
+ *                               with the contract as a compound node
+ *                               containing:
+ *                                 0  the complete ABI
+ *                                 1  constructor parameters
  * @return {object}              the elements for a Cytoscape graph
  */
 export default function parseContract (contract, mode) {
@@ -55,11 +57,13 @@ function getNodes (contractName, abi, mode) {
 
   switch (mode) {
     case 0:
-      contractNode.data.type = 'contract:completeAbi'
+      contractNode.data.type = 'contract'
+      contractNode.data.subType = 'completeAbi'
       abi.forEach(entry => nodes.push(getNodeAll(contractName, entry)))
       break
     case 1:
-      contractNode.data.type = 'contract:constructor'
+      contractNode.data.type = 'contract'
+      contractNode.data.subType = 'constructor'
       nodes = nodes.concat(getConstructorNodes(contractName, abi))
       break
     default:

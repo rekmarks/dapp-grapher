@@ -14,6 +14,12 @@ class Header extends Component {
           <h1 className="Header-title">Dapp Grapher</h1>
           <div className = "Header-items">
             <div>
+              <p className="Header-info">
+                { this.props.web3Injected
+                  ? 'Logged in with MetaMask'
+                  : 'Please log in with MetaMask'
+                }
+              </p>
               <NavLink
                 className="Header-nav"
                 activeClassName="Header-active-nav"
@@ -35,12 +41,6 @@ class Header extends Component {
                 Form
               </NavLink>
             </div>
-            <p className="Header-info">
-              { this.props.web3Injected
-                ? 'Logged in with MetaMask'
-                : 'Please log in with MetaMask'
-              }
-            </p>
           </div>
         </header>
       </div>

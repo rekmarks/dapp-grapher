@@ -7,7 +7,7 @@ export default class ContractForm extends Component {
 
   render () {
     return (
-      <div>
+      <div className="Home-menu-container">
         <p className="temp">I am a menu</p>
       </div>
     )
