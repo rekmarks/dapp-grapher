@@ -32,7 +32,7 @@
   "homepage": "https://github.com/rekmarks/dapp-grapher#readme",
   "dependencies": {
     "bootstrap": "^3.3.7",
-    "chain-end": "^0.1.2",
+    "chain-end": "^0.2.0",
     "cytoscape": "^3.2.14",
     "cytoscape-dagre": "^2.2.1",
     "immutable": "^3.8.2",

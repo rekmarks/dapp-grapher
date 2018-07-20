@@ -11,7 +11,7 @@ import Home from './Home'
 import './style/App.css'
 
 import { logRenderError } from '../redux/reducers/renderErrors'
-import { getWeb3 } from '../redux/reducers/web3'
+import { getWeb3, deploy } from '../redux/reducers/web3'
 
 class App extends Component {
 
@@ -50,7 +50,9 @@ class App extends Component {
                   render={
                     () => <ContractForm
                       nodes={this.props.graph.config.elements.nodes}
-                      contractName={this.props.graph.name} /> } />
+                      contractName={this.props.graph.name}
+                      deployer={this.props.deployer}
+                      deploy={this.props.deploy} /> } />
               </Switch>
             </div>
           </div>
@@ -71,19 +73,28 @@ App.propTypes = {
   getWeb3: PropTypes.func,
   logRenderError: PropTypes.func,
   graph: PropTypes.object,
+  deployer: PropTypes.object,
+  deploy: PropTypes.func,
 }
 
 function mapStateToProps (state) {
   return {
-    web3: state.web3.injected,
+    // grapher
     graph: state.grapher.selectedGraph,
+    // web3
+    web3: state.web3.injected,
+    deployer: state.web3.deployer,
   }
 }
 
 function mapDispatchToProps (dispatch) {
   return {
-    getWeb3: () => dispatch(getWeb3()),
+    // renderErrors
     logRenderError: (error, errorInfo) => dispatch(logRenderError(error, errorInfo)),
+    // web3
+    getWeb3: () => dispatch(getWeb3()),
+    deploy: (deployer, contractName, constructorParams) => 
+      dispatch(deploy(deployer, contractName, constructorParams))
   }
 }
 

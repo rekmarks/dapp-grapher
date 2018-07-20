@@ -28,6 +28,7 @@ export default function parseContract (contract, mode) {
 
   const graph = {...graphTemplate}
   graph.name = contract.contractName
+  graph.type = (mode === 1 ? 'constructor' : 'completeAbi')
   graph.config.elements = {
     nodes: getNodes(contract.contractName, contract.abi, mode),
     edges: getEdges(contract.contractName, contract.abi, mode),
