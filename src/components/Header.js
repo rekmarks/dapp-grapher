@@ -23,13 +23,6 @@ class Header extends Component {
               <NavLink
                 className="Header-nav"
                 activeClassName="Header-active-nav"
-                exact to="/" >
-                Home
-              </NavLink>
-              {' '}
-              <NavLink
-                className="Header-nav"
-                activeClassName="Header-active-nav"
                 to="/dapp-graph" >
                 Graph
                 </NavLink>

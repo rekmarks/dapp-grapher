@@ -2,12 +2,11 @@
 import PropTypes from 'prop-types'
 import React, { Component } from 'react'
 import { connect } from 'react-redux'
-import { BrowserRouter, Route, Switch } from 'react-router-dom'
+import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom'
 
 import ContractForm from './ContractForm'
 import Grapher from './Grapher'
 import Header from './Header'
-import Home from './Home'
 import './style/App.css'
 
 import { logRenderError } from '../redux/reducers/renderErrors'
@@ -41,7 +40,9 @@ class App extends Component {
             />
             <div className="App-canvas-container">
               <Switch>
-                <Route exact path="/" component={Home} />
+                <Route exact path="/" render={ () => (
+                  <Redirect to="/dapp-graph" />
+                )} />
                 <Route
                   path="/dapp-graph"
                   render={
