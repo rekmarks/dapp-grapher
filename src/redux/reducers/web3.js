@@ -1,7 +1,7 @@
 
 import Web3 from 'web3'
 
-import { Deployer } from 'chain-end'
+import { initializeDeployer } from './contracts'
 
 const ACTIONS = {
   GET_WEB3: 'WEB3:GET_WEB3',
@@ -10,27 +10,21 @@ const ACTIONS = {
   GET_ACCOUNT: 'WEB3:GET_ACCOUNT',
   GET_ACCOUNT_SUCCESS: 'WEB3:GET_ACCOUNT_SUCCESS',
   GET_ACCOUNT_FAILURE: 'WEB3:GET_ACCOUNT_FAILURE',
-  INITIALIZE_DEPLOYER: 'WEB3:INITIALIZE_DEPLOYER',
-  DEPLOY: 'WEB3:DEPLOY',
-  DEPLOYMENT_SUCCESS: 'WEB3:DEPLOYMENT_SUCCESS',
-  DEPLOYMENT_FAILURE: 'WEB3:DEPLOYMENT_FAILURE',
   CLEAR_ERRORS: 'WEB3:CLEAR_ERRORS',
 }
 
 const initialState = {
   account: null,
-  deployer: null,
   injected: null,
+  networkId: null,
   provider: null,
   ready: false,
-  web3Error: [],
+  web3Errors: [],
 }
 
 export {
   getWeb3Thunk as getWeb3,
-  getDeployThunk as deploy,
-  getClearErrorsAction as clearWeb3Errors,
-  ACTIONS,
+  getClearErrorsAction as clearweb3Errorss,
 }
 
 export default function reducer (state = initialState, action) {
@@ -42,7 +36,8 @@ export default function reducer (state = initialState, action) {
         ...state,
         ready: false,
         injected: null,
-        web3Error: [],
+        networkId: null,
+        web3Errors: [],
         account: null,
       }
 
@@ -57,7 +52,7 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.GET_WEB3_FAILURE:
       return {
         ...state,
-        web3Error: state.web3Error.concat([action.error]),
+        web3Errors: state.web3Errors.concat([action.error]),
       }
 
     case ACTIONS.GET_ACCOUNT:
@@ -72,41 +67,19 @@ export default function reducer (state = initialState, action) {
         ...state,
         ready: true,
         account: action.account,
+        networkId: action.networkId,
       }
 
     case ACTIONS.GET_ACCOUNT_FAILURE:
       return {
         ...state,
-        web3Error: state.web3Error.concat([action.error]),
+        web3Errors: state.web3Errors.concat([action.error]),
       }
-
-    case ACTIONS.INITIALIZE_DEPLOYER:
-      return {
-        ...state,
-        deployer: new Deployer(state.provider, state.account),
-      }
-
-    case ACTIONS.DEPLOY:
-      return {
-        ...state,
-        ready: false,
-      }
-
-    case ACTIONS.DEPLOYMENT_SUCCESS:
-      return {
-        ...state,
-      }
-
-    case ACTIONS.DEPLOYMENT_FAILURE:
-      return {
-        ...state,
-        web3Error: state.web3Error.concat([action.error]),
-    }
 
     case ACTIONS.CLEAR_ERRORS:
       return {
         ...state,
-        web3Error: [],
+        web3Errors: [],
       }
 
     default:
@@ -142,41 +115,17 @@ function getAccountAction () {
   }
 }
 
-function getAccountSuccessAction (account) {
+function getAccountSuccessAction (account, networkId) {
   return {
     type: ACTIONS.GET_ACCOUNT_SUCCESS,
     account: account,
+    networkId: networkId,
   }
 }
 
 function getAccountFailureAction (error) {
   return {
     type: ACTIONS.GET_ACCOUNT_FAILURE,
-    error: error,
-  }
-}
-
-function getInitializeDeployerAction () {
-  return {
-    type: ACTIONS.INITIALIZE_DEPLOYER,
-  }
-}
-
-function getDeployAction () {
-  return {
-    type: ACTIONS.DEPLOY,
-  }
-}
-
-function getDeploymentSuccessAction () {
-  return {
-    type: ACTIONS.DEPLOYMENT_SUCCESS,
-  }
-}
-
-function getDeploymentFailureAction (error) {
-  return {
-    type: ACTIONS.DEPLOYMENT_FAILURE,
     error: error,
   }
 }
@@ -221,10 +170,11 @@ function getWeb3Thunk () {
 
     if (web3 &&
       web3.currentProvider.constructor.name === 'MetamaskInpageProvider') {
+
       dispatch(getWeb3SuccessAction(web3))
       dispatch(getWeb3AccountThunk(web3))
     } else {
-      dispatch(getWeb3FailureAction(new Error('no web3 retrieved')))
+      dispatch(getWeb3FailureAction(new Error('invalid web3', web3)))
     }
   }
 }
@@ -240,9 +190,10 @@ function getWeb3AccountThunk (web3) {
 
     dispatch(getAccountAction())
 
-    let accounts
+    let accounts, networkId
     try {
       accounts = await web3.eth.getAccounts()
+      networkId = await web3.eth.net.getId()
     } catch (error) {
       dispatch(getAccountFailureAction(error))
       return
@@ -255,50 +206,7 @@ function getWeb3AccountThunk (web3) {
     }
 
     if (accounts.length !== 1) console.log('WARNING: More than one account found.', accounts)
-    dispatch(getAccountSuccessAction(accounts[0]))
-    dispatch(getInitializeDeployerAction())
-    // dispatch(getDeployThunk(
-    //   'StandardERC20', [
-    //     'BlackPhillipBux',
-    //     'BPX',
-    //     18,
-    //     666,
-    //   ]))
-  }
-}
-
-/**
- * [getDeployThunk description]
- * @param  {[type]} contractName      [description]
- * @param  {[type]} constructorParams [description]
- * @return {[type]}                   [description]
- */
-function getDeployThunk (contractName, constructorParams) {
-
-  return async (dispatch, getState) => {
-
-    dispatch(getDeployAction)
-
-    const deployer = getState().web3.deployer
-    if (!deployer) {
-      dispatch(getDeploymentFailureAction(new Error('deployer not initialized')))
-      return
-    }
-
-    let instance
-    try {
-      instance = await deployer.deploy(contractName, constructorParams)
-    } catch (error) {
-      dispatch(getDeploymentFailureAction(error))
-      return
-    }
-
-    if (!instance) {
-      dispatch(getDeploymentFailureAction(new Error('deployment returned false')))
-    }
-
-    dispatch(getDeploymentSuccessAction())
-    console.log('instance', instance)
-    return instance
+    dispatch(getAccountSuccessAction(accounts[0], networkId))
+    dispatch(initializeDeployer())
   }
 }

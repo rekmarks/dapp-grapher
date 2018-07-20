@@ -11,7 +11,8 @@ import Home from './Home'
 import './style/App.css'
 
 import { logRenderError } from '../redux/reducers/renderErrors'
-import { getWeb3, deploy } from '../redux/reducers/web3'
+import { getWeb3 } from '../redux/reducers/web3'
+import { deploy } from '../redux/reducers/contracts'
 
 class App extends Component {
 

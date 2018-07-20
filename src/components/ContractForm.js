@@ -13,15 +13,16 @@ export default class ContractForm extends Component {
 
   constructor (props) {
     super(props)
-    this.state = {formProps: null}
+    this.state = {formData: null}
   }
 
+  // gene
   componentDidMount () {
     this.setState((prevProps, props) => {
       // console.log(prevProps, props)
       // TODO: this check fails because contracts don't have unique IDs
       if (prevProps.contractName !== props.contractName) {
-        return { formProps: generateForm(props.nodes)}
+        return { formData: generateForm(props.nodes)}
       }
       return {}
     })
@@ -34,13 +35,12 @@ export default class ContractForm extends Component {
     return (
       <div className="ContractForm-formContainer">
         {
-          this.state.formProps
+          this.state.formData
             ? <Form
                 className="ContractForm-form"
-                schema={this.state.formProps.schema}
-                uiSchema={this.state.formProps.uiSchema}
+                schema={this.state.formData.schema}
+                uiSchema={this.state.formData.uiSchema}
                 onChange={log('changed')}
-                // onSubmit={deploy()}
                 onSubmit={
                   (formData) => (this.props.deploy(
                     formData.schema.title,
@@ -95,7 +95,7 @@ function generateForm (nodes) {
 
     } else {
 
-      // parse node data to create field objects
+      // parse node data to create corresponding field object
       const field = {
         type: parseSolidityType(node.data.abi.type),
         title: node.data.nodeName,
@@ -130,8 +130,8 @@ function parseSolidityType (parameterType) {
 
   switch (parameterType) {
 
-    case parameterType.slice(-2) === '[]':
-      return 'string' // array
+    case parameterType.slice(-2) === '[]': // array
+      return 'string'
 
     case 'bool':
       return 'boolean'
