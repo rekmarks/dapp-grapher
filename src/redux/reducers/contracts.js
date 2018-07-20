@@ -44,15 +44,15 @@ export default function reducer (state = initialState, action) {
       return {
         ...state,
         instances: {
-          [action.data.networkId]: { 
+          [action.data.networkId]: {
             [action.data.instance.address]: {
               account: action.data.account,
               type: action.data.contractName,
               constructorParams: action.data.constructorParams,
               instance: action.data.instance,
-            }
-          }
-        }
+            },
+          },
+        },
       }
 
     case ACTIONS.DEPLOYMENT_FAILURE:
