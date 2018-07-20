@@ -51,7 +51,7 @@ export default function reducer (state = initialState, action) {
         ...state,
         ready: true,
         injected: action.injectedWeb3,
-        provider: action.injectedWeb3.currentProvider
+        provider: action.injectedWeb3.currentProvider,
       }
 
     case ACTIONS.GET_WEB3_FAILURE:
@@ -219,8 +219,8 @@ function getWeb3Thunk () {
       // web3 = await new Web3(new Web3.providers.HttpProvider('http://localhost:8545'))
     }
 
-    if (web3 
-      && web3.currentProvider.constructor.name === 'MetamaskInpageProvider') {
+    if (web3 &&
+      web3.currentProvider.constructor.name === 'MetamaskInpageProvider') {
       dispatch(getWeb3SuccessAction(web3))
       dispatch(getWeb3AccountThunk(web3))
     } else {

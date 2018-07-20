@@ -87,7 +87,7 @@ function generateForm (nodes) {
   }
 
   nodes.forEach(node => {
-    
+
     // contract name = form title
     if (node.data.type === 'contract') {
 
@@ -107,9 +107,9 @@ function generateForm (nodes) {
 
       uiSchema['ui:order'].push(field.parameterName)
       uiSchema[field.parameterName] = {
-        'ui:placeholder': node.data.abi.type + ': ' + node.data.abi.name
+        'ui:placeholder': node.data.abi.type + ': ' + node.data.abi.name,
       }
-        
+
     }
   })
 
