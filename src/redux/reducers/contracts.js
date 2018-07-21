@@ -35,7 +35,6 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.DEPLOY:
       return {
         ...state,
-        ready: false,
       }
 
     // TODO: add network IDs for organizational purposes and peace of mind?
@@ -44,7 +43,9 @@ export default function reducer (state = initialState, action) {
       return {
         ...state,
         instances: {
+          ...state.instances,
           [action.data.networkId]: {
+            ...state.instances[action.data.networkId],
             [action.data.instance.address]: {
               account: action.data.account,
               type: action.data.contractName,
