@@ -12,11 +12,11 @@
  *
  * @return {Object} An object that contains the specified keys with truth-y values
  */
-export default function getSubset(obj, paths) {
-  let subset = {}
+export default function getSubset (obj, paths) {
+  const subset = {}
 
   paths.forEach((key) => {
-    let slice = obj[key]
+    const slice = obj[key]
     if (slice) subset[key] = slice
   })
 

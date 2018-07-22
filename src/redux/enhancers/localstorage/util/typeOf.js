@@ -2,7 +2,7 @@
  * https://github.com/elgerlambert/redux-localstorage
  */
 
-let _isArray = Array.isArray || (Array.isArray = function(a){ return '' + a !== a && {}.toString.call(a) === '[object Array]'})
+const _isArray = Array.isArray || (Array.isArray = function (a) { return '' + a !== a && {}.toString.call(a) === '[object Array]' })
 
 /**
  * @description
@@ -14,7 +14,7 @@ let _isArray = Array.isArray || (Array.isArray = function(a){ return '' + a !== 
  *
  * @return {String} Actionable type classification
  */
-export default function typeOf(thing) {
+export default function typeOf (thing) {
   if (!thing) return 'void'
 
   if (_isArray(thing)) {

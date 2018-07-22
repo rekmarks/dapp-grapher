@@ -13,7 +13,7 @@ import typeOf from './util/typeOf.js'
  *
  * @return {Function} A slicer function, which returns the subset to store when called with Redux's store state.
  */
-export default function createSlicer(paths) {
+export default function createSlicer (paths) {
   switch (typeOf(paths)) {
     case 'void':
       return (state) => state

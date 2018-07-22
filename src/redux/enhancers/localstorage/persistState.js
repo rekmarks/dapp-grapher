@@ -21,14 +21,14 @@ import mergeState from './util/mergeState.js'
  *
  * @return {Function} An enhanced store
  */
-export default function persistState(paths, config) {
+export default function persistState (paths, config) {
   const cfg = {
     key: 'redux',
     merge: mergeState,
     slicer: createSlicer,
     serialize: JSON.stringify,
     deserialize: JSON.parse,
-    ...config
+    ...config,
   }
 
   const {
@@ -36,7 +36,7 @@ export default function persistState(paths, config) {
     merge,
     slicer,
     serialize,
-    deserialize
+    deserialize,
   } = cfg
 
   return next => (reducer, initialState, enhancer) => {
@@ -68,8 +68,7 @@ export default function persistState(paths, config) {
           // debugger
           if (key === 'deployer' || key === 'instance') {
             return null
-          }
-          else return value
+          } else return value
         }))
       } catch (e) {
         console.warn('Unable to persist state to localStorage:', e)
