@@ -24,8 +24,12 @@ class App extends Component {
   //   console.log(nextProps)
   // }
 
+  componentDidMount () {
+
+  }
+
   componentDidCatch (error, errorInfo) {
-    // Catch errors in any components below and re-render with error message
+    // Catch errors in any components below and, in the future, re-render with error message
     this.props.logRenderError(error, errorInfo)
   }
 
@@ -37,6 +41,7 @@ class App extends Component {
           <div>
             <Header
               web3Injected={!!this.props.web3}
+              contractInstances={this.props.contractInstances}
             />
             <div className="App-canvas-container">
               <Switch>
@@ -77,26 +82,30 @@ App.propTypes = {
   graph: PropTypes.object,
   deployer: PropTypes.object,
   deploy: PropTypes.func,
+  contractInstances: PropTypes.object,
 }
 
 function mapStateToProps (state) {
   return {
+    // contracts
+    deployer: state.contracts.deployer,
+    contractInstances: state.contracts.instances,
     // grapher
     graph: state.grapher.selectedGraph,
     // web3
     web3: state.web3.injected,
-    deployer: state.web3.deployer,
   }
 }
 
 function mapDispatchToProps (dispatch) {
   return {
+    // contracts
+    deploy: (deployer, contractName, constructorParams) =>
+      dispatch(deploy(deployer, contractName, constructorParams)),
     // renderErrors
     logRenderError: (error, errorInfo) => dispatch(logRenderError(error, errorInfo)),
     // web3
     getWeb3: () => dispatch(getWeb3()),
-    deploy: (contractName, constructorParams) =>
-      dispatch(deploy(contractName, constructorParams)),
   }
 }
 
