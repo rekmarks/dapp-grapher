@@ -1,0 +1,13 @@
+
+.ResourceMenu {
+    height: 100%;
+    width: 160px;
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Stay on top */
+    top: 70px; /* Stay at the top */
+    left: 0;
+    background-color: #222;
+    overflow-x: hidden; /* Disable horizontal scroll */
+    padding-top: 70px;
+    /* transition: 0.5s;*/ /* 0.5 second transition effect to slide in the sidenav */
+}

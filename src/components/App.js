@@ -7,6 +7,8 @@ import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom'
 import ContractForm from './ContractForm'
 import Grapher from './Grapher'
 import Header from './Header'
+import ResourceMenu from './ResourceMenu'
+
 import './style/App.css'
 
 import { logRenderError } from '../redux/reducers/renderErrors'
@@ -38,6 +40,7 @@ class App extends Component {
             <Header
               web3Injected={!!this.props.web3}
             />
+            <ResourceMenu />
             <div className="App-canvas-container">
               <Switch>
                 <Route exact path="/" render={ () => (

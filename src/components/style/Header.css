@@ -6,7 +6,9 @@
   color: white;
   display: flex;
   justify-content: space-between;
-  /*position: fixed;*/
+  z-index: 1;
+  position: fixed;
+  width: 100%;
 }
 
 .Header-title {

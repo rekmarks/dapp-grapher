@@ -92,7 +92,7 @@ const style = {
   height: '100%',
   width: '100%',
   position: 'absolute',
-  left: '0px',
+  left: '160px', // TODO: set dynamically to equal resource menu width
   top: '70px', // TODO: set dynamically to equal header height
   // 'zIndex': '-10',
 }
