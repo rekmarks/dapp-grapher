@@ -22,6 +22,10 @@ class Grapher extends Component {
     const cy = cytoscape(this.props.graph.config)
     cy.zoom(0.9)
     cy.center()
+    cy.on('tap', 'node', function(evt){
+      const node = evt.target
+      console.log( 'tapped ' + node.id() )
+    })
     this.setState({ cy: cy })
   }
 
@@ -31,7 +35,7 @@ class Grapher extends Component {
     }
   }
 
-  // Cytoscape has its own rendered, this decreases React re-renders
+  // Cytoscape has its own renderer, this decreases React re-renders
   shouldComponentUpdate () {
     return false
   }

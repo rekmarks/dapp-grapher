@@ -64,9 +64,7 @@ export default function persistState (paths, config) {
       const subset = slicerFn(state)
 
       try {
-        // debugger
         localStorage.setItem(key, serialize(subset, (key, value) => {
-          // debugger
           if (cfg.excludeKeys.includes(key)) {
             return null
           } else return value
