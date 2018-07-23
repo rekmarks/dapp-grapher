@@ -17,7 +17,7 @@ const initialState = {
 
 const excludeKeys = [
   'deployer',
-  'instance'
+  'instance',
 ]
 
 export {
@@ -25,7 +25,7 @@ export {
   deployThunk as deploy,
   getClearErrorsAction as clearcontractErrors,
   getInitializeDeployerAction,
-  excludeKeys as contractsExcludeKeys
+  excludeKeys as contractsExcludeKeys,
 }
 
 export default function reducer (state = initialState, action) {
