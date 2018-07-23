@@ -5,7 +5,20 @@ import { NavLink } from 'react-router-dom'
 
 import './style/Header.css'
 
-class Header extends Component {
+export default class Header extends Component {
+
+  constructor (props) {
+    super(props)
+    this.state = { storageHref: getStorageHref()}
+  }
+
+  componentDidUpdate (prevProps) {
+
+    if (prevProps.contractInstances !== this.props.contractInstances) {
+      this.setState({ storageHref: getStorageHref()})
+    }
+  }
+
   render () {
     // console.log('Header render', this.props.version)
     return (
@@ -33,6 +46,10 @@ class Header extends Component {
                 to="/contract-form" >
                 Form
               </NavLink>
+              <br/>
+              <a className="Header-nav" href={this.state.storageHref} download="state.json">
+                Download State
+              </a>
             </div>
           </div>
         </header>
@@ -45,6 +62,13 @@ Header.propTypes = {
   web3Injected: PropTypes.bool,
   setCanvas: PropTypes.func,
   canvasComponent: PropTypes.string,
+  contractInstances: PropTypes.object,
 }
 
-export default Header
+/**
+ * encodes persisted storage as an href for downloading
+ * @return {string} href attribute for an HTML anchor
+ */
+function getStorageHref () {
+ return 'data:text/plain;charset=utf-8,' + encodeURIComponent(window.localStorage.getItem('dapp-grapher'))
+}
