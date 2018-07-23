@@ -22,9 +22,9 @@ class Grapher extends Component {
     const cy = cytoscape(this.props.graph.config)
     cy.zoom(0.9)
     cy.center()
-    cy.on('tap', 'node', function(evt){
+    cy.on('tap', 'node', function (evt) {
       const node = evt.target
-      console.log( 'tapped ' + node.id() )
+      console.log('tapped ' + node.id())
     })
     this.setState({ cy: cy })
   }

@@ -49,7 +49,7 @@ export default function reducer (state = initialState, action) {
       return {
         ...state,
         instances: {
-          
+
           ...state.instances,
 
           [action.data.networkId]: {
