@@ -19,7 +19,7 @@ const excludeKeys = [
   'deployer',
   'instance',
   'ready',
-  'contractErrors'
+  'contractErrors',
 ]
 
 export {
