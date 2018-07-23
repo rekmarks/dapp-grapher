@@ -18,6 +18,8 @@ const initialState = {
 const excludeKeys = [
   'deployer',
   'instance',
+  'ready',
+  'contractErrors'
 ]
 
 export {

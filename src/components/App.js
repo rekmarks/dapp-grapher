@@ -95,8 +95,8 @@ function mapDispatchToProps (dispatch) {
     logRenderError: (error, errorInfo) => dispatch(logRenderError(error, errorInfo)),
     // web3
     getWeb3: () => dispatch(getWeb3()),
-    deploy: (deployer, contractName, constructorParams) =>
-      dispatch(deploy(deployer, contractName, constructorParams)),
+    deploy: (contractName, constructorParams) =>
+      dispatch(deploy(contractName, constructorParams)),
   }
 }
 
