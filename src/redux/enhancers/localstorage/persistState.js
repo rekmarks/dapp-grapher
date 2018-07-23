@@ -28,6 +28,7 @@ export default function persistState (paths, config) {
     slicer: createSlicer,
     serialize: JSON.stringify,
     deserialize: JSON.parse,
+    excludeKeys: [], // excludes keys in state from serialization and storage
     ...config,
   }
 
@@ -66,7 +67,7 @@ export default function persistState (paths, config) {
         // debugger
         localStorage.setItem(key, serialize(subset, (key, value) => {
           // debugger
-          if (key === 'deployer' || key === 'instance') {
+          if (cfg.excludeKeys.includes(key)) {
             return null
           } else return value
         }))

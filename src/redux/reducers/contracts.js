@@ -15,11 +15,17 @@ const initialState = {
   contractErrors: [],
 }
 
+const excludeKeys = [
+  'deployer',
+  'instance'
+]
+
 export {
   initializeDeployerThunk as initializeDeployer,
   deployThunk as deploy,
   getClearErrorsAction as clearcontractErrors,
   getInitializeDeployerAction,
+  excludeKeys as contractsExcludeKeys
 }
 
 export default function reducer (state = initialState, action) {

@@ -5,12 +5,14 @@ import { createLogger } from 'redux-logger'
 import thunkMiddleware from 'redux-thunk'
 
 import dappGrapher from './reducers/root'
+import { contractsExcludeKeys } from './reducers/contracts'
 
 const initialState = {}
 const loggerMiddleware = createLogger()
 
 const persistStateConfig = {
   key: 'dapp-grapher',
+  excludeKeys: contractsExcludeKeys,
 }
 
 const enhancer = compose(
