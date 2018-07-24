@@ -1,7 +1,7 @@
 
 import PropTypes from 'prop-types'
 import React, { Component } from 'react'
-import { NavLink } from 'react-router-dom'
+// import { NavLink } from 'react-router-dom'
 
 import './style/Header.css'
 
@@ -26,28 +26,23 @@ export default class Header extends Component {
         <header className="Header">
           <h1 className="Header-title">Dapp Grapher</h1>
           <div className = "Header-items">
-            <div>
-              <p className="Header-info">
+            <div className="Header-info">
+              <p className="Header-info-label">
                 { this.props.web3Injected
                   ? 'Logged in with MetaMask'
                   : 'Please log in with MetaMask'
                 }
               </p>
-              <NavLink
-                className="Header-nav"
-                activeClassName="Header-active-nav"
-                to="/dapp-graph" >
-                Graph
-                </NavLink>
+            </div>
+            <div className="Header-links">
+              <a className="Header-link" href="#" onClick={ event => {
+                event.preventDefault()
+                this.props.openContractForm()
+              }}>
+                Open Contract Form
+              </a>
               {' '}
-              <NavLink
-                className="Header-nav"
-                activeClassName="Header-active-nav"
-                to="/contract-form" >
-                Form
-              </NavLink>
-              <br/>
-              <a className="Header-nav" href={this.state.storageHref} download="state.json">
+              <a className="Header-link" href={this.state.storageHref} download="state.json">
                 Download State
               </a>
             </div>
@@ -63,6 +58,7 @@ Header.propTypes = {
   setCanvas: PropTypes.func,
   canvasComponent: PropTypes.string,
   contractInstances: PropTypes.object,
+  openContractForm: PropTypes.func,
 }
 
 /**

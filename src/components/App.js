@@ -1,17 +1,21 @@
 
 import PropTypes from 'prop-types'
 import React, { Component } from 'react'
+import ReactModal from 'react-modal'
 import { connect } from 'react-redux'
-import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom'
+// import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom'
 
 import ContractForm from './ContractForm'
 import Grapher from './Grapher'
 import Header from './Header'
 import './style/App.css'
 
-import { logRenderError } from '../redux/reducers/renderErrors'
-import { getWeb3 } from '../redux/reducers/web3'
 import { deploy } from '../redux/reducers/contracts'
+import { logRenderError } from '../redux/reducers/renderErrors'
+import { closeContractForm, openContractForm } from '../redux/reducers/ui'
+import { getWeb3 } from '../redux/reducers/web3'
+
+ReactModal.setAppElement('#root')
 
 class App extends Component {
 
@@ -24,10 +28,6 @@ class App extends Component {
   //   console.log(nextProps)
   // }
 
-  componentDidMount () {
-
-  }
-
   componentDidCatch (error, errorInfo) {
     // Catch errors in any components below and, in the future, re-render with error message
     this.props.logRenderError(error, errorInfo)
@@ -37,39 +37,48 @@ class App extends Component {
     // console.log('App render', this.props.web3 && this.props.web3.version)
     return (
       <div className="App">
-        <BrowserRouter>
-          <div>
-            <Header
-              web3Injected={!!this.props.web3}
-              contractInstances={this.props.contractInstances}
-            />
-            <div className="App-canvas-container">
-              <Switch>
-                <Route exact path="/" render={ () => (
-                  <Redirect to="/dapp-graph" />
-                )} />
-                <Route
-                  path="/dapp-graph"
-                  render={
-                    () => <Grapher graph={this.props.graph} /> } />
-                <Route
-                  path="/contract-form"
-                  render={
-                    () => <ContractForm
-                      nodes={this.props.graph.config.elements.nodes}
-                      contractName={this.props.graph.name}
-                      deployer={this.props.deployer}
-                      deploy={this.props.deploy} /> } />
-              </Switch>
-            </div>
+        <div>
+          <Header
+            web3Injected={!!this.props.web3}
+            contractInstances={this.props.contractInstances}
+            openContractForm={this.props.openContractForm}
+          />
+          <div className="App-canvas-container">
+            <ReactModal
+               isOpen={this.props.contractModal}
+               contentLabel="contractModal"
+               onRequestClose={this.props.closeContractForm}
+            >
+              <ContractForm
+                    nodes={this.props.graph.config.elements.nodes}
+                    contractName={this.props.graph.name}
+                    deployer={this.props.deployer}
+                    deploy={this.props.deploy}
+                    closeContractForm={this.props.closeContractForm} />
+            </ReactModal>
+            <Grapher graph={this.props.graph} />
           </div>
-        </BrowserRouter>
+        </div>
       </div>
     )
   }
 }
 
 App.propTypes = {
+  // contracts
+  deployer: PropTypes.object,
+  deploy: PropTypes.func,
+  contractInstances: PropTypes.object,
+  // grapher
+  graph: PropTypes.object,
+  // renderErrors
+  logRenderError: PropTypes.func,
+  // ui
+  contractModal: PropTypes.bool,
+  closeContractForm: PropTypes.func,
+  openContractForm: PropTypes.func,
+  // web3
+  getWeb3: PropTypes.func,
   web3: (props, propName, componentName) => {
     if (props[propName] !== null && typeof props[propName] !== 'object') {
       return new Error(
@@ -77,12 +86,6 @@ App.propTypes = {
       )
     }
   },
-  getWeb3: PropTypes.func,
-  logRenderError: PropTypes.func,
-  graph: PropTypes.object,
-  deployer: PropTypes.object,
-  deploy: PropTypes.func,
-  contractInstances: PropTypes.object,
 }
 
 function mapStateToProps (state) {
@@ -92,6 +95,8 @@ function mapStateToProps (state) {
     contractInstances: state.contracts.instances,
     // grapher
     graph: state.grapher.selectedGraph,
+    // ui
+    contractModal: state.ui.forms.contractForm,
     // web3
     web3: state.web3.injected,
   }
@@ -104,6 +109,9 @@ function mapDispatchToProps (dispatch) {
       dispatch(deploy(deployer, contractName, constructorParams)),
     // renderErrors
     logRenderError: (error, errorInfo) => dispatch(logRenderError(error, errorInfo)),
+    // ui
+    closeContractForm: () => dispatch(closeContractForm()),
+    openContractForm: () => dispatch(openContractForm()),
     // web3
     getWeb3: () => dispatch(getWeb3()),
   }
