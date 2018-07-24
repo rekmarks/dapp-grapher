@@ -45,6 +45,7 @@ class App extends Component {
             contractInstances={this.props.contractInstances}
             openContractForm={this.props.openContractForm}
           />
+          <ResourceMenu />
           <div className="App-canvas-container">
             <ReactModal
                isOpen={this.props.contractModal}
