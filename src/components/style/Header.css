@@ -1,14 +1,16 @@
 
 .Header {
   background-color: #222;
-  height: 70px;
+  height: 90px;
   padding: 20px;
   color: white;
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   z-index: 1;
   position: fixed;
   width: 100%;
+  align-items: center;
 }
 
 .Header-title {
@@ -17,20 +19,28 @@
 }
 
 .Header-items {
-  justify-content: space-between;
-  align-self: center;
+  flex-direction: column;
 }
 
 .Header-info {
-  font-size: 1.0em;
-  /*align-self: center;*/
+  flex-direction: row;
+  justify-content: flex-end;
 }
 
-.Header-nav {
+.Header-info-label {
+  font-size: 1.0em;
+}
+
+.Header-links {
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.Header-link {
   color: white;
   text-decoration: underline;
 }
 
-.Header-active-nav {
+.Header-active-link {
   color: red;
 }

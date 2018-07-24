@@ -42,10 +42,13 @@ export default class ContractForm extends Component {
                 uiSchema={this.state.formData.uiSchema}
                 onChange={log('changed')}
                 onSubmit={
-                  (formData) => (this.props.deploy(
-                    formData.schema.title,
-                    Object.values(formData.formData)
-                  ))
+                  (formData) => {
+                    this.props.deploy(
+                      formData.schema.title,
+                      Object.values(formData.formData)
+                    )
+                    this.props.closeContractForm()
+                  }
                 }
                 onError={log('errors')} />
             : ''
@@ -59,6 +62,7 @@ ContractForm.propTypes = {
   nodes: PropTypes.array,
   contractName: PropTypes.string,
   deploy: PropTypes.func,
+  closeContractForm: PropTypes.func,
 }
 
 /* helper functions */
