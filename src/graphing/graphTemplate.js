@@ -91,9 +91,9 @@ const config = {
 const style = {
   height: '100%',
   width: '100%',
-  position: 'absolute',
-  left: '160px', // TODO: set dynamically to equal resource menu width
-  top: '90px', // TODO: set dynamically to equal header height
+  position: 'fixed',
+  paddingLeft: '160px', // TODO: set dynamically to equal resource menu width
+  paddingTop: '90px', // TODO: set dynamically to equal header height
   // 'zIndex': '-10',
 }
 

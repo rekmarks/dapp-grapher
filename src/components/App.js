@@ -51,6 +51,8 @@ class App extends Component {
                isOpen={this.props.contractModal}
                contentLabel="contractModal"
                onRequestClose={this.props.closeContractForm}
+               overlayClassName='App-modal-overlay'
+               className='App-modal-content'
             >
               <ContractForm
                     nodes={this.props.graph.config.elements.nodes}
