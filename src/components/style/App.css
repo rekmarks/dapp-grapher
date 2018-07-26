@@ -7,6 +7,10 @@
   font-size: large;
 }
 
+.App-static-container {
+  flex-direction: row;
+}
+
 .App-modal-overlay {
   position: fixed;
   top: 0;
@@ -14,7 +18,7 @@
   right: 0;
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.75);
-  z-index: 3;
+  z-index: 90;
 }
 
 .App-modal-content {
@@ -27,9 +31,9 @@
   background-color: #fff;
   opacity: 1;
   overflow: auto;
-  /*WebkitOverflowScrolling: touch;*/
+  /*WebkitOverflowScrolling: touch;*/ /* doesn't work, what does it do? */
   border-radius: 4px;
   outline: none;
   padding: 20px;
-  z-index: 4;
+  z-index: 91;
 }

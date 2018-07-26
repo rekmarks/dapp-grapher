@@ -1,12 +1,79 @@
 
 .ResourceMenu {
-    height: 100%;
-    padding-top: 90px;
-    display: flex;
-    width: 160px;
-    position: fixed; /* Stay in place */
-    z-index: 1; /* Stay on top */
-    background-color: #222;
-    overflow-x: hidden; /* Disable horizontal scroll */
-    /* transition: 0.5s;*/ /* 0.5 second transition effect to slide in the sidenav */
+  height: 100%;
+  margin-top: 90px;
+  width: 180px;
+  position: fixed; /* Stay in place */
+  z-index: 1; /* Stay on top */
+  background-color: #666;
+  overflow-x: hidden; /* Disable horizontal scroll */
+  transition: 0.5s; /* 0.5 second transition effect to slide in the sidenav */
+  display: flex;
+  flex-direction: column;
+}
+
+.ResourceMenu::-webkit-scrollbar { 
+    display: none; 
+}
+
+.rc-collapse {
+  background-color: #666;
+  border-radius: 0px;
+  border: 1px solid black;
+}
+
+.rc-collapse > .rc-collapse-item > .rc-collapse-header {
+  height: 38px;
+  line-height: 38px;
+  text-indent: 16px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.rc-collapse > .rc-collapse-item {
+  border-top: 1px solid black;
+}
+
+.rc-collapse > .rc-collapse-item > .rc-collapse-header .arrow {
+  display: inline-block;
+  content: '\20';
+  width: 0;
+  height: 0;
+  font-size: 0;
+  line-height: 0;
+  border-top: 2px solid black;
+  border-bottom: 2px solid black;
+  border-left: 4px solid #666;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+.rc-collapse-content {
+  overflow: hidden;
+  color: #666;
+  padding: 0 16px;
+  background-color: #888;
+}
+.rc-collapse-content > .rc-collapse-content-box {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.ResourceMenu-collapse-header {
+  color: #fff;
+  border-radius: 0px;
+  border: 0px;
+  background-color: #666;
+}
+
+.ResourceMenu-panel-outer {
+  color: #fff;
+  background-color: #666;
+  border: solid 1px black;
+  border-radius: 0px;
+}
+
+.ResourceMenu-link {
+  color: white;
+  text-decoration: underline;
 }

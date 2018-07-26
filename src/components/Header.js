@@ -24,7 +24,9 @@ export default class Header extends Component {
     return (
       <div>
         <header className="Header">
-          <h1 className="Header-title">Dapp Grapher</h1>
+          <div>
+            <h1 className="Header-title">Dapp Grapher</h1>
+          </div>
           <div className = "Header-items">
             <div className="Header-info">
               <p className="Header-info-label">

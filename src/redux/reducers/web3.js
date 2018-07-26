@@ -193,7 +193,8 @@ function getWeb3AccountThunk (web3) {
     let accounts, networkId
     try {
       accounts = await web3.eth.getAccounts()
-      networkId = await web3.eth.net.getId()
+      const _networkId = await web3.eth.net.getId()
+      networkId = _networkId.toString()
     } catch (error) {
       dispatch(getAccountFailureAction(error))
       return

@@ -39,30 +39,36 @@ class App extends Component {
     // console.log('App render', this.props.web3 && this.props.web3.version)
     return (
       <div className="App">
-        <div>
+        <div className="App-static-container" >
           <Header
             web3Injected={!!this.props.web3}
             contractInstances={this.props.contractInstances}
             openContractForm={this.props.openContractForm}
           />
-          <ResourceMenu />
-          <div className="App-canvas-container">
-            <ReactModal
-               isOpen={this.props.contractModal}
-               contentLabel="contractModal"
-               onRequestClose={this.props.closeContractForm}
-               overlayClassName='App-modal-overlay'
-               className='App-modal-content'
-            >
-              <ContractForm
-                    nodes={this.props.graph.config.elements.nodes}
-                    contractName={this.props.graph.name}
-                    deployer={this.props.deployer}
-                    deploy={this.props.deploy}
-                    closeContractForm={this.props.closeContractForm} />
-            </ReactModal>
-            <Grapher graph={this.props.graph} />
-          </div>
+          <ResourceMenu
+            account={this.props.account}
+            networkId={this.props.networkId}
+            contractTypes={this.props.contractTypes}
+            contractInstances={this.props.contractInstances} />
+        </div>
+        <div className="App-canvas-container" >
+          <Grapher graph={this.props.graph} />
+        </div>
+        <div className="App-modal-container" >
+          <ReactModal
+                 isOpen={this.props.contractModal}
+             contentLabel="contractModal"
+             onRequestClose={this.props.closeContractForm}
+             overlayClassName="App-modal-overlay"
+             className="App-modal-content"
+          >
+            <ContractForm
+                  nodes={this.props.graph.config.elements.nodes}
+                  contractName={this.props.graph.name}
+                  deployer={this.props.deployer}
+                  deploy={this.props.deploy}
+                  closeContractForm={this.props.closeContractForm} />
+          </ReactModal>
         </div>
       </div>
     )
@@ -74,6 +80,7 @@ App.propTypes = {
   deployer: PropTypes.object,
   deploy: PropTypes.func,
   contractInstances: PropTypes.object,
+  contractTypes: PropTypes.object,
   // grapher
   graph: PropTypes.object,
   // renderErrors
@@ -83,6 +90,8 @@ App.propTypes = {
   closeContractForm: PropTypes.func,
   openContractForm: PropTypes.func,
   // web3
+  account: PropTypes.string,
+  networkId: PropTypes.string,
   getWeb3: PropTypes.func,
   web3: (props, propName, componentName) => {
     if (props[propName] !== null && typeof props[propName] !== 'object') {
@@ -98,11 +107,14 @@ function mapStateToProps (state) {
     // contracts
     deployer: state.contracts.deployer,
     contractInstances: state.contracts.instances,
+    contractTypes: state.contracts.deployer ? state.contracts.deployer.contractTypes : null,
     // grapher
     graph: state.grapher.selectedGraph,
     // ui
     contractModal: state.ui.forms.contractForm,
     // web3
+    account: state.web3.account,
+    networkId: state.web3.networkId,
     web3: state.web3.injected,
   }
 }

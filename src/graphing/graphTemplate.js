@@ -30,17 +30,18 @@ const config = {
   // interaction options:
   autounselectify: false,
   boxSelectionEnabled: false,
-  // minZoom: 1e-50,
-  // maxZoom: 1e50,
-  // zoomingEnabled: true,
-  // userZoomingEnabled: true,
-  // panningEnabled: true,
-  // userPanningEnabled: true,
-  // selectionType: 'single',
-  // touchTapThreshold: 8,
-  // desktopTapThreshold: 4,
-  // autolock: false,
-  // autoungrabify: false,
+  minZoom: 0.1,
+  maxZoom: 1.25,
+  zoomingEnabled: true,
+  userZoomingEnabled: true,
+  wheelSensitivity: 0.1,
+  panningEnabled: true,
+  userPanningEnabled: true,
+  selectionType: 'single',
+  touchTapThreshold: 8,
+  desktopTapThreshold: 4,
+  autolock: false,
+  autoungrabify: false,
 
   style: [
     {
@@ -49,6 +50,8 @@ const config = {
         'content': 'data(nodeName)', // usually data(id), but we want the name
         'text-valign': 'center',
         'text-halign': 'center',
+        'background-color': '#242423',
+        'color': '#F8F8F8',
       },
     },
     {
@@ -60,7 +63,8 @@ const config = {
         'padding-right': '10px',
         'text-valign': 'top',
         'text-halign': 'center',
-        'background-color': '#bbb',
+        'background-color': '#434039',
+        'color': '#222',
       },
     },
     {
@@ -92,9 +96,10 @@ const style = {
   height: '100%',
   width: '100%',
   position: 'fixed',
-  paddingLeft: '160px', // TODO: set dynamically to equal resource menu width
+  paddingLeft: '180px', // TODO: set dynamically to equal resource menu width
   paddingTop: '90px', // TODO: set dynamically to equal header height
-  // 'zIndex': '-10',
+  backgroundColor: '#F8F8F8',
+  // 'zIndex': '-10', // doesn't seem to do anything
 }
 
 const template = {
