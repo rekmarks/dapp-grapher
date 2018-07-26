@@ -3,8 +3,7 @@
 const assert = require('assert')
 const util = require('util')
 
-import Deployer from 'chain-end'
-import { contracts } from 'chain-end'
+import { Deployer, deploy, contracts } from 'chain-end'
 import parse from '../graphing/contractParser'
 
 const StandardERC20_JSON = contracts.StandardERC20

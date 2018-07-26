@@ -37,13 +37,6 @@ export default class Header extends Component {
               </p>
             </div>
             <div className="Header-links">
-              <a className="Header-link" href="#" onClick={ event => {
-                event.preventDefault()
-                this.props.openContractForm()
-              }}>
-                Open Contract Form
-              </a>
-              {' '}
               <a className="Header-link" href={this.state.storageHref} download="state.json">
                 Download State
               </a>
@@ -60,7 +53,6 @@ Header.propTypes = {
   setCanvas: PropTypes.func,
   canvasComponent: PropTypes.string,
   contractInstances: PropTypes.object,
-  openContractForm: PropTypes.func,
 }
 
 /**

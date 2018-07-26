@@ -34,9 +34,9 @@
 }
 
 .Header-links {
-  /*display: flex; // eliminates space between for some reason
+  display: flex; // eliminates space between for some reason
   flex-direction: row;
-  justify-content: space-between;*/
+  justify-content: flex-end;
 }
 
 .Header-link {

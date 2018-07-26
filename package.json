@@ -31,9 +31,11 @@
   },
   "homepage": "https://github.com/rekmarks/dapp-grapher#readme",
   "dependencies": {
+    "ajv": "^6.5.2",
     "bootstrap": "^3.3.7",
-    "chain-end": "^0.2.0",
+    "chain-end": "^0.3.0",
     "cytoscape": "^3.2.14",
+    "eslint": "^5.2.0",
     "immutable": "^3.8.2",
     "lodash": "^4.17.10",
     "rc-collapse": "^1.9.3",
@@ -48,11 +50,9 @@
     "redux": "^4.0.0",
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.3.0",
-    "truffle-contract": "^3.0.6",
     "web3": "^1.0.0-beta.34"
   },
   "devDependencies": {
-    "eslint": "^5.1.0",
     "eslint-plugin-chai": "0.0.1",
     "eslint-plugin-json": "^1.2.0",
     "eslint-plugin-mocha": "^5.1.0",

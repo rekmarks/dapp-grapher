@@ -43,7 +43,6 @@ class App extends Component {
           <Header
             web3Injected={!!this.props.web3}
             contractInstances={this.props.contractInstances}
-            openContractForm={this.props.openContractForm}
           />
           <ResourceMenu
             account={this.props.account}
@@ -67,7 +66,6 @@ class App extends Component {
             <ContractForm
                   nodes={this.props.graph.config.elements.nodes}
                   contractName={this.props.graph.name}
-                  deployer={this.props.deployer}
                   deploy={this.props.deploy}
                   closeContractForm={this.props.closeContractForm} />
           </ReactModal>
@@ -79,7 +77,6 @@ class App extends Component {
 
 App.propTypes = {
   // contracts
-  deployer: PropTypes.object,
   deploy: PropTypes.func,
   contractInstances: PropTypes.object,
   contractTypes: PropTypes.object,
@@ -107,9 +104,8 @@ App.propTypes = {
 function mapStateToProps (state) {
   return {
     // contracts
-    deployer: state.contracts.deployer,
     contractInstances: state.contracts.instances,
-    contractTypes: state.contracts.deployer ? state.contracts.deployer.contractTypes : null,
+    contractTypes: state.contracts.contractTypes,
     // grapher
     graph: state.grapher.selectedGraph,
     // ui
@@ -124,8 +120,8 @@ function mapStateToProps (state) {
 function mapDispatchToProps (dispatch) {
   return {
     // contracts
-    deploy: (deployer, contractName, constructorParams) =>
-      dispatch(deploy(deployer, contractName, constructorParams)),
+    deploy: (contractName, constructorParams) =>
+      dispatch(deploy(contractName, constructorParams)),
     // renderErrors
     logRenderError: (error, errorInfo) => dispatch(logRenderError(error, errorInfo)),
     // ui

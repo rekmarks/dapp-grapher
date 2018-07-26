@@ -1,24 +1,22 @@
 
-import { Deployer, contracts } from 'chain-end'
+import { contracts, deploy as _deploy } from 'chain-end'
 
 const ACTIONS = {
   ADD_CONTRACT_TYPE: 'CONTRACTS:ADD_CONTRACT_TYPE',
+  REMOVE_CONTRACT_TYPE: 'CONTRACTS:REMOVE_CONTRACT_TYPE',
   CLEAR_ERRORS: 'CONTRACTS:CLEAR_ERRORS',
   DEPLOY: 'CONTRACTS:DEPLOY',
   DEPLOYMENT_SUCCESS: 'CONTRACTS:DEPLOYMENT_SUCCESS',
   DEPLOYMENT_FAILURE: 'CONTRACTS:DEPLOYMENT_FAILURE',
-  INITIALIZE_DEPLOYER: 'CONTRACTS:INITIALIZE_DEPLOYER',
 }
 
 const initialState = {
-  contractTypes: contracts,
-  deployer: null,
   instances: {},
-  contractErrors: [],
+  types: contracts,
+  contractErrors: null,
 }
 
 const excludeKeys = [
-  'deployer',
   'instance',
   'ready',
   'contractErrors',
@@ -26,10 +24,9 @@ const excludeKeys = [
 
 export {
   addContractTypeThunk as addContractType,
-  initializeDeployerThunk as initializeDeployer,
+  getRemoveContractTypeAction as removeContractType,
   deployThunk as deploy,
   getClearErrorsAction as clearcontractErrors,
-  getInitializeDeployerAction,
   excludeKeys as contractsExcludeKeys,
 }
 
@@ -40,17 +37,22 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.ADD_CONTRACT_TYPE:
       return {
         ...state,
-        contracts: {
-          ...state.contracts,
+        types: {
+          ...state.types,
           [action.contractName]: action.contract,
         },
       }
 
-    case ACTIONS.INITIALIZE_DEPLOYER:
-      return {
-        ...state,
-        deployer: action.deployer,
+    case ACTIONS.REMOVE_CONTRACT_TYPE:
+
+      if (!state.contracts.types[action.contractName]) {
+        console.warn(ACTIONS.REMOVE_CONTRACT_TYPE + ': type not found')
+        return state
       }
+
+      const newState = { ...state }
+      delete newState.types[action.contractName]
+      return newState
 
     case ACTIONS.DEPLOY:
       return {
@@ -82,13 +84,16 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.DEPLOYMENT_FAILURE:
       return {
         ...state,
-        contractErrors: state.contractErrors.concat([action.error]),
+        contractErrors: 
+          state.contractErrors
+          ? state.contractErrors.concat([action.error])
+          : [action.error]
     }
 
     case ACTIONS.CLEAR_ERRORS:
       return {
         ...state,
-        contractErrors: [],
+        contractErrors: null,
       }
 
     default:
@@ -97,18 +102,6 @@ export default function reducer (state = initialState, action) {
 }
 
 /* Synchronous action creators */
-
-function initializeDeployerThunk () {
-
-  return (dispatch, getState) => {
-
-    const state = getState()
-
-    const deployer = new Deployer(state.web3.provider, state.web3.account)
-
-    dispatch(getInitializeDeployerAction(deployer))
-  }
-}
 
 function addContractTypeThunk (contractName) {
 
@@ -129,10 +122,10 @@ function getAddContractTypeAction (contractName, contract) {
   }
 }
 
-function getInitializeDeployerAction (deployer) {
+function getRemoveContractTypeAction (contractName) {
   return {
-    type: ACTIONS.INITIALIZE_DEPLOYER,
-    deployer: deployer,
+    type: ACTIONS.REMOVE_CONTRACT_TYPE,
+    contractName: contractName,
   }
 }
 
@@ -177,23 +170,32 @@ function deployThunk (contractName, constructorParams) {
     dispatch(getDeployAction())
 
     const state = getState()
-    const deployer = state.contracts.deployer
+    const provider = state.web3.provider
     const account = state.web3.account
+    const contractJSON = state.contracts.types[contractName]
 
-    if (!deployer) {
-      dispatch(getDeploymentFailureAction(new Error('deployer not initialized')))
+    if (!provider) {
+      dispatch(getDeploymentFailureAction(new Error('missing web3 provider')))
       return
     }
     if (!account) {
       dispatch(getDeploymentFailureAction(new Error('missing web3 account')))
       return
     }
-
-    deployer.setAccount(account)
+    if (!contractJSON) {
+      dispatch(getDeploymentFailureAction(new Error(
+        'no contract found of type ' + contractName)))
+      return
+    }
 
     let instance
     try {
-      instance = await deployer.deploy(contractName, constructorParams)
+      instance = await _deploy(
+        contractJSON,
+        constructorParams,
+        state.web3.provider,
+        account
+      )
     } catch (error) {
       dispatch(getDeploymentFailureAction(error))
       return
