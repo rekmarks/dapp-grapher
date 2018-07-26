@@ -22,7 +22,8 @@ import graphTemplate from './graphTemplate'
  *                               containing:
  *                                 0  the complete ABI
  *                                 1  constructor parameters
- * @return {object}              the elements for a Cytoscape graph
+ * @return {object}              a Cytoscape graph with config and style
+ *                               properties
  */
 export default function parseContract (contract, mode) {
 
@@ -59,12 +60,12 @@ function getNodes (contractName, abi, mode) {
   switch (mode) {
     case 0:
       contractNode.data.type = 'contract'
-      contractNode.data.subType = 'completeAbi'
+      contractNode.data.abi = 'complete'
       abi.forEach(entry => nodes.push(getNodeAll(contractName, entry)))
       break
     case 1:
       contractNode.data.type = 'contract'
-      contractNode.data.subType = 'constructor'
+      contractNode.data.abi = 'constructor'
       nodes = nodes.concat(getConstructorNodes(contractName, abi))
       break
     default:

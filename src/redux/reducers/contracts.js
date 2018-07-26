@@ -1,15 +1,17 @@
 
-import { Deployer } from 'chain-end'
+import { Deployer, contracts } from 'chain-end'
 
 const ACTIONS = {
-  INITIALIZE_DEPLOYER: 'CONTRACTS:INITIALIZE_DEPLOYER',
+  ADD_CONTRACT_TYPE: 'CONTRACTS:ADD_CONTRACT_TYPE',
+  CLEAR_ERRORS: 'CONTRACTS:CLEAR_ERRORS',
   DEPLOY: 'CONTRACTS:DEPLOY',
   DEPLOYMENT_SUCCESS: 'CONTRACTS:DEPLOYMENT_SUCCESS',
   DEPLOYMENT_FAILURE: 'CONTRACTS:DEPLOYMENT_FAILURE',
-  CLEAR_ERRORS: 'CONTRACTS:CLEAR_ERRORS',
+  INITIALIZE_DEPLOYER: 'CONTRACTS:INITIALIZE_DEPLOYER',
 }
 
 const initialState = {
+  contractTypes: contracts,
   deployer: null,
   instances: {},
   contractErrors: [],
@@ -23,6 +25,7 @@ const excludeKeys = [
 ]
 
 export {
+  addContractTypeThunk as addContractType,
   initializeDeployerThunk as initializeDeployer,
   deployThunk as deploy,
   getClearErrorsAction as clearcontractErrors,
@@ -33,6 +36,15 @@ export {
 export default function reducer (state = initialState, action) {
 
   switch (action.type) {
+
+    case ACTIONS.ADD_CONTRACT_TYPE:
+      return {
+        ...state,
+        contracts: {
+          ...state.contracts,
+          [action.contractName]: action.contract,
+        },
+      }
 
     case ACTIONS.INITIALIZE_DEPLOYER:
       return {
@@ -98,6 +110,25 @@ function initializeDeployerThunk () {
   }
 }
 
+function addContractTypeThunk (contractName) {
+
+  // TODO
+  return (dispatch, getState) => {
+
+    const contract = 'sune'
+
+    dispatch(getAddContractTypeAction(contractName, contract))
+  }
+}
+
+function getAddContractTypeAction (contractName, contract) {
+  return {
+    type: ACTIONS.ADD_CONTRACT_TYPE,
+    contractName: contractName,
+    contract: contract,
+  }
+}
+
 function getInitializeDeployerAction (deployer) {
   return {
     type: ACTIONS.INITIALIZE_DEPLOYER,
@@ -147,14 +178,21 @@ function deployThunk (contractName, constructorParams) {
 
     const state = getState()
     const deployer = state.contracts.deployer
+    const account = state.web3.account
+
     if (!deployer) {
       dispatch(getDeploymentFailureAction(new Error('deployer not initialized')))
       return
     }
+    if (!account) {
+      dispatch(getDeploymentFailureAction(new Error('missing web3 account')))
+      return
+    }
 
-    let instance, account
+    deployer.setAccount(account)
+
+    let instance
     try {
-      account = deployer.config.account
       instance = await deployer.deploy(contractName, constructorParams)
     } catch (error) {
       dispatch(getDeploymentFailureAction(error))

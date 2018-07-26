@@ -52,7 +52,9 @@ class App extends Component {
             contractInstances={this.props.contractInstances} />
         </div>
         <div className="App-canvas-container" >
-          <Grapher graph={this.props.graph} />
+          <Grapher
+            graph={this.props.graph}
+            openContractForm={this.props.openContractForm} />
         </div>
         <div className="App-modal-container" >
           <ReactModal

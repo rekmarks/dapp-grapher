@@ -51,7 +51,6 @@ function getCloseContractFormModalAction () {
 }
 
 function getOpenContractFormModalAction () {
-  console.log('opening a modal')
   return {
     type: ACTIONS.OPEN_CONTRACT_FORM_MODAL,
   }

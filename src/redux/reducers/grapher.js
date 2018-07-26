@@ -1,24 +1,26 @@
 
+import { contracts } from 'chain-end'
+
 import parse from '../../graphing/contractParser'
-import graphTemplate from '../../graphing/graphTemplate'
-import { contracts } from 'chain-end' // this might be a little beefy one day
 
 // dev-temp - this will all happen as a result of user action
 const testGraph = parse(contracts.StandardERC20, 1)
 // dev-temp
 
 const ACTIONS = {
-  PARSE_CONTRACT: 'PARSER:PARSE_CONTRACT',
+  PARSE_CONTRACT: 'GRAPHER:PARSE_CONTRACT',
+  SELECT_GRAPH: 'GRAPHER:SELECT_GRAPH',
 }
 
 const initialState = {
-  contracts: contracts,
+  contractTypes: contracts,
   selectedGraph: testGraph, // null
-  contractGraphs: [testGraph], // []
+  graphs: {testGraph}, // {}
 }
 
 export {
   getParseContractAction,
+  selectGraphThunk as selectGraph,
 }
 
 export default function reducer (state = initialState, action) {
@@ -27,18 +29,18 @@ export default function reducer (state = initialState, action) {
 
     case ACTIONS.PARSE_CONTRACT:
 
-      // TODO: disallow re-parsing contracts
-        // i.e. create a normalized schema for storing parsed contracts
-
-      // TODO: allow user to select parsing mode
-      const contractGraph = {...graphTemplate}
-      contractGraph.config.elements = parse(action.contract, 1)
-      contractGraph.name = action.contract.contractName
-
       return {
         ...state,
-        selectedGraph: contractGraph,
-        contractGraphs: state.contractGraphs.concat([contractGraph]),
+        graphs: {
+          ...state.graphs,
+          [action.contractGraph.name]: action.contractGraph,
+        },
+      }
+
+    case ACTIONS.SELECT_GRAPH:
+      return {
+        ...state,
+        selectedGraph: state.graphs[action.graphName],
       }
 
     default:
@@ -48,9 +50,38 @@ export default function reducer (state = initialState, action) {
 
 /* Synchronous action creators */
 
-function getParseContractAction (contract) {
+function getParseContractAction (contractGraph) {
   return {
     type: ACTIONS.PARSE_CONTRACT,
-    contract: contract,
+    contractGraph: contractGraph,
+  }
+}
+
+function getSelectGraphAction (graphName) {
+  return {
+    type: ACTIONS.SELECT_GRAPH,
+    graphName: graphName,
+  }
+}
+
+function selectGraphThunk (graphName) {
+
+  return (dispatch, getState) => {
+
+    const state = getState()
+
+    state.grapher.graphs.forEach(graph => {
+      if (graph.name === graphName) {
+
+      }
+    })
+
+    dispatch(getSelectGraphAction(graphName))
+
+    if (Object.keys(state.grapher.graphs).includes(graphName)) {
+      console.log('Contract graph found with key: ' + graphName)
+    } else {
+      console.log('No contract graph found with key: ' + graphName)
+    }
   }
 }

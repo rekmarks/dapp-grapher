@@ -22,9 +22,15 @@ class Grapher extends Component {
     const cy = cytoscape(this.props.graph.config)
     cy.zoom(0.9)
     cy.center()
-    cy.on('tap', 'node', function (evt) {
-      const node = evt.target
-      console.log('tapped ' + node.id())
+
+    // handle opening contract form
+    cy.on('taphold', 'node', (event) => {
+
+      const node = event.target
+
+      if (node.data().type === 'contract') {
+        this.props.openContractForm()
+      }
     })
     this.setState({ cy: cy })
   }
@@ -50,6 +56,7 @@ class Grapher extends Component {
 
 Grapher.propTypes = {
   graph: PropTypes.object,
+  openContractForm: PropTypes.func,
 }
 
 export default Grapher
