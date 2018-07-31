@@ -1,7 +1,6 @@
 
 .ResourceMenu {
   height: 100%;
-  margin-top: 90px;
   width: 180px;
   position: fixed; /* Stay in place */
   z-index: 1; /* Stay on top */

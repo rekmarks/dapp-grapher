@@ -5,7 +5,7 @@
 
 .App-rows {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
 }
 
 .App-top-row {
@@ -17,6 +17,12 @@
   display: flex;
   flex-direction: row;
   justify-content: flex-start;
+  height: 100vh;
+}
+
+.App-ResourceMenu-container {
+  display: flex;
+  flex-direction: column;
 }
 
 .App-graph-container {
@@ -28,8 +34,8 @@
 .App-no-graph-label {
   align-self: center;
   margin: auto;
-  padding-top: 150px;
-  padding-left: 450px;
+/*  padding-top: 150px;
+  padding-left: 450px;*/
 }
 
 .App-modal-overlay {

@@ -51,7 +51,7 @@ class App extends Component {
             />
           </div>
           <div className="App-bottom-row" >
-            <div className="App-resourceMenu-container" >
+            <div className="App-ResourceMenu-container" >
               <ResourceMenu
               account={this.props.account}
               networkId={this.props.networkId}

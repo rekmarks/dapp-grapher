@@ -22,7 +22,7 @@ export default class Header extends Component {
   render () {
     // console.log('Header render', this.props.version)
     return (
-      <div>
+      <div className="Header-container">
         <header className="Header">
           <div>
             <h1 className="Header-title">Dapp Grapher</h1>

@@ -1,15 +1,18 @@
 
+.Header-container {
+  display: flex;
+  height: 90px;
+}
+
 .Header {
   display: flex;
   background-color: #333;
-  height: 90px;
   color: white;
   flex-direction: row;
   justify-content: space-between;
   align-items: center;
   z-index: 2;
-  position: fixed;
-  width: 100%;
+  flex: 1 1 auto;
 }
 
 .Header-title {
