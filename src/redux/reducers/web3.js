@@ -23,6 +23,7 @@ const initialState = {
 export {
   getWeb3Thunk as getWeb3,
   getClearErrorsAction as clearweb3Errorss,
+  initialState as web3InitialState,
 }
 
 export default function reducer (state = initialState, action) {

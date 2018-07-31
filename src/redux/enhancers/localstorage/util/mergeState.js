@@ -3,7 +3,9 @@
  */
 
 export default function mergeState (initialState, persistedState) {
-  return persistedState
-    ? {...initialState, ...persistedState}
-    : initialState
+  const merged = {}
+  Object.keys(initialState).forEach(key => {
+    merged[key] = {...initialState[key], ...persistedState[key]}
+  })
+  return merged
 }

@@ -13,6 +13,7 @@ const initialState = {
 export {
   getCloseContractFormModalAction as closeContractForm,
   getOpenContractFormModalAction as openContractForm,
+  initialState as uiInitialState,
 }
 
 export default function reducer (state = initialState, action) {

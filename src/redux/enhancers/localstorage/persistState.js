@@ -66,7 +66,7 @@ export default function persistState (paths, config) {
       try {
         localStorage.setItem(key, serialize(subset, (key, value) => {
           if (cfg.excludeKeys.includes(key)) {
-            return null
+            return undefined
           } else return value
         }))
       } catch (e) {

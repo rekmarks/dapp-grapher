@@ -15,9 +15,32 @@
 export default function getSubset (obj, paths) {
   const subset = {}
 
-  paths.forEach((key) => {
-    const slice = obj[key]
-    if (slice) subset[key] = slice
+  paths.forEach(key => {
+
+    let branch
+    if (key.indexOf('.') === -1) {
+
+      branch = obj[key]
+      if (branch) subset[key] = branch
+
+    } else {
+
+      const splitKey = key.split('.')
+
+      // get target nested property
+      const topKey = splitKey.shift()
+      branch = {...obj[topKey]}
+      splitKey.forEach(subKey => {
+        branch = branch[subKey]
+      })
+
+      // rebuild path as object and add branch if it exists
+      splitKey.reverse()
+      splitKey.forEach(subKey => {
+        branch = { [subKey]: branch}
+      })
+      if (branch) subset[topKey] = branch
+    }
   })
 
   return subset

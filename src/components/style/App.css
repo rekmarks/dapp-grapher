@@ -1,14 +1,35 @@
 
 .App {
+  
+}
+
+.App-rows {
   display: flex;
-}
-
-.App-intro {
-  font-size: large;
-}
-
-.App-static-container {
   flex-direction: row;
+}
+
+.App-top-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.App-bottom-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.App-graph-container {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: row;
+}
+
+.App-no-graph-label {
+  align-self: center;
+  margin: auto;
+  padding-top: 150px;
+  padding-left: 450px;
 }
 
 .App-modal-overlay {

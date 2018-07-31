@@ -1,33 +1,49 @@
 
-import { contracts, deploy as _deploy } from 'chain-end'
+import { contracts as defaultContracts, deploy as _deploy } from 'chain-end'
+
+import { removeGraph } from './grapher'
 
 const ACTIONS = {
   ADD_CONTRACT_TYPE: 'CONTRACTS:ADD_CONTRACT_TYPE',
+  ADD_GRAPH_ID: 'CONTRACTS:ADD_GRAPH_ID',
   REMOVE_CONTRACT_TYPE: 'CONTRACTS:REMOVE_CONTRACT_TYPE',
   CLEAR_ERRORS: 'CONTRACTS:CLEAR_ERRORS',
   DEPLOY: 'CONTRACTS:DEPLOY',
   DEPLOYMENT_SUCCESS: 'CONTRACTS:DEPLOYMENT_SUCCESS',
   DEPLOYMENT_FAILURE: 'CONTRACTS:DEPLOYMENT_FAILURE',
+  LOG_ERROR: 'CONTRACTS:LOG_ERROR',
 }
+
+const contracts = {}
+Object.entries(defaultContracts).forEach(([key, value]) => {
+  contracts[key] = {
+    constructorGraphId: null,
+    deployedGraphId: null,
+    artifact: value,
+  }
+})
 
 const initialState = {
   instances: {},
-  types: contracts,
-  contractErrors: null,
+  types: contracts, // TODO: store these by a unique id, not name?
+  errors: null,
+  ready: true, // TODO: use to prevent deploying while waiting?
 }
 
 const excludeKeys = [
   'instance',
   'ready',
-  'contractErrors',
+  'errors',
 ]
 
 export {
   addContractTypeThunk as addContractType,
-  getRemoveContractTypeAction as removeContractType,
+  getAddGraphIdAction as addContractGraphId,
+  removeContractTypeThunk as removeContractType,
   deployThunk as deploy,
-  getClearErrorsAction as clearcontractErrors,
+  getClearErrorsAction as clearerrors,
   excludeKeys as contractsExcludeKeys,
+  initialState as contractsInitialState,
 }
 
 export default function reducer (state = initialState, action) {
@@ -39,7 +55,23 @@ export default function reducer (state = initialState, action) {
         ...state,
         types: {
           ...state.types,
-          [action.contractName]: action.contract,
+          [action.contractName]: {
+            artifact: action.artifact,
+            constructorGraphId: null,
+            deployedGraphId: null,
+          },
+        },
+      }
+
+    case ACTIONS.ADD_GRAPH_ID:
+      return {
+        ...state,
+        types: {
+          ...state.types,
+          [action.contractName]: {
+            artifact: state.types[action.contractName].artifact,
+            ...action.payload,
+          },
         },
       }
 
@@ -57,6 +89,7 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.DEPLOY:
       return {
         ...state,
+        ready: false,
       }
 
     case ACTIONS.DEPLOYMENT_SUCCESS:
@@ -79,21 +112,31 @@ export default function reducer (state = initialState, action) {
             },
           },
         },
+        ready: true,
       }
 
     case ACTIONS.DEPLOYMENT_FAILURE:
       return {
         ...state,
-        contractErrors: 
-          state.contractErrors
-          ? state.contractErrors.concat([action.error])
-          : [action.error]
+        errors:
+          state.errors
+          ? state.errors.concat([action.error])
+          : [action.error],
+        ready: true,
     }
 
     case ACTIONS.CLEAR_ERRORS:
       return {
         ...state,
-        contractErrors: null,
+        errors: null,
+      }
+
+    case ACTIONS.LOG_ERROR:
+      return {
+        ...state,
+        errors: state.errors
+          ? state.errors.concat([action.error])
+          : [action.error],
       }
 
     default:
@@ -103,22 +146,24 @@ export default function reducer (state = initialState, action) {
 
 /* Synchronous action creators */
 
-function addContractTypeThunk (contractName) {
-
-  // TODO
-  return (dispatch, getState) => {
-
-    const contract = 'sune'
-
-    dispatch(getAddContractTypeAction(contractName, contract))
-  }
-}
-
-function getAddContractTypeAction (contractName, contract) {
+function getAddContractTypeAction (contractName, artifact) {
   return {
     type: ACTIONS.ADD_CONTRACT_TYPE,
     contractName: contractName,
-    contract: contract,
+    artifact: artifact,
+  }
+}
+
+function getAddGraphIdAction ( // 7-27: change this to handle one id at a time
+  contractName,
+  params,
+) {
+  return {
+    type: ACTIONS.ADD_GRAPH_ID,
+    contractName: contractName,
+    payload: {
+      ...params,
+    },
   }
 }
 
@@ -155,6 +200,63 @@ function getClearErrorsAction () {
   }
 }
 
+function getLogErrorAction (error) {
+  return {
+    type: ACTIONS.LOG_ERROR,
+    error: error,
+  }
+}
+
+function addContractTypeThunk (contractJSON) {
+
+  return (dispatch, getState) => {
+
+    const state = getState()
+    const contractName = contractJSON.contractName
+
+    if (state.contracts.type[contractName]) {
+      dispatch(getLogErrorAction(new Error(
+        'cannot add duplicate contract type')))
+      return
+    }
+
+    // validate contractJSON
+    if (!contractName) {
+      dispatch(getLogErrorAction(new Error(
+        'add contract failure: missing contract name')))
+      return
+    }
+    if (contractJSON.isDeployed && contractJSON.isDeployed()) {
+      dispatch(getLogErrorAction(new Error(
+        'add contract failure: contract type is deployed instance')))
+      return
+    }
+    if (!contractJSON.abi || !contractJSON.bytecode) {
+      dispatch(getLogErrorAction(new Error(
+        'add contract failure: contract JSON missing bytecode or abi')))
+      return
+    }
+
+    dispatch(getAddContractTypeAction(contractName, contractJSON))
+  }
+}
+
+function removeContractTypeThunk (contractName) {
+
+  return (dispatch, getState) => {
+
+    const contract = getState().contracts.types[contractName]
+
+    if (contract) {
+      dispatch(removeGraph(contract.constructorGraphId))
+      dispatch(removeGraph(contract.deployedGraphId))
+      dispatch(getRemoveContractTypeAction(contractName))
+    } else {
+      dispatch(getLogErrorAction(new Error('contract type not found')))
+    }
+  }
+}
+
 /* Asynchronous action creators */
 
 /**
@@ -170,15 +272,13 @@ function deployThunk (contractName, constructorParams) {
     dispatch(getDeployAction())
 
     const state = getState()
-    const provider = state.web3.provider
-    const account = state.web3.account
-    const contractJSON = state.contracts.types[contractName]
+    const contractJSON = state.contracts.types[contractName].artifact
 
-    if (!provider) {
+    if (!state.web3.provider) {
       dispatch(getDeploymentFailureAction(new Error('missing web3 provider')))
       return
     }
-    if (!account) {
+    if (!state.web3.account) {
       dispatch(getDeploymentFailureAction(new Error('missing web3 account')))
       return
     }
@@ -194,7 +294,7 @@ function deployThunk (contractName, constructorParams) {
         contractJSON,
         constructorParams,
         state.web3.provider,
-        account
+        state.web3.account
       )
     } catch (error) {
       dispatch(getDeploymentFailureAction(error))
@@ -207,7 +307,7 @@ function deployThunk (contractName, constructorParams) {
 
     const payload = {
       instance: instance,
-      account: account,
+      account: state.web3.account,
       contractName: contractName,
       constructorParams: constructorParams,
       networkId: state.web3.networkId,

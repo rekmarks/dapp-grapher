@@ -31,6 +31,7 @@
   },
   "homepage": "https://github.com/rekmarks/dapp-grapher#readme",
   "dependencies": {
+    "@material-ui/core": "^1.4.2",
     "ajv": "^6.5.2",
     "bootstrap": "^3.3.7",
     "chain-end": "^0.3.0",
@@ -50,6 +51,7 @@
     "redux": "^4.0.0",
     "redux-logger": "^3.0.6",
     "redux-thunk": "^2.3.0",
+    "uuid": "^3.3.2",
     "web3": "^1.0.0-beta.34"
   },
   "devDependencies": {

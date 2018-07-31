@@ -12,7 +12,12 @@ import ResourceMenu from './ResourceMenu'
 
 import './style/App.css'
 
-import { deploy } from '../redux/reducers/contracts'
+import { addContractType, deploy } from '../redux/reducers/contracts'
+import {
+  createGraph,
+  getCreateGraphParams,
+  selectGraph,
+} from '../redux/reducers/grapher'
 import { logRenderError } from '../redux/reducers/renderErrors'
 import { closeContractForm, openContractForm } from '../redux/reducers/ui'
 import { getWeb3 } from '../redux/reducers/web3'
@@ -36,38 +41,54 @@ class App extends Component {
   }
 
   render () {
-    // console.log('App render', this.props.web3 && this.props.web3.version)
     return (
       <div className="App">
-        <div className="App-static-container" >
-          <Header
-            web3Injected={!!this.props.web3}
-            contractInstances={this.props.contractInstances}
-          />
-          <ResourceMenu
-            account={this.props.account}
-            networkId={this.props.networkId}
-            contractTypes={this.props.contractTypes}
-            contractInstances={this.props.contractInstances} />
-        </div>
-        <div className="App-canvas-container" >
-          <Grapher
-            graph={this.props.graph}
-            openContractForm={this.props.openContractForm} />
+        <div className="App-rows" >
+          <div className="App-top-row" >
+            <Header
+              web3Injected={!!this.props.web3}
+              contractInstances={this.props.contractInstances}
+            />
+          </div>
+          <div className="App-bottom-row" >
+            <div className="App-resourceMenu-container" >
+              <ResourceMenu
+              account={this.props.account}
+              networkId={this.props.networkId}
+              contractTypes={this.props.contractTypes}
+              contractInstances={this.props.contractInstances}
+              createGraph={this.props.createGraph}
+              getCreateGraphParams={getCreateGraphParams} // helper, not dispatch
+              selectGraph={this.props.selectGraph} />
+            </div>
+            <div className="App-graph-container" >
+              {
+                this.props.graph
+                ? <Grapher
+                    graph={this.props.graph}
+                    openContractForm={this.props.openContractForm} />
+                : <h2 className="App-no-graph-label">Please select a graph</h2>
+              }
+            </div>
+          </div>
         </div>
         <div className="App-modal-container" >
           <ReactModal
-                 isOpen={this.props.contractModal}
-             contentLabel="contractModal"
-             onRequestClose={this.props.closeContractForm}
-             overlayClassName="App-modal-overlay"
-             className="App-modal-content"
+            isOpen={this.props.contractModal}
+            contentLabel="contractModal"
+            onRequestClose={this.props.closeContractForm}
+            overlayClassName="App-modal-overlay"
+            className="App-modal-content"
           >
-            <ContractForm
+            {
+              this.props.graph
+              ? <ContractForm
                   nodes={this.props.graph.config.elements.nodes}
                   contractName={this.props.graph.name}
                   deploy={this.props.deploy}
                   closeContractForm={this.props.closeContractForm} />
+              : null
+            }
           </ReactModal>
         </div>
       </div>
@@ -77,11 +98,14 @@ class App extends Component {
 
 App.propTypes = {
   // contracts
+  addContractType: PropTypes.func,
   deploy: PropTypes.func,
   contractInstances: PropTypes.object,
   contractTypes: PropTypes.object,
   // grapher
   graph: PropTypes.object,
+  createGraph: PropTypes.func,
+  selectGraph: PropTypes.func,
   // renderErrors
   logRenderError: PropTypes.func,
   // ui
@@ -105,9 +129,9 @@ function mapStateToProps (state) {
   return {
     // contracts
     contractInstances: state.contracts.instances,
-    contractTypes: state.contracts.contractTypes,
+    contractTypes: state.contracts.types,
     // grapher
-    graph: state.grapher.selectedGraph,
+    graph: state.grapher.graphs[state.grapher.selectedGraph],
     // ui
     contractModal: state.ui.forms.contractForm,
     // web3
@@ -119,9 +143,13 @@ function mapStateToProps (state) {
 
 function mapDispatchToProps (dispatch) {
   return {
-    // contracts
+    // contracts // TODO: where add contract type?
+    addContractType: contractJSON => dispatch(addContractType(contractJSON)),
     deploy: (contractName, constructorParams) =>
       dispatch(deploy(contractName, constructorParams)),
+    // grapher
+    createGraph: params => dispatch(createGraph(params)),
+    selectGraph: graphId => dispatch(selectGraph(graphId)),
     // renderErrors
     logRenderError: (error, errorInfo) => dispatch(logRenderError(error, errorInfo)),
     // ui

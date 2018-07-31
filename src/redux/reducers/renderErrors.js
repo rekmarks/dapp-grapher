@@ -11,6 +11,7 @@ const initialState = {
 export {
   getClearErrorsAction as clearRenderErrors,
   getLogErrorAction as logRenderError,
+  initialState as renderErrorsInitialState,
 }
 
 export default function reducer (state = initialState, action) {

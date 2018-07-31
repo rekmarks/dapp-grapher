@@ -16,7 +16,6 @@ export default class ContractForm extends Component {
     this.state = {formData: null}
   }
 
-  // gene
   componentDidMount () {
     this.setState((prevProps, props) => {
       // console.log(prevProps, props)
@@ -66,7 +65,8 @@ ContractForm.propTypes = {
 }
 
 /* helper functions */
-// TODO - move all of these operations out of here, probably
+// TODO: move all of these operations out of here, probably
+// TODO: handle deployed
 
 /**
  * Takes the nodes of a smart contract graph and returns the schema

@@ -7,6 +7,13 @@ import 'rc-collapse/assets/index.css'
 import './style/ResourceMenu.css'
 
 export default class ResourceMenu extends Component {
+
+  // componentDidMount () {
+  //   this.setState((prevProps, props) => {
+
+  //   }
+  // }
+
   render () {
     return (
       <div className="ResourceMenu" >
@@ -16,7 +23,12 @@ export default class ResourceMenu extends Component {
             headerClass="ResourceMenu-panel-outer"
           >
            {
-            getContractsJSX(this.props.contractTypes)
+            getContractsJSX(
+              this.props.contractTypes,
+              this.props.getCreateGraphParams,
+              this.props.createGraph,
+              this.props.selectGraph
+            )
            }
           </Panel>
           {
@@ -37,6 +49,62 @@ ResourceMenu.propTypes = {
   networkId: PropTypes.string,
   contractInstances: PropTypes.object,
   contractTypes: PropTypes.object,
+  createGraph: PropTypes.func,
+  getCreateGraphParams: PropTypes.func,
+  selectGraph: PropTypes.func,
+}
+
+class ContractTypeButton extends Component {
+
+  constructor (props) {
+    super(props)
+    this._onClick = this._onClick.bind(this)
+  }
+
+  render () {
+    return (
+      <button
+        className="ResourceMenu-button"
+        onClick={this._onClick} >
+        {this.props.contractName}
+      </button>
+    )
+  }
+
+  _onClick () {
+    this.props.onContractTypeClick(
+      this.props.contractName,
+      this.props.graphId,
+      this.props.getCreateGraphParams,
+      this.props.createGraph,
+      this.props.selectGraph
+    )
+  }
+}
+
+ContractTypeButton.propTypes = {
+  contractName: PropTypes.string,
+  onContractTypeClick: PropTypes.func,
+  createGraph: PropTypes.func,
+  getCreateGraphParams: PropTypes.func,
+  selectGraph: PropTypes.func,
+  graphId: PropTypes.string,
+}
+
+function onContractTypeClick (
+  contractName,
+  graphId,
+  getCreateGraphParams,
+  createGraph,
+  selectGraph
+  ) {
+
+  if (graphId) {
+    selectGraph(graphId)
+  } else {
+    createGraph(getCreateGraphParams(
+      'contract', 'constructor', contractName))
+  }
 }
 
 /**
@@ -44,7 +112,12 @@ ResourceMenu.propTypes = {
  * @param  {object} contractTypes contract types
  * @return {jsx}                  a number of <a> elements
  */
-function getContractsJSX (contractTypes) {
+function getContractsJSX (
+  contractTypes,
+  getCreateGraphParams,
+  createGraph,
+  selectGraph
+  ) {
 
   if (!contractTypes || Object.keys(contractTypes) === 0) {
     return <p>Please add some contract types.</p>
@@ -53,15 +126,22 @@ function getContractsJSX (contractTypes) {
   const contractTypeNames = Object.keys(contractTypes)
   contractTypeNames.sort()
 
+  // TODO: alter this so that it calls selectGraphThunk on the id
+  // if it exists
   const contracts = []
   contractTypeNames.forEach(contractName => {
+
+    const graphId = contractTypes[contractName].constructorGraphId
+
     contracts.push(
-      <a
-        className="ResourceMenu-link"
+      <ContractTypeButton
         key={contractName}
-        href="#" >
-        {contractName}
-      </a>
+        contractName={contractName}
+        onContractTypeClick={onContractTypeClick}
+        graphId={graphId}
+        getCreateGraphParams={getCreateGraphParams}
+        createGraph={createGraph}
+        selectGraph={selectGraph} />
     )
   })
   return contracts
