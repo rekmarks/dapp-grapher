@@ -59,7 +59,8 @@ class App extends Component {
               contractInstances={this.props.contractInstances}
               createGraph={this.props.createGraph}
               getCreateGraphParams={getCreateGraphParams} // helper, not dispatch
-              selectGraph={this.props.selectGraph} />
+              selectGraph={this.props.selectGraph}
+              selectedGraph={this.props.selectedGraph} />
             </div>
             <div className="App-graph-container" >
               {
@@ -106,6 +107,7 @@ App.propTypes = {
   graph: PropTypes.object,
   createGraph: PropTypes.func,
   selectGraph: PropTypes.func,
+  selectedGraph: PropTypes.string,
   // renderErrors
   logRenderError: PropTypes.func,
   // ui
@@ -131,6 +133,7 @@ function mapStateToProps (state) {
     contractInstances: state.contracts.instances,
     contractTypes: state.contracts.types,
     // grapher
+    selectedGraph: state.grapher.selectedGraph,
     graph: state.grapher.graphs[state.grapher.selectedGraph],
     // ui
     contractModal: state.ui.forms.contractForm,

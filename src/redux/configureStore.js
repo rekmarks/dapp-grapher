@@ -10,7 +10,7 @@ import { grapherExcludeKeys } from './reducers/grapher'
 
 const loggerMiddleware = createLogger()
 
-const excludeKeys = contractsExcludeKeys.concat(grapherExcludeKeys)
+const excludeKeys = [].concat(contractsExcludeKeys, grapherExcludeKeys)
 
 const persistStateConfig = {
   key: 'dapp-grapher',

@@ -29,7 +29,8 @@ export default function parseContract (contract, mode) {
 
   const graph = {...graphTemplate}
   graph.name = contract.contractName
-  graph.type = (mode === 1 ? 'constructor' : 'completeAbi')
+  graph.type = mode === 1 ? 'constructor' : 'completeAbi'
+  graph.id = graph.name + ':' + graph.type
   graph.config.elements = {
     nodes: getNodes(contract.contractName, contract.abi, mode),
     edges: getEdges(contract.contractName, contract.abi, mode),
@@ -61,7 +62,7 @@ function getNodes (contractName, abi, mode) {
     case 0:
       contractNode.data.type = 'contract'
       contractNode.data.abi = 'complete'
-      abi.forEach(entry => nodes.push(getNodeAll(contractName, entry)))
+      nodes = nodes.concat(getAllNodes(contractName, abi))
       break
     case 1:
       contractNode.data.type = 'contract'
@@ -78,44 +79,83 @@ function getNodes (contractName, abi, mode) {
 }
 
 /**
- * [getNodeAll description]
- * @param  {[type]} contractName [description]
- * @param  {[type]} entry        [description]
- * @return {[type]}              [description]
+ * Gets all nodes for a smart contract graph from its ABI, including events,
+ * functions, and the constructor
+ * @param  {string} contractName the name of the contract being parsed
+ * @param  {object} abi          the ABI of the contract being parsed
+ * @return {array}               an array of node objects
  */
-function getNodeAll (contractName, entry) {
+function getAllNodes (contractName, abi) {
 
-  if (!(entry.type === 'function') &&
-    !(entry.type === 'constructor') &&
-    !(entry.type === 'event')) {
-    throw new Error('Invalid abi entry type:\n\n' + util.inspect(entry, {showHidden: false, depth: null}) + '\n')
+  const nodes = []; let hasFunctions = false; let hasEvents = false
+  const eventsId = contractName + '::Events'
+  const functionsId = contractName + '::Functions'
+  // const defaultPosition = { x: 0, y: 0}
+
+  abi.forEach(entry => {
+    if (!(entry.type === 'function') &&
+      !(entry.type === 'constructor') &&
+      !(entry.type === 'event')) {
+      throw new Error('Invalid abi entry type:\n\n' + util.inspect(
+        entry, {showHidden: false, depth: null}
+        ) + '\n'
+      )
+    }
+
+    const data = { abi: {} }
+    if (entry.type === 'constructor') {
+      data.id = contractName + ':constructor'
+      data.nodeName = 'Constructor'
+      data.parent = contractName
+    } else {
+      if (!entry.name) throw new Error('getNode: invalid ABI entry: missing name')
+      data.id = contractName + ':' + entry.name
+      data.nodeName = getFormattedName(entry.name)
+      data.type = entry.type ? entry.type : 'function' // abi type defaults to function if omitted
+      data.parent = data.type === 'event' ? eventsId : functionsId
+    }
+
+    if (!hasEvents) hasEvents = data.parent === eventsId
+    if (!hasFunctions) hasFunctions = data.parent === functionsId
+
+    data.abi = Object.assign(data.abi, entry) // abi may or may not have the type property
+
+    nodes.push({
+      data: data,
+      position: { x: getRandomInt(-200, 200), y: getRandomInt(-200, 200)},
+    })
+  })
+
+  if (hasEvents) {
+    nodes.push({
+      data: {
+        id: contractName + '::Events', // extra colon to ensure no collisions
+        nodeName: 'Events',
+        parent: contractName,
+      },
+      position: { x: 1, y: 1},
+    })
+  }
+  if (hasFunctions) {
+    nodes.push({
+      data: {
+        id: contractName + '::Functions', // extra colon to ensure no collisions
+        nodeName: 'Functions',
+        parent: contractName,
+      },
+      position: { x: 2, y: 2},
+    })
   }
 
-  const data = { abi: {} }
-  if (entry.type === 'constructor') {
-    data.id = contractName + ':constructor'
-    data.nodeName = 'Constructor'
-  } else {
-    if (!entry.name) throw new Error('getNode: invalid ABI entry: missing name')
-    data.id = contractName + ':' + entry.name
-    data.nodeName = getFormattedName(entry.name)
-  }
-  data.parent = contractName
-  entry.type ? data.type = entry.type : data.type = 'function' // abi type defaults to function if omitted
-
-  data.abi = Object.assign(data.abi, entry) // abi may or may not have the type property
-
-  return {
-    data: data,
-    position: { x: 0, y: 0}, // placeholder
-  }
+  return nodes
 }
 
 /**
- * [getConstructorNodes description]
- * @param  {[type]} contractName [description]
- * @param  {[type]} abi          [description]
- * @return {[type]}              [description]
+ * Parses a smart contract ABI and returns the nodes corresponding to the
+ * constructor's parameters
+ * @param  {string} contractName the name of the contract being parsed
+ * @param  {object} abi          the ABI of the contract being parsed
+ * @return {array}               an array of node objects
  */
 function getConstructorNodes (contractName, abi) {
 
@@ -160,7 +200,6 @@ function getFormattedName (name) {
   return formattedName.charAt(0).toUpperCase() + formattedName.slice(1)
 }
 
-// for testing
-// const StandardERC20 = require('chain-end').contracts.StandardERC20
-// const testGraph = parseContract(StandardERC20, 1)
-// console.log(util.inspect(testGraph.config.elements, {showHidden: false, depth: null}))
+function getRandomInt (min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min
+}

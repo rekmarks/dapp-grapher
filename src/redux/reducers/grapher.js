@@ -185,8 +185,8 @@ function createGraphThunk (params) {
       const payloadKey = parseMode === 1 ? 'constructorGraphId' : 'deployedGraphId'
 
       dispatch(getAddGraphAction(graphId, graph))
-      dispatch(selectGraphThunk(graphId))
       dispatch(addContractGraphId(contractName, {[payloadKey]: graphId}))
+      dispatch(selectGraphThunk(graphId))
 
     } else if (params.type === 'dapp') {
 
