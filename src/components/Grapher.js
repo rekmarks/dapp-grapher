@@ -23,17 +23,10 @@ class Grapher extends Component {
   }
 
   componentDidUpdate (prevProps) {
+
     if (this.props.graph.id !== prevProps.graph.id) {
-      // this.state.cy.destroy()
-      // this.setState({cy: null})
-      // this.initGraph()
-      this.state.cy.json({ elements: this.props.graph.config.elements })
-      // debugger
-      this.state.cy.layout({
-        name: 'grid',
-      }).run()
-      this.state.cy.zoom(0.9)
-      this.state.cy.center()
+      this.state.cy.destroy()
+      this.initGraph()
     }
   }
 
@@ -41,9 +34,20 @@ class Grapher extends Component {
 
     this.props.graph.config.container = this.cyRef
 
-    // cytoscape.use(coseBilkent)
-
     const cy = cytoscape(this.props.graph.config)
+
+    // move function nodes as grid layout doesn't handle nested compound nodes
+    if (this.props.graph.type === 'contract:completeAbi') {
+
+      cy.elements('node[type = "function"]').positions( (node, i) => {
+        return {
+          x: node.position('x'),
+          y: node.position('y') - 100,
+        }
+      })
+    }
+
+    // set initial zoom and pan
     cy.zoom(0.9)
     cy.center()
 
@@ -59,13 +63,7 @@ class Grapher extends Component {
     this.setState({ cy: cy})
   }
 
-  // Cytoscape has its own renderer, this decreases React re-renders
-  // shouldComponentUpdate () {
-  //   return false
-  // }
-
   render () {
-    // console.log(this.props.graph)
     return <div style={this.props.graph.style} ref={(cyRef) => {
       this.cyRef = cyRef
     }}/>

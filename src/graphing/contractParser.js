@@ -29,7 +29,7 @@ export default function parseContract (contract, mode) {
 
   const graph = {...graphTemplate}
   graph.name = contract.contractName
-  graph.type = mode === 1 ? 'constructor' : 'completeAbi'
+  graph.type = mode === 1 ? 'contract:constructor' : 'contract:completeAbi'
   graph.id = graph.name + ':' + graph.type
   graph.config.elements = {
     nodes: getNodes(contract.contractName, contract.abi, mode),
@@ -50,12 +50,13 @@ function getNodes (contractName, abi, mode) {
   let nodes = []
 
   // contract node (parent of all others)
+  // parent nodes don't have positions; their position is a function
+  // of their children's positions
   const contractNode = {
     data: {
       id: contractName,
       nodeName: getFormattedName(contractName),
     },
-    position: {x: 0, y: 0},
   }
 
   switch (mode) {
@@ -90,7 +91,6 @@ function getAllNodes (contractName, abi) {
   const nodes = []; let hasFunctions = false; let hasEvents = false
   const eventsId = contractName + '::Events'
   const functionsId = contractName + '::Functions'
-  // const defaultPosition = { x: 0, y: 0}
 
   abi.forEach(entry => {
     if (!(entry.type === 'function') &&
@@ -106,6 +106,7 @@ function getAllNodes (contractName, abi) {
     if (entry.type === 'constructor') {
       data.id = contractName + ':constructor'
       data.nodeName = 'Constructor'
+      data.type = 'constructor'
       data.parent = contractName
     } else {
       if (!entry.name) throw new Error('getNode: invalid ABI entry: missing name')
@@ -122,7 +123,8 @@ function getAllNodes (contractName, abi) {
 
     nodes.push({
       data: data,
-      position: { x: getRandomInt(-200, 200), y: getRandomInt(-200, 200)},
+      // some layouts allegedly require non-zero or non-overlapping positions
+      position: { x: Math.random(), y: Math.random()},
     })
   })
 
@@ -133,7 +135,6 @@ function getAllNodes (contractName, abi) {
         nodeName: 'Events',
         parent: contractName,
       },
-      position: { x: 1, y: 1},
     })
   }
   if (hasFunctions) {
@@ -143,7 +144,6 @@ function getAllNodes (contractName, abi) {
         nodeName: 'Functions',
         parent: contractName,
       },
-      position: { x: 2, y: 2},
     })
   }
 
@@ -177,7 +177,8 @@ function getConstructorNodes (contractName, abi) {
         type: 'parameter',
         abi: input,
       },
-      position: {x: 0, y: 0}, // placeholder
+      // some layouts allegedly require non-zero or non-overlapping positions
+      position: { x: Math.random(), y: Math.random()},
     })
   }
 
@@ -198,8 +199,4 @@ function getEdges (abi) {
 function getFormattedName (name) {
   const formattedName = name.substring(name.search(/[a-z]/i)) // regex: /i indicates ignorecase
   return formattedName.charAt(0).toUpperCase() + formattedName.slice(1)
-}
-
-function getRandomInt (min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min
 }

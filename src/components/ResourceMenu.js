@@ -52,22 +52,21 @@ export default class ResourceMenu extends Component {
     const contractTypeNames = Object.keys(this.props.contractTypes)
     contractTypeNames.sort()
 
-    // TODO: alter this so that it calls selectGraphThunk on the id
-    // if it exists
+    const thisTarget = this
     const contracts = []
     contractTypeNames.forEach(contractName => {
 
-      const graphId = this.props.contractTypes[contractName].constructorGraphId
+      const graphId = thisTarget.props.contractTypes[contractName].constructorGraphId
 
       contracts.push(
         <ContractTypeButton
           key={contractName}
           contractName={contractName}
           graphId={graphId}
-          getCreateGraphParams={this.props.getCreateGraphParams}
-          createGraph={this.props.createGraph}
-          selectGraph={this.props.selectGraph}
-          selectedGraph={this.props.selectedGraph} />
+          getCreateGraphParams={thisTarget.props.getCreateGraphParams}
+          createGraph={thisTarget.props.createGraph}
+          selectGraph={thisTarget.props.selectGraph}
+          selectedGraph={thisTarget.props.selectedGraph} />
       )
     })
     return contracts
@@ -88,16 +87,17 @@ export default class ResourceMenu extends Component {
       !this.props.contractInstances.hasOwnProperty(this.props.networkId)
     ) return
 
+    const thisTarget = this
     const instances = []
     Object.keys(
-      this.props.contractInstances[this.props.networkId]).forEach(address => {
+      this.props.contractInstances[thisTarget.props.networkId]).forEach(address => {
 
       const instance =
-        this.props.contractInstances[this.props.networkId][address]
-      if (instance.account === this.props.account) {
+        thisTarget.props.contractInstances[thisTarget.props.networkId][address]
+      if (instance.account === thisTarget.props.account) {
 
         // instance.type is the same as contractName
-        const graphId = this.props.contractTypes[instance.type].deployedGraphId
+        const graphId = thisTarget.props.contractTypes[instance.type].deployedGraphId
 
         instances.push(
           <Collapse key={address + ':collapse'} >
@@ -110,10 +110,10 @@ export default class ResourceMenu extends Component {
               <ContractInstanceButton
                 contractName={instance.type}
                 graphId={graphId}
-                getCreateGraphParams={this.props.getCreateGraphParams}
-                createGraph={this.props.createGraph}
-                selectGraph={this.props.selectGraph}
-                selectedGraph={this.props.selectedGraph} />
+                getCreateGraphParams={thisTarget.props.getCreateGraphParams}
+                createGraph={thisTarget.props.createGraph}
+                selectGraph={thisTarget.props.selectGraph}
+                selectedGraph={thisTarget.props.selectedGraph} />
             </Panel>
           </Collapse>
         )
@@ -154,7 +154,8 @@ class ContractTypeButton extends Component {
     return (
       <button
         className="ResourceMenu-button"
-        disabled={this.props.selectedGraph === this.props.graphId}
+        disabled={this.props.selectedGraph &&
+          this.props.selectedGraph === this.props.graphId}
         onClick={this._onClick}
       >
         {this.props.contractName}
@@ -192,7 +193,8 @@ class ContractInstanceButton extends Component {
     return (
       <button
         className="ResourceMenu-button"
-        disabled={this.props.selectedGraph === this.props.graphId}
+        disabled={this.props.selectedGraph &&
+          this.props.selectedGraph === this.props.graphId}
         onClick={this._onClick}
       >
         Select

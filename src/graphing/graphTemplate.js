@@ -88,7 +88,6 @@ const config = {
 
   layout: {
     name: 'grid',
-    // padding: 5
   },
 }
 

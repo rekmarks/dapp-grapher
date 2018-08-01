@@ -69,7 +69,7 @@ export default function reducer (state = initialState, action) {
         types: {
           ...state.types,
           [action.contractName]: {
-            artifact: state.types[action.contractName].artifact,
+            ...state.types[action.contractName],
             ...action.payload,
           },
         },
@@ -154,7 +154,7 @@ function getAddContractTypeAction (contractName, artifact) {
   }
 }
 
-function getAddGraphIdAction ( // 7-27: change this to handle one id at a time
+function getAddGraphIdAction (
   contractName,
   params,
 ) {

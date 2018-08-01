@@ -51,7 +51,11 @@ export default function persistState (paths, config) {
 
     try {
       persistedState = deserialize(localStorage.getItem(key))
-      finalInitialState = merge(initialState, persistedState)
+      if (!persistedState) {
+        console.log('No persisted state found. Initializing default state.')
+      } else {
+        finalInitialState = merge(initialState, persistedState)
+      }
     } catch (e) {
       console.warn('Failed to retrieve initialize state from localStorage:', e)
     }
