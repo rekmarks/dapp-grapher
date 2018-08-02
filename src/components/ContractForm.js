@@ -3,70 +3,88 @@ import PropTypes from 'prop-types'
 import React, { Component } from 'react'
 import Form from 'react-jsonschema-form'
 
+import { contractGraphTypes } from '../graphing/contractParser'
+
 import './style/ContractForm.css'
 
 // react-jsonschema-form logger
 const log = (type) => console.log.bind(console, type)
-// const onSubmit = (formData) => console.log("Data submitted: ",  formData)
 
 export default class ContractForm extends Component {
 
-  constructor (props) {
-    super(props)
-    this.state = {formData: null}
-  }
-
-  componentDidMount () {
-    this.setState((prevProps, props) => {
-      // console.log(prevProps, props)
-      // TODO: this check fails because contracts don't have unique IDs
-      if (prevProps.contractName !== props.contractName) {
-        return { formData: generateForm(props.nodes)}
-      }
-      return {}
-    })
-  }
-
   render () {
 
-    // console.log('rendering')
+    let formComponents = null; let formData
+
+    switch (this.props.graphType) {
+
+      case contractGraphTypes.completeAbi:
+
+        formData = generateForm(this.props.nodes, this.props.graphType)
+
+        formComponents = (
+          <Form
+          className="ContractForm-form"
+          schema={formData.schema}
+          uiSchema={formData.uiSchema}
+          onChange={log('changed')}
+          onSubmit={
+            (formData) => {
+              this.props.deploy(
+                formData.schema.title,
+                Object.values(formData.formData)
+              )
+              this.props.closeContractForm()
+            }
+          }
+          onError={log('errors')} />
+        )
+        break
+
+      case contractGraphTypes._constructor:
+
+        formData = generateForm(this.props.nodes, this.props.graphType)
+
+        formComponents = (
+          <Form
+          className="ContractForm-form"
+          schema={formData.schema}
+          uiSchema={formData.uiSchema}
+          onChange={log('changed')}
+          onSubmit={
+            (formData) => {
+              this.props.deploy(
+                formData.schema.title,
+                Object.values(formData.formData)
+              )
+              this.props.closeContractForm()
+            }
+          }
+          onError={log('errors')} />
+        )
+        break
+
+      default:
+        break
+    }
 
     return (
       <div className="ContractForm-formContainer">
-        {
-          this.state.formData
-            ? <Form
-                className="ContractForm-form"
-                schema={this.state.formData.schema}
-                uiSchema={this.state.formData.uiSchema}
-                onChange={log('changed')}
-                onSubmit={
-                  (formData) => {
-                    this.props.deploy(
-                      formData.schema.title,
-                      Object.values(formData.formData)
-                    )
-                    this.props.closeContractForm()
-                  }
-                }
-                onError={log('errors')} />
-            : ''
-        }
+        {formComponents}
       </div>
     )
   }
 }
 
 ContractForm.propTypes = {
-  nodes: PropTypes.array,
   contractName: PropTypes.string,
+  graphType: PropTypes.string,
+  nodes: PropTypes.array,
   deploy: PropTypes.func,
   closeContractForm: PropTypes.func,
 }
 
 /* helper functions */
-// TODO: move all of these operations out of here, probably
-// TODO: handle deployed
 
 /**
  * Takes the nodes of a smart contract graph and returns the schema
@@ -74,7 +92,7 @@ ContractForm.propTypes = {
  * @param  {object} nodes the nodes to turn into a form
  * @return {object}       an object with attributes schema and uiSchema
  */
-function generateForm (nodes) {
+function generateForm (nodes, graphType) {
 
   const schema = {
     title: null, // form title
@@ -99,6 +117,9 @@ function generateForm (nodes) {
 
     } else {
 
+      if (graphType === contractGraphTypes.completeAbi &&
+        node.data.type !== 'function') return
+
       // parse node data to create corresponding field object
       const field = {
         type: parseSolidityType(node.data.abi.type),
@@ -111,9 +132,8 @@ function generateForm (nodes) {
 
       uiSchema['ui:order'].push(field.parameterName)
       uiSchema[field.parameterName] = {
-        'ui:placeholder': node.data.abi.type + ': ' + node.data.abi.name,
+        'ui:placeholder': node.data.abi.type + ':' + node.data.abi.name,
       }
-
     }
   })
 

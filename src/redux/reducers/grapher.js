@@ -1,8 +1,9 @@
 
 import uuid from 'uuid/v4'
+import { fromJS } from 'immutable'
 
-import parseContract from '../../graphing/contractParser'
-import { addContractGraphId } from './contracts'
+import parseContract, { contractGraphTypes } from '../../graphing/contractParser'
+import { setContractGraphId, removeAllContractGraphIds } from './contracts'
 
 // testing
 // import { contracts } from 'chain-end'
@@ -15,27 +16,39 @@ import { addContractGraphId } from './contracts'
 const ACTIONS = {
   ADD_GRAPH: 'GRAPHER:ADD_GRAPH',
   DELETE_GRAPH: 'GRAPHER:DELETE_GRAPH',
+  DELETE_ALL_GRAPHS: 'GRAPHER:DELETE_ALL_GRAPHS',
   SELECT_GRAPH: 'GRAPHER:SELECT_GRAPH',
   LOG_ERROR: 'GRAPHER:LOG_ERROR',
 }
 
 const initialState = {
-  selectedGraph: null,
+  selectedGraphId: null,
+  selectedGraphName: null,
   graphs: {},
   errors: null,
 }
 
+// keys to exclude from locally stored state
 const excludeKeys = [
   'container',
-  'selectedGraph',
+  'selectedGraphId',
+  'selectedGraphName',
   'errors',
+]
+
+// for contract graph creation
+const contractSubtypes = [
+  'constructor',
+  'completeAbi',
+  'functions',
 ]
 
 export {
   selectGraphThunk as selectGraph,
   createGraphThunk as createGraph,
   getGraphCreationParameters as getCreateGraphParams,
-  getRemoveGraphAction as removeGraph,
+  deleteGraphThunk as deleteGraph,
+  deleteAllGraphsThunk as deleteAllGraphs,
   excludeKeys as grapherExcludeKeys,
   initialState as grapherInitialState,
 }
@@ -55,7 +68,7 @@ export default function reducer (state = initialState, action) {
 
     case ACTIONS.DELETE_GRAPH:
 
-      if (!action.grahpId) return state
+      if (!action.graphId) return state
       if (!state.graphs[action.graphId]) {
         console.warn('no graph with id "' + action.graphId + '" found')
         return state
@@ -63,12 +76,23 @@ export default function reducer (state = initialState, action) {
 
       const newState = {...state}
       delete newState.graphs[action.graphId]
+      if (action.graphId === state.selectedGraphId) { newState.selectedGraphId = null }
+        newState.selectedGraphName = null
       return newState
+
+    case ACTIONS.DELETE_ALL_GRAPHS:
+      return {
+        ...state,
+        graphs: {},
+        selectedGraphId: null,
+        selectedGraphName: null,
+      }
 
     case ACTIONS.SELECT_GRAPH:
       return {
         ...state,
-        selectedGraph: action.graphId,
+        selectedGraphId: action.graphId,
+        selectedGraphName: action.graphName,
       }
 
     case ACTIONS.LOG_ERROR:
@@ -94,17 +118,24 @@ function getAddGraphAction (graphId, graph) {
   }
 }
 
-function getRemoveGraphAction (graphId) {
+function getDeleteGraphAction (graphId) {
   return {
     type: ACTIONS.DELETE_GRAPH,
     graphId: graphId,
   }
 }
 
-function getSelectGraphAction (graphId) {
+function getDeleteAllGraphsAction () {
+  return {
+    type: ACTIONS.DELETE_ALL_GRAPHS,
+  }
+}
+
+function getSelectGraphAction (graphId, graphName) {
   return {
     type: ACTIONS.SELECT_GRAPH,
     graphId: graphId,
+    graphName: graphName,
   }
 }
 
@@ -123,7 +154,10 @@ function selectGraphThunk (graphId) {
 
     // select graph if it exists
     if (state.grapher.graphs[graphId]) {
-      dispatch(getSelectGraphAction(graphId))
+      dispatch(getSelectGraphAction(
+        graphId,
+        state.grapher.graphs[graphId].get('name'),
+      ))
       return
     } else {
       dispatch(getLogErrorAction(new Error('graph not found with id ' +
@@ -159,13 +193,19 @@ function createGraphThunk (params) {
       }
 
       // select parser mode
-      let parseMode
+      let parseMode, payloadKey
       switch (params.subType) {
+        case 'completeAbi':
+          parseMode = 0
+          payloadKey = contractGraphTypes.completeAbi
+          break
         case 'constructor':
           parseMode = 1
+          payloadKey = contractGraphTypes._constructor
           break
-        case 'deployed':
-          parseMode = 0
+        case 'functions':
+          parseMode = 2
+          payloadKey = contractGraphTypes.functions
           break
         default:
           dispatch(getLogErrorAction(new Error(
@@ -182,10 +222,9 @@ function createGraphThunk (params) {
       }
 
       const graphId = uuid()
-      const payloadKey = parseMode === 1 ? 'constructorGraphId' : 'deployedGraphId'
 
-      dispatch(getAddGraphAction(graphId, graph))
-      dispatch(addContractGraphId(contractName, {[payloadKey]: graphId}))
+      dispatch(getAddGraphAction(graphId, fromJS(graph)))
+      dispatch(setContractGraphId(contractName, {[payloadKey]: graphId}))
       dispatch(selectGraphThunk(graphId))
 
     } else if (params.type === 'dapp') {
@@ -198,6 +237,29 @@ function createGraphThunk (params) {
         'invalid graph type: ' + params.type)))
       return
     }
+  }
+}
+
+function deleteGraphThunk (graphId) {
+
+  return (dispatch, getState) => {
+
+    const graph = getState().grapher.graphs[graphId]
+
+    // this order of operations probably matters
+    dispatch(setContractGraphId(
+      graph.get('name'),
+      {[graph.get('type')]: null}
+    ))
+    dispatch(getDeleteGraphAction(graphId))
+  }
+}
+
+function deleteAllGraphsThunk (graphId) {
+
+  return (dispatch, getState) => {
+    dispatch(removeAllContractGraphIds())
+    dispatch(getDeleteAllGraphsAction())
   }
 }
 
@@ -215,8 +277,6 @@ function getGraphCreationParameters (type, subType = null, contractName = null) 
   const returnProperties = {}
 
   if (type === 'contract') {
-
-    const contractSubtypes = ['constructor', 'deployed']
 
     if (!contractSubtypes.includes(subType)) {
       throw new Error('missing contract graph subtype')

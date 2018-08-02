@@ -1,11 +1,13 @@
 
 import { contracts as defaultContracts, deploy as _deploy } from 'chain-end'
 
-import { removeGraph } from './grapher'
+import { contractGraphTypes as graphTypes } from '../../graphing/contractParser'
+import { deleteGraph } from './grapher'
 
 const ACTIONS = {
   ADD_CONTRACT_TYPE: 'CONTRACTS:ADD_CONTRACT_TYPE',
-  ADD_GRAPH_ID: 'CONTRACTS:ADD_GRAPH_ID',
+  SET_GRAPH_ID: 'CONTRACTS:SET_GRAPH_ID',
+  REMOVE_ALL_GRAPH_IDS: 'CONTRACTS:REMOVE_ALL_GRAPH_IDS',
   REMOVE_CONTRACT_TYPE: 'CONTRACTS:REMOVE_CONTRACT_TYPE',
   CLEAR_ERRORS: 'CONTRACTS:CLEAR_ERRORS',
   DEPLOY: 'CONTRACTS:DEPLOY',
@@ -17,8 +19,9 @@ const ACTIONS = {
 const contracts = {}
 Object.entries(defaultContracts).forEach(([key, value]) => {
   contracts[key] = {
-    constructorGraphId: null,
-    deployedGraphId: null,
+    [graphTypes._constructor]: null,
+    [graphTypes.completeAbi]: null,
+    [graphTypes.functions]: null,
     artifact: value,
   }
 })
@@ -38,7 +41,8 @@ const excludeKeys = [
 
 export {
   addContractTypeThunk as addContractType,
-  getAddGraphIdAction as addContractGraphId,
+  getSetGraphIdAction as setContractGraphId,
+  getRemoveAllGraphIdsAction as removeAllContractGraphIds,
   removeContractTypeThunk as removeContractType,
   deployThunk as deploy,
   getClearErrorsAction as clearerrors,
@@ -57,13 +61,14 @@ export default function reducer (state = initialState, action) {
           ...state.types,
           [action.contractName]: {
             artifact: action.artifact,
-            constructorGraphId: null,
-            deployedGraphId: null,
+            [graphTypes._constructor]: null,
+            [graphTypes.completeAbi]: null,
+            [graphTypes.functions]: null,
           },
         },
       }
 
-    case ACTIONS.ADD_GRAPH_ID:
+    case ACTIONS.SET_GRAPH_ID:
       return {
         ...state,
         types: {
@@ -73,6 +78,23 @@ export default function reducer (state = initialState, action) {
             ...action.payload,
           },
         },
+      }
+
+    case ACTIONS.REMOVE_ALL_GRAPH_IDS:
+
+      const contractTypes = { ...state.types }
+      Object.keys(contractTypes).forEach(contractName => {
+        contractTypes[contractName] = {
+          artifact: contractTypes[contractName].artifact,
+          [graphTypes._constructor]: null,
+          [graphTypes.completeAbi]: null,
+          [graphTypes.functions]: null,
+        }
+      })
+
+      return {
+        ...state,
+        types: { ...contractTypes },
       }
 
     case ACTIONS.REMOVE_CONTRACT_TYPE:
@@ -154,16 +176,19 @@ function getAddContractTypeAction (contractName, artifact) {
   }
 }
 
-function getAddGraphIdAction (
-  contractName,
-  params,
-) {
+function getSetGraphIdAction (contractName, params) {
   return {
-    type: ACTIONS.ADD_GRAPH_ID,
+    type: ACTIONS.SET_GRAPH_ID,
     contractName: contractName,
     payload: {
       ...params,
     },
+  }
+}
+
+function getRemoveAllGraphIdsAction () {
+  return {
+    type: ACTIONS.REMOVE_ALL_GRAPH_IDS,
   }
 }
 
@@ -248,8 +273,9 @@ function removeContractTypeThunk (contractName) {
     const contract = getState().contracts.types[contractName]
 
     if (contract) {
-      dispatch(removeGraph(contract.constructorGraphId))
-      dispatch(removeGraph(contract.deployedGraphId))
+      dispatch(deleteGraph(contract[graphTypes._constructor]))
+      dispatch(deleteGraph(contract[graphTypes.completeAbi]))
+      dispatch(deleteGraph(contract[graphTypes.functions]))
       dispatch(getRemoveContractTypeAction(contractName))
     } else {
       dispatch(getLogErrorAction(new Error('contract type not found')))

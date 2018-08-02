@@ -3,6 +3,8 @@ import PropTypes from 'prop-types'
 import React, { Component } from 'react'
 import Collapse, { Panel } from 'rc-collapse'
 
+import { contractGraphTypes } from '../graphing/contractParser'
+
 import 'rc-collapse/assets/index.css'
 import './style/ResourceMenu.css'
 
@@ -23,6 +25,22 @@ export default class ResourceMenu extends Component {
   render () {
     return (
       <div className="ResourceMenu" >
+        <div className="ResourceMenu-delete-buttons">
+          <button
+            className="ResourceMenu-button"
+            disabled={!this.props.selectedGraphId}
+            onClick={() => this.props.deleteGraph(this.props.selectedGraphId)}
+          >
+            Delete Selected Graph
+          </button>
+          <button
+            className="ResourceMenu-button"
+            disabled={!this.props.hasGraphs}
+            onClick={this.props.deleteAllGraphs}
+          >
+            Delete All Graphs
+          </button>
+        </div>
         <Collapse accordion={true} >
           <Panel
             header="Contract Types"
@@ -56,7 +74,8 @@ export default class ResourceMenu extends Component {
     const contracts = []
     contractTypeNames.forEach(contractName => {
 
-      const graphId = thisTarget.props.contractTypes[contractName].constructorGraphId
+      const graphId =
+        thisTarget.props.contractTypes[contractName][contractGraphTypes._constructor]
 
       contracts.push(
         <ContractTypeButton
@@ -66,7 +85,7 @@ export default class ResourceMenu extends Component {
           getCreateGraphParams={thisTarget.props.getCreateGraphParams}
           createGraph={thisTarget.props.createGraph}
           selectGraph={thisTarget.props.selectGraph}
-          selectedGraph={thisTarget.props.selectedGraph} />
+          selectedGraphId={thisTarget.props.selectedGraphId} />
       )
     })
     return contracts
@@ -87,17 +106,20 @@ export default class ResourceMenu extends Component {
       !this.props.contractInstances.hasOwnProperty(this.props.networkId)
     ) return
 
-    const thisTarget = this
+    const _this = this
     const instances = []
     Object.keys(
-      this.props.contractInstances[thisTarget.props.networkId]).forEach(address => {
+      this.props.contractInstances[_this.props.networkId]).forEach(address => {
 
       const instance =
-        thisTarget.props.contractInstances[thisTarget.props.networkId][address]
-      if (instance.account === thisTarget.props.account) {
+        _this.props.contractInstances[_this.props.networkId][address]
+      if (instance.account === _this.props.account) {
 
         // instance.type is the same as contractName
-        const graphId = thisTarget.props.contractTypes[instance.type].deployedGraphId
+        const completeAbiGraphId =
+          _this.props.contractTypes[instance.type][contractGraphTypes.completeAbi]
+        const functionsGraphId =
+          _this.props.contractTypes[instance.type][contractGraphTypes.functions]
 
         instances.push(
           <Collapse key={address + ':collapse'} >
@@ -107,13 +129,14 @@ export default class ResourceMenu extends Component {
               headerClass="ResourceMenu-panel-inner"
             >
               <p>{address}</p>
-              <ContractInstanceButton
+              <ContractInstanceButtons
                 contractName={instance.type}
-                graphId={graphId}
-                getCreateGraphParams={thisTarget.props.getCreateGraphParams}
-                createGraph={thisTarget.props.createGraph}
-                selectGraph={thisTarget.props.selectGraph}
-                selectedGraph={thisTarget.props.selectedGraph} />
+                completeAbiGraphId={completeAbiGraphId}
+                functionsGraphId={functionsGraphId}
+                getCreateGraphParams={_this.props.getCreateGraphParams}
+                createGraph={_this.props.createGraph}
+                selectGraph={_this.props.selectGraph}
+                selectedGraphId={_this.props.selectedGraphId} />
             </Panel>
           </Collapse>
         )
@@ -136,9 +159,12 @@ ResourceMenu.propTypes = {
   contractInstances: PropTypes.object,
   contractTypes: PropTypes.object,
   createGraph: PropTypes.func,
+  deleteGraph: PropTypes.func,
+  deleteAllGraphs: PropTypes.func,
   getCreateGraphParams: PropTypes.func,
   selectGraph: PropTypes.func,
-  selectedGraph: PropTypes.string,
+  selectedGraphId: PropTypes.string,
+  hasGraphs: PropTypes.bool,
 }
 
 /* subcomponents */
@@ -154,8 +180,8 @@ class ContractTypeButton extends Component {
     return (
       <button
         className="ResourceMenu-button"
-        disabled={this.props.selectedGraph &&
-          this.props.selectedGraph === this.props.graphId}
+        disabled={this.props.selectedGraphId &&
+          this.props.selectedGraphId === this.props.graphId}
         onClick={this._onClick}
       >
         {this.props.contractName}
@@ -178,45 +204,68 @@ ContractTypeButton.propTypes = {
   createGraph: PropTypes.func,
   getCreateGraphParams: PropTypes.func,
   selectGraph: PropTypes.func,
-  selectedGraph: PropTypes.string,
+  selectedGraphId: PropTypes.string,
   graphId: PropTypes.string,
 }
 
-class ContractInstanceButton extends Component {
+class ContractInstanceButtons extends Component {
 
   constructor (props) {
     super(props)
-    this._onClick = this._onClick.bind(this)
+    this.onCompleteAbiClick = this.onCompleteAbiClick.bind(this)
+    this.onFunctionsClick = this.onFunctionsClick.bind(this)
   }
 
   render () {
     return (
-      <button
-        className="ResourceMenu-button"
-        disabled={this.props.selectedGraph &&
-          this.props.selectedGraph === this.props.graphId}
-        onClick={this._onClick}
-      >
-        Select
-      </button>
+      <div>
+        <button
+          className="ResourceMenu-button"
+          disabled={this.props.selectedGraphId &&
+            this.props.selectedGraphId === this.props.completeAbiGraphId}
+          onClick={this.onCompleteAbiClick}
+        >
+          Complete ABI
+        </button>
+        <button
+          className="ResourceMenu-button"
+          disabled={this.props.selectedGraphId &&
+            this.props.selectedGraphId === this.props.functionsGraphId}
+          onClick={this.onFunctionsClick}
+        >
+          Functions
+        </button>
+      </div>
     )
   }
 
-  _onClick () {
-    if (this.props.graphId) {
-      this.props.selectGraph(this.props.graphId)
+  onCompleteAbiClick () {
+    if (this.props.completeAbiGraphId) {
+      this.props.selectGraph(this.props.completeAbiGraphId)
     } else {
       this.props.createGraph(this.props.getCreateGraphParams(
-        'contract', 'deployed', this.props.contractName))
+        'contract', 'completeAbi', this.props.contractName))
+    }
+  }
+
+  onFunctionsClick () {
+    if (this.props.functionsGraphId) {
+      this.props.selectGraph(this.props.functionsGraphId)
+    } else {
+      this.props.createGraph(this.props.getCreateGraphParams(
+      'contract', 'functions', this.props.contractName))
     }
   }
 }
 
-ContractInstanceButton.propTypes = {
+ContractInstanceButtons.propTypes = {
   contractName: PropTypes.string,
   createGraph: PropTypes.func,
+  deleteGraph: PropTypes.func,
+  deleteAllGraphs: PropTypes.func,
   getCreateGraphParams: PropTypes.func,
   selectGraph: PropTypes.func,
-  selectedGraph: PropTypes.string,
-  graphId: PropTypes.string,
+  selectedGraphId: PropTypes.string,
+  completeAbiGraphId: PropTypes.string,
+  functionsGraphId: PropTypes.string,
 }

@@ -36,7 +36,6 @@
     "bootstrap": "^3.3.7",
     "chain-end": "^0.3.0",
     "cytoscape": "^3.2.14",
-    "cytoscape-cose-bilkent": "^4.0.0",
     "eslint": "^5.2.0",
     "immutable": "^3.8.2",
     "lodash": "^4.17.10",

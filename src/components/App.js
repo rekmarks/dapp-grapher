@@ -10,17 +10,19 @@ import Grapher from './Grapher'
 import Header from './Header'
 import ResourceMenu from './ResourceMenu'
 
-import './style/App.css'
-
 import { addContractType, deploy } from '../redux/reducers/contracts'
 import {
   createGraph,
+  deleteGraph,
+  deleteAllGraphs,
   getCreateGraphParams,
   selectGraph,
 } from '../redux/reducers/grapher'
 import { logRenderError } from '../redux/reducers/renderErrors'
 import { closeContractForm, openContractForm } from '../redux/reducers/ui'
 import { getWeb3 } from '../redux/reducers/web3'
+
+import './style/App.css'
 
 ReactModal.setAppElement('#root')
 
@@ -41,6 +43,10 @@ class App extends Component {
   }
 
   render () {
+
+    let currentGraph = null
+    if (this.props.selectedGraphObject) { currentGraph = this.props.selectedGraphObject.toJS() }
+
     return (
       <div className="App">
         <div className="App-rows" >
@@ -59,14 +65,17 @@ class App extends Component {
               contractInstances={this.props.contractInstances}
               createGraph={this.props.createGraph}
               getCreateGraphParams={getCreateGraphParams} // helper, not dispatch
+              deleteGraph={this.props.deleteGraph}
+              deleteAllGraphs={this.props.deleteAllGraphs}
               selectGraph={this.props.selectGraph}
-              selectedGraph={this.props.selectedGraph} />
+              selectedGraphId={this.props.selectedGraphId}
+              hasGraphs={this.props.hasGraphs} />
             </div>
             <div className="App-graph-container" >
               {
-                this.props.graph
+                currentGraph
                 ? <Grapher
-                    graph={this.props.graph}
+                    graph={currentGraph}
                     openContractForm={this.props.openContractForm} />
                 : <h2 className="App-no-graph-label">Please select a graph</h2>
               }
@@ -82,10 +91,11 @@ class App extends Component {
             className="App-modal-content"
           >
             {
-              this.props.graph
+              currentGraph
               ? <ContractForm
-                  nodes={this.props.graph.config.elements.nodes}
-                  contractName={this.props.graph.name}
+                  nodes={currentGraph.config.elements.nodes}
+                  contractName={currentGraph.name}
+                  graphType={currentGraph.type}
                   deploy={this.props.deploy}
                   closeContractForm={this.props.closeContractForm} />
               : null
@@ -104,10 +114,13 @@ App.propTypes = {
   contractInstances: PropTypes.object,
   contractTypes: PropTypes.object,
   // grapher
-  graph: PropTypes.object,
   createGraph: PropTypes.func,
+  deleteGraph: PropTypes.func,
+  deleteAllGraphs: PropTypes.func,
   selectGraph: PropTypes.func,
-  selectedGraph: PropTypes.string,
+  selectedGraphId: PropTypes.string,
+  selectedGraphObject: PropTypes.object,
+  hasGraphs: PropTypes.bool,
   // renderErrors
   logRenderError: PropTypes.func,
   // ui
@@ -133,8 +146,9 @@ function mapStateToProps (state) {
     contractInstances: state.contracts.instances,
     contractTypes: state.contracts.types,
     // grapher
-    selectedGraph: state.grapher.selectedGraph,
-    graph: state.grapher.graphs[state.grapher.selectedGraph],
+    selectedGraphId: state.grapher.selectedGraphId,
+    selectedGraphObject: state.grapher.graphs[state.grapher.selectedGraphId],
+    hasGraphs: Object.keys(state.grapher.graphs).length >= 1,
     // ui
     contractModal: state.ui.forms.contractForm,
     // web3
@@ -152,6 +166,8 @@ function mapDispatchToProps (dispatch) {
       dispatch(deploy(contractName, constructorParams)),
     // grapher
     createGraph: params => dispatch(createGraph(params)),
+    deleteGraph: graphId => dispatch(deleteGraph(graphId)),
+    deleteAllGraphs: () => dispatch(deleteAllGraphs()),
     selectGraph: graphId => dispatch(selectGraph(graphId)),
     // renderErrors
     logRenderError: (error, errorInfo) => dispatch(logRenderError(error, errorInfo)),
