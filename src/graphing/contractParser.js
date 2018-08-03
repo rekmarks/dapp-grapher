@@ -226,7 +226,7 @@ function getConstructorNodes (contractName, abi) {
 
 /**
  * Parses a smart contract ABI and returns the nodes corresponding to functions
- * and their parameters
+ * (not the constructor) and their parameters
  * @param  {string} contractName the name of the contract being parsed
  * @param  {object} abi          the ABI of the contract being parsed
  * @return {array}               an array of node objects

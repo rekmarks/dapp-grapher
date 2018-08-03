@@ -19,7 +19,11 @@ import {
   selectGraph,
 } from '../redux/reducers/grapher'
 import { logRenderError } from '../redux/reducers/renderErrors'
-import { closeContractForm, openContractForm } from '../redux/reducers/ui'
+import {
+  closeContractForm,
+  openContractForm,
+  selectContractFunction,
+} from '../redux/reducers/ui'
 import { getWeb3 } from '../redux/reducers/web3'
 
 import './style/App.css'
@@ -97,7 +101,9 @@ class App extends Component {
                   contractName={currentGraph.name}
                   graphType={currentGraph.type}
                   deploy={this.props.deploy}
-                  closeContractForm={this.props.closeContractForm} />
+                  closeContractForm={this.props.closeContractForm}
+                  selectContractFunction={this.props.selectContractFunction}
+                  selectedContractFunction={this.props.selectedContractFunction} />
               : null
             }
           </ReactModal>
@@ -127,6 +133,8 @@ App.propTypes = {
   contractModal: PropTypes.bool,
   closeContractForm: PropTypes.func,
   openContractForm: PropTypes.func,
+  selectContractFunction: PropTypes.func,
+  selectedContractFunction: PropTypes.string,
   // web3
   account: PropTypes.string,
   networkId: PropTypes.string,
@@ -150,7 +158,8 @@ function mapStateToProps (state) {
     selectedGraphObject: state.grapher.graphs[state.grapher.selectedGraphId],
     hasGraphs: Object.keys(state.grapher.graphs).length >= 1,
     // ui
-    contractModal: state.ui.forms.contractForm,
+    contractModal: state.ui.contractForm.open,
+    selectedContractFunction: state.ui.contractForm.selectedFunction,
     // web3
     account: state.web3.account,
     networkId: state.web3.networkId,
@@ -174,6 +183,7 @@ function mapDispatchToProps (dispatch) {
     // ui
     closeContractForm: () => dispatch(closeContractForm()),
     openContractForm: () => dispatch(openContractForm()),
+    selectContractFunction: func => dispatch(selectContractFunction(func)),
     // web3
     getWeb3: () => dispatch(getWeb3()),
   }

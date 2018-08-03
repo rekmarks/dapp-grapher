@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import React, { Component } from 'react'
 import Form from 'react-jsonschema-form'
 
+import DropdownMenu from './DropdownMenu'
 import { contractGraphTypes } from '../graphing/contractParser'
 
 import './style/ContractForm.css'
@@ -12,56 +13,79 @@ const log = (type) => console.log.bind(console, type)
 
 export default class ContractForm extends Component {
 
+  getConstructorForm = () => {
+
+    const formData = generateFunctionForm(this.props.nodes)
+
+    return (
+      <Form
+      className="ContractForm-form"
+      schema={formData.schema}
+      uiSchema={formData.uiSchema}
+      onChange={log('changed')}
+      onSubmit={
+        formData => {
+          this.props.deploy(
+            formData.schema.title,
+            Object.values(formData.formData)
+          )
+          this.props.closeContractForm()
+        }
+      }
+      onError={log('errors')} />
+    )
+  }
+
+  getFunctionsForm = () => {
+
+    const formComponents = [(
+      <DropdownMenu
+        key='DropdownMenu'
+        menuItemData={getFunctionIds(this.props.nodes)}
+        menuTitle={this.props.contractName}
+        selectAction={this.props.selectContractFunction} />
+    )]
+
+    if (this.props.selectedContractFunction) {
+      
+      const formData = generateFunctionForm(
+          this.props.nodes,
+          this.props.selectedContractFunction
+      )
+
+      formComponents.push(
+        <Form
+        key="ContractForm-form"
+        className="ContractForm-form"
+        schema={formData.schema}
+        uiSchema={formData.uiSchema}
+        onChange={log('changed')}
+        onSubmit={
+          formData => {
+            // do stuff
+            console.log('^_^ form was submitted ^_^')
+            this.props.closeContractForm()
+          }
+        }
+        onError={log('errors')} />
+      )
+    }
+
+    return formComponents
+  }
+
   render () {
 
-    let formComponents = null; let formData
+    let formComponents = null
 
     switch (this.props.graphType) {
 
-      case contractGraphTypes.completeAbi:
-
-        formData = generateForm(this.props.nodes, this.props.graphType)
-
-        formComponents = (
-          <Form
-          className="ContractForm-form"
-          schema={formData.schema}
-          uiSchema={formData.uiSchema}
-          onChange={log('changed')}
-          onSubmit={
-            (formData) => {
-              this.props.deploy(
-                formData.schema.title,
-                Object.values(formData.formData)
-              )
-              this.props.closeContractForm()
-            }
-          }
-          onError={log('errors')} />
-        )
+      case contractGraphTypes._constructor:
+        formComponents = this.getConstructorForm()
         break
 
-      case contractGraphTypes._constructor:
-
-        formData = generateForm(this.props.nodes, this.props.graphType)
-
-        formComponents = (
-          <Form
-          className="ContractForm-form"
-          schema={formData.schema}
-          uiSchema={formData.uiSchema}
-          onChange={log('changed')}
-          onSubmit={
-            (formData) => {
-              this.props.deploy(
-                formData.schema.title,
-                Object.values(formData.formData)
-              )
-              this.props.closeContractForm()
-            }
-          }
-          onError={log('errors')} />
-        )
+      case contractGraphTypes.functions:
+        formComponents = this.getFunctionsForm()
         break
 
       default:
@@ -82,17 +106,40 @@ ContractForm.propTypes = {
   nodes: PropTypes.array,
   deploy: PropTypes.func,
   closeContractForm: PropTypes.func,
+  selectContractFunction: PropTypes.func,
+  selectedContractFunction: PropTypes.string,
 }
 
 /* helper functions */
 
+function getFunctionIds (nodes) {
+
+  const functions = nodes.filter(node => node.data.type === 'function')
+    .map(node => {
+      return {
+        id: node.data.id,
+        name: node.data.nodeName,
+      }
+    })
+
+  return functions
+}
+
 /**
- * Takes the nodes of a smart contract graph and returns the schema
+ * Takes the nodes of a smart contract function graph and returns the schema
  * and uiSchema for a react-jsonschema-form
- * @param  {object} nodes the nodes to turn into a form
- * @return {object}       an object with attributes schema and uiSchema
+ * @param  {object} nodes   the nodes to turn into a form
+ * @return {object}         an object with attributes schema and uiSchema
  */
-function generateForm (nodes, graphType) {
+function generateFunctionForm (nodes, functionId=null) {
+
+  let functionNodes
+
+  functionId
+  ? functionNodes = nodes.filter(node => {
+      return node.data.id === functionId || node.data.parent === functionId
+    })
+  : functionNodes = nodes
 
   const schema = {
     title: null, // form title
@@ -108,17 +155,14 @@ function generateForm (nodes, graphType) {
     'ui:order': [], // parameter fields will be pushed in their correct order
   }
 
-  nodes.forEach(node => {
+  functionNodes.forEach(node => {
 
     // contract name = form title
-    if (node.data.type === 'contract') {
+    if (node.data.type === 'contract' || node.data.type === 'function') {
 
       schema.title = node.data.nodeName
 
     } else {
-
-      if (graphType === contractGraphTypes.completeAbi &&
-        node.data.type !== 'function') return
 
       // parse node data to create corresponding field object
       const field = {
@@ -130,6 +174,7 @@ function generateForm (nodes, graphType) {
       schema.properties[field.parameterName] = field
       schema.required.push(field.parameterName)
 
+      // order is retained from ABI and is correct for the web3.eth call
       uiSchema['ui:order'].push(field.parameterName)
       uiSchema[field.parameterName] = {
         'ui:placeholder': node.data.abi.type + ':' + node.data.abi.name,

@@ -115,6 +115,7 @@ export default function reducer (state = initialState, action) {
       }
 
     case ACTIONS.DEPLOYMENT_SUCCESS:
+      // also adds Truffle instance
       return {
         ...state,
         instances: {
