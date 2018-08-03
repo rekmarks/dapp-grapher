@@ -45,7 +45,7 @@ class DropdownMenu extends Component {
     })
   }
 
-  render() {
+  render () {
 
     const { anchorEl } = this.state
 

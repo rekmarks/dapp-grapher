@@ -40,14 +40,14 @@ export default class ContractForm extends Component {
 
     const formComponents = [(
       <DropdownMenu
-        key='DropdownMenu'
+        key="DropdownMenu"
         menuItemData={getFunctionIds(this.props.nodes)}
         menuTitle={this.props.contractName}
         selectAction={this.props.selectContractFunction} />
     )]
 
     if (this.props.selectedContractFunction) {
-      
+
       const formData = generateFunctionForm(
           this.props.nodes,
           this.props.selectedContractFunction
@@ -131,7 +131,7 @@ function getFunctionIds (nodes) {
  * @param  {object} nodes   the nodes to turn into a form
  * @return {object}         an object with attributes schema and uiSchema
  */
-function generateFunctionForm (nodes, functionId=null) {
+function generateFunctionForm (nodes, functionId = null) {
 
   let functionNodes
 
