@@ -143,7 +143,7 @@ function getClearErrorsAction () {
  */
 function getWeb3Thunk () {
 
-  return async dispatch => {
+  return async (dispatch, getState) => {
 
     dispatch(getWeb3Action())
 
@@ -185,9 +185,15 @@ function getWeb3Thunk () {
  */
 function getWeb3AccountThunk (web3) {
 
-  return async dispatch => {
+  return async (dispatch, getState) => {
+
+    const state = getState()
 
     dispatch(getAccountAction())
+
+    if (!state.web3.ready) {
+      dispatch(getAccountFailureAction(new Error('web3 not ready')))
+    }
 
     let accounts, networkId
     try {

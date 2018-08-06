@@ -10,7 +10,12 @@ import Grapher from './Grapher'
 import Header from './Header'
 import ResourceMenu from './ResourceMenu'
 
-import { addContractType, deploy } from '../redux/reducers/contracts'
+import {
+  addContractType,
+  addInstance,
+  deploy,
+} from '../redux/reducers/contracts'
+
 import {
   createGraph,
   deleteGraph,
@@ -18,12 +23,15 @@ import {
   getCreateGraphParams,
   selectGraph,
 } from '../redux/reducers/grapher'
+
 import { logRenderError } from '../redux/reducers/renderErrors'
+
 import {
   closeContractForm,
   openContractForm,
   selectContractFunction,
 } from '../redux/reducers/ui'
+
 import { getWeb3 } from '../redux/reducers/web3'
 
 import './style/App.css'
@@ -64,6 +72,7 @@ class App extends Component {
             <div className="App-ResourceMenu-container" >
               <ResourceMenu
               account={this.props.account}
+              addInstance={this.props.addInstance}
               networkId={this.props.networkId}
               contractTypes={this.props.contractTypes}
               contractInstances={this.props.contractInstances}
@@ -117,6 +126,7 @@ App.propTypes = {
   // contracts
   addContractType: PropTypes.func,
   deploy: PropTypes.func,
+  addInstance: PropTypes.func,
   contractInstances: PropTypes.object,
   contractTypes: PropTypes.object,
   // grapher
@@ -173,6 +183,8 @@ function mapDispatchToProps (dispatch) {
     addContractType: contractJSON => dispatch(addContractType(contractJSON)),
     deploy: (contractName, constructorParams) =>
       dispatch(deploy(contractName, constructorParams)),
+    addInstance: (contractName, address) =>
+      dispatch(addInstance(contractName, address)),
     // grapher
     createGraph: params => dispatch(createGraph(params)),
     deleteGraph: graphId => dispatch(deleteGraph(graphId)),

@@ -1,5 +1,9 @@
 
-import { contracts as defaultContracts, deploy as _deploy } from 'chain-end'
+import {
+  contracts as defaultContracts,
+  deploy as _deploy,
+  getInstance,
+} from 'chain-end'
 
 import { contractGraphTypes as graphTypes } from '../../graphing/contractParser'
 import { deleteGraph } from './grapher'
@@ -13,6 +17,9 @@ const ACTIONS = {
   DEPLOY: 'CONTRACTS:DEPLOY',
   DEPLOYMENT_SUCCESS: 'CONTRACTS:DEPLOYMENT_SUCCESS',
   DEPLOYMENT_FAILURE: 'CONTRACTS:DEPLOYMENT_FAILURE',
+  ADD_INSTANCE: 'CONTRACTS:ADD_INSTANCE',
+  ADD_INSTANCE_SUCCESS: 'CONTRACTS:ADD_INSTANCE_SUCCESS',
+  ADD_INSTANCE_FAILURE: 'CONTRACTS:ADD_INSTANCE_FAILURE',
   LOG_ERROR: 'CONTRACTS:LOG_ERROR',
 }
 
@@ -45,6 +52,7 @@ export {
   getRemoveAllGraphIdsAction as removeAllContractGraphIds,
   removeContractTypeThunk as removeContractType,
   deployThunk as deploy,
+  addInstanceThunk as addInstance,
   getClearErrorsAction as clearerrors,
   excludeKeys as contractsExcludeKeys,
   initialState as contractsInitialState,
@@ -146,7 +154,53 @@ export default function reducer (state = initialState, action) {
           ? state.errors.concat([action.error])
           : [action.error],
         ready: true,
-    }
+      }
+
+    case ACTIONS.ADD_INSTANCE:
+      return {
+        ...state,
+        ready: false,
+      }
+
+    case ACTIONS.ADD_INSTANCE_SUCCESS:
+
+      const newInstances = { ...state.instances }
+
+      if (!newInstances[action.data.networkId]) {
+        newInstances[action.data.networkId] = {}
+      }
+
+      if (newInstances[action.data.networkId][action.data.instance.address]) {
+
+        newInstances[action.data.networkId][action.data.instance.address] = {
+          ...newInstances[action.data.networkId][action.data.instance.address],
+          instance: action.data.instance,
+        }
+      } else {
+
+        newInstances[action.data.networkId][action.data.instance.address] = {
+          account: action.data.account,
+          instance: action.data.instance,
+          type: action.data.contractName,
+          constructorParams: null,
+        }
+      }
+
+      return {
+        ...state,
+        instances: newInstances,
+        ready: true,
+      }
+
+    case ACTIONS.ADD_INSTANCE_FAILURE:
+      return {
+        ...state,
+        errors:
+          state.errors
+          ? state.errors.concat([action.error])
+          : [action.error],
+        ready: true,
+      }
 
     case ACTIONS.CLEAR_ERRORS:
       return {
@@ -220,6 +274,26 @@ function getDeploymentFailureAction (error) {
   }
 }
 
+function getAddInstanceAction () {
+  return {
+    type: ACTIONS.ADD_INSTANCE,
+  }
+}
+
+function getAddInstanceSuccessAction (payload) {
+  return {
+    type: ACTIONS.ADD_INSTANCE_SUCCESS,
+    data: payload,
+  }
+}
+
+function getAddInstanceFailureAction (error) {
+  return {
+    type: ACTIONS.ADD_INSTANCE_FAILURE,
+    error: error,
+  }
+}
+
 function getClearErrorsAction () {
   return {
     type: ACTIONS.CLEAR_ERRORS,
@@ -287,18 +361,27 @@ function removeContractTypeThunk (contractName) {
 /* Asynchronous action creators */
 
 /**
- * [getDeployThunk description]
- * @param  {[type]} contractName      [description]
- * @param  {[type]} constructorParams [description]
- * @return {[type]}                   [description]
+ * Attempts to deploy the given contract by calling its constructor with the
+ * given parameters. Dispatches actions at start and success or failure.
+ * 
+ * @param  {string} contractName      the name of the contract to deploy
+ * @param  {array} constructorParams  the parameters, in the order they must be
+ *                                    passed to the constructor
  */
 function deployThunk (contractName, constructorParams) {
 
   return async (dispatch, getState) => {
 
-    dispatch(getDeployAction())
-
     const state = getState()
+    if (!state.contracts.ready) {
+      dispatch(getDeploymentFailureAction(new Error('contracts not ready')))
+    }
+    if (!state.web3.ready) {
+      dispatch(getAddInstanceFailureAction(new Error('web3 not ready')))
+    }
+
+    dispatch(getDeployAction())
+    
     const contractJSON = state.contracts.types[contractName].artifact
 
     if (!state.web3.provider) {
@@ -340,5 +423,66 @@ function deployThunk (contractName, constructorParams) {
       networkId: state.web3.networkId,
     }
     dispatch(getDeploymentSuccessAction(payload))
+  }
+}
+
+/**
+ * Attempts to add a deployed contract instance to state.
+ * Fails if contract type not yet added, if instance already exists, or if
+ * no valid contract is found at the given address on the current network.
+ * 
+ * @param {[type]} contractName the contract type of the instance
+ * @param {[type]} address      the address of the instance
+ */
+function addInstanceThunk (contractName, address) {
+
+  return async (dispatch, getState) => {
+
+    const state = getState()
+    if (!state.contracts.ready) {
+      dispatch(getAddInstanceFailureAction(new Error('contracts not ready')))
+    }
+    if (!state.web3.ready) {
+      dispatch(getAddInstanceFailureAction(new Error('web3 not ready')))
+    }
+
+    const account = state.web3.account
+    const networkId = state.web3.networkId
+    const provider = state.web3.provider
+
+    dispatch(getAddInstanceAction())
+
+    let oldInstance
+    try {
+      oldInstance = state.contracts.instances[networkId][address].instance
+    } catch (error) {} // do nothing
+    
+    if (oldInstance)
+      dispatch(getAddInstanceFailureAction(new Error(
+        'instance already added'
+      )))
+
+    if (!state.contracts.types[contractName])
+      dispatch(getAddInstanceFailureAction(new Error(
+        'missing contract type'
+      )))
+
+    const artifact = state.contracts.types[contractName].artifact
+
+    let instance
+    try {
+      instance = await getInstance(artifact, provider, address, account)
+    } catch (error) {
+      dispatch(getAddInstanceFailureAction(error))
+      return
+    }
+
+    dispatch(getAddInstanceSuccessAction({
+      account: account,
+      instance: instance,
+      networkId: networkId,
+      type: contractName,
+      // TODO: constructor parameters?
+    }))
   }
 }
