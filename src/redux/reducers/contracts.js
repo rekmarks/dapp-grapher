@@ -575,7 +575,7 @@ function addInstanceThunk (contractName, address) {
  * @param  {[type]} sender       [description]
  * @return {[type]}              [description]
  */
-function callInstanceThunk (address, functionName, params=null, sender=null) {
+function callInstanceThunk (address, functionName, params = null, sender = null) {
 
   return async (dispatch, getState) => {
 
@@ -592,7 +592,7 @@ function callInstanceThunk (address, functionName, params=null, sender=null) {
     dispatch(getCallInstanceAction())
 
     const networkId = state.web3.networkId
-    
+
     let instance
     try {
       instance = state.contracts.instances[networkId][address].truffleContract

@@ -194,7 +194,7 @@ function mapDispatchToProps (dispatch) {
       dispatch(deploy(contractName, constructorParams)),
     addInstance: (contractName, address) =>
       dispatch(addInstance(contractName, address)),
-    callInstance: (address, functionName, params=null, sender=null) =>
+    callInstance: (address, functionName, params = null, sender = null) =>
       dispatch(callInstance(address, functionName, params, sender)),
     selectContractAddress: address => dispatch(selectContractAddress(address)),
     // grapher

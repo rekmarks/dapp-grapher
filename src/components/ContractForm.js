@@ -61,10 +61,10 @@ export default class ContractForm extends Component {
         uiSchema={formData.uiSchema}
         onChange={log('changed')}
         onSubmit={formData => {
-            
+
             const params = [
               this.props.contractAddress,
-              formData.schema.abiName
+              formData.schema.abiName,
             ]
 
             if (Object.keys(formData.formData).length > 0) {
