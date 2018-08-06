@@ -193,6 +193,7 @@ function getWeb3AccountThunk (web3) {
 
     if (!state.web3.ready) {
       dispatch(getAccountFailureAction(new Error('web3 not ready')))
+      return
     }
 
     let accounts, networkId

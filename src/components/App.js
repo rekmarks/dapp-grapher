@@ -13,7 +13,9 @@ import ResourceMenu from './ResourceMenu'
 import {
   addContractType,
   addInstance,
+  callInstance,
   deploy,
+  selectContractAddress,
 } from '../redux/reducers/contracts'
 
 import {
@@ -71,18 +73,19 @@ class App extends Component {
           <div className="App-bottom-row" >
             <div className="App-ResourceMenu-container" >
               <ResourceMenu
-              account={this.props.account}
-              addInstance={this.props.addInstance}
-              networkId={this.props.networkId}
-              contractTypes={this.props.contractTypes}
-              contractInstances={this.props.contractInstances}
-              createGraph={this.props.createGraph}
-              getCreateGraphParams={getCreateGraphParams} // helper, not dispatch
-              deleteGraph={this.props.deleteGraph}
-              deleteAllGraphs={this.props.deleteAllGraphs}
-              selectGraph={this.props.selectGraph}
-              selectedGraphId={this.props.selectedGraphId}
-              hasGraphs={this.props.hasGraphs} />
+                account={this.props.account}
+                addInstance={this.props.addInstance}
+                networkId={this.props.networkId}
+                contractTypes={this.props.contractTypes}
+                contractInstances={this.props.contractInstances}
+                createGraph={this.props.createGraph}
+                getCreateGraphParams={getCreateGraphParams} // helper, not dispatch
+                deleteGraph={this.props.deleteGraph}
+                deleteAllGraphs={this.props.deleteAllGraphs}
+                selectGraph={this.props.selectGraph}
+                selectedGraphId={this.props.selectedGraphId}
+                selectContractAddress={this.props.selectContractAddress}
+                hasGraphs={this.props.hasGraphs} />
             </div>
             <div className="App-graph-container" >
               {
@@ -106,10 +109,12 @@ class App extends Component {
             {
               currentGraph
               ? <ContractForm
+                  contractAddress={this.props.selectedContractAddress}
                   nodes={currentGraph.config.elements.nodes}
                   contractName={currentGraph.name}
                   graphType={currentGraph.type}
                   deploy={this.props.deploy}
+                  callInstance={this.props.callInstance}
                   closeContractForm={this.props.closeContractForm}
                   selectContractFunction={this.props.selectContractFunction}
                   selectedContractFunction={this.props.selectedContractFunction} />
@@ -127,8 +132,11 @@ App.propTypes = {
   addContractType: PropTypes.func,
   deploy: PropTypes.func,
   addInstance: PropTypes.func,
+  callInstance: PropTypes.func,
   contractInstances: PropTypes.object,
   contractTypes: PropTypes.object,
+  selectedContractAddress: PropTypes.string,
+  selectContractAddress: PropTypes.func,
   // grapher
   createGraph: PropTypes.func,
   deleteGraph: PropTypes.func,
@@ -163,6 +171,7 @@ function mapStateToProps (state) {
     // contracts
     contractInstances: state.contracts.instances,
     contractTypes: state.contracts.types,
+    selectedContractAddress: state.contracts.selectedAddress,
     // grapher
     selectedGraphId: state.grapher.selectedGraphId,
     selectedGraphObject: state.grapher.graphs[state.grapher.selectedGraphId],
@@ -185,6 +194,9 @@ function mapDispatchToProps (dispatch) {
       dispatch(deploy(contractName, constructorParams)),
     addInstance: (contractName, address) =>
       dispatch(addInstance(contractName, address)),
+    callInstance: (address, functionName, params=null, sender=null) =>
+      dispatch(callInstance(address, functionName, params, sender)),
+    selectContractAddress: address => dispatch(selectContractAddress(address)),
     // grapher
     createGraph: params => dispatch(createGraph(params)),
     deleteGraph: graphId => dispatch(deleteGraph(graphId)),

@@ -60,11 +60,20 @@ export default class ContractForm extends Component {
         schema={formData.schema}
         uiSchema={formData.uiSchema}
         onChange={log('changed')}
-        onSubmit={
-          formData => {
-            // do stuff
-            console.log('^_^ form was submitted ^_^')
-            this.props.closeContractForm()
+        onSubmit={formData => {
+            
+            const params = [
+              this.props.contractAddress,
+              formData.schema.abiName
+            ]
+
+            if (Object.keys(formData.formData).length > 0) {
+              params.push(Object.values(formData.formData))
+            }
+            // debugger
+            this.props.callInstance(...params)
+            // console.log(formData)
+            // this.props.closeContractForm()
           }
         }
         onError={log('errors')} />
@@ -101,6 +110,8 @@ export default class ContractForm extends Component {
 }
 
 ContractForm.propTypes = {
+  contractAddress: PropTypes.string,
+  callInstance: PropTypes.func,
   contractName: PropTypes.string,
   graphType: PropTypes.string,
   nodes: PropTypes.array,
@@ -161,6 +172,7 @@ function generateFunctionForm (nodes, functionId = null) {
     if (node.data.type === 'contract' || node.data.type === 'function') {
 
       schema.title = node.data.nodeName
+      schema.abiName = node.data.abiName
 
     } else {
 

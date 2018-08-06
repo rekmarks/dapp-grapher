@@ -82,6 +82,7 @@ function getNodes (contractName, abi, mode) {
   const contractNode = {
     data: {
       id: contractName,
+      abiName: contractName,
       nodeName: getFormattedName(contractName),
     },
   }
@@ -148,6 +149,7 @@ function getCompleteAbiNodes (contractName, abi) {
     } else {
       if (!entry.name) throw new Error('getNode: invalid ABI entry: missing name')
       data.id = contractName + ':' + entry.name
+      data.abiName = entry.name
       data.nodeName = getFormattedName(entry.name)
       data.type = entry.type ? entry.type : 'function' // abi type defaults to function if omitted
       data.parent = data.type === 'event' ? eventsId : functionsId
@@ -212,6 +214,7 @@ function getConstructorNodes (contractName, abi) {
       data: {
         id: contractName + ':constructor:' + input.name,
         nodeName: getFormattedName(input.name),
+        abiName: input.name,
         parent: contractName,
         type: 'parameter',
         abi: input,
@@ -250,6 +253,7 @@ function getFunctionNodes (contractName, abi) {
       data: {
         id: functionId, // extra colon to ensure no collisions
         nodeName: getFormattedName(entry.name),
+        abiName: entry.name,
         parent: contractName,
         type: 'function',
         abi: entry,
@@ -263,6 +267,7 @@ function getFunctionNodes (contractName, abi) {
         data: {
           id: functionId + ':' + input.name,
           nodeName: getFormattedName(input.name),
+          abiName: input.name,
           parent: functionId,
           type: 'parameter',
           abi: input,
