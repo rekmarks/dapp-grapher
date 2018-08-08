@@ -22,7 +22,7 @@ const initialState = {
 
 export {
   getWeb3Thunk as getWeb3,
-  getClearErrorsAction as clearweb3Errorss,
+  getClearErrorsAction as clearweb3Errors,
   initialState as web3InitialState,
 }
 
