@@ -33,6 +33,7 @@ export {
  *                               containing:
  *                                 0  the complete ABI
  *                                 1  constructor parameters
+ *                                 2  functions and their parameters (excluding constructor)
  * @return {object}              a Cytoscape graph with config and style
  *                               properties
  */
@@ -54,10 +55,12 @@ export default function parseContract (contract, mode) {
       throw new Error('invalid mode: ' + mode)
   }
   graph.id = graph.name + ':' + graph.type
+  const nodeData = getNodes(contract.contractName, contract.abi, mode)
   graph.config.elements = {
-    nodes: getNodes(contract.contractName, contract.abi, mode),
+    nodes: nodeData.nodes,
     edges: getEdges(contract.contractName, contract.abi, mode),
   }
+  graph.layoutData = nodeData.layoutData
   return graph
 }
 
@@ -74,7 +77,7 @@ export default function parseContract (contract, mode) {
  */
 function getNodes (contractName, abi, mode) {
 
-  let nodes
+  let nodes, layoutData
 
   // contract node (parent of all others)
   // parent nodes don't have positions; their position is a function
@@ -104,7 +107,9 @@ function getNodes (contractName, abi, mode) {
     case 2:
       contractNode.data.type = 'contract'
       contractNode.data.abiType = 'functions'
-      nodes = getFunctionNodes(contractName, abi)
+      const data = getFunctionNodes(contractName, abi)
+      nodes = data.nodes
+      layoutData = data.layoutData
       break
 
     default:
@@ -113,7 +118,7 @@ function getNodes (contractName, abi, mode) {
 
   nodes.push(contractNode)
 
-  return nodes
+  return { nodes, layoutData}
 }
 
 /**
@@ -241,6 +246,15 @@ function getFunctionNodes (contractName, abi) {
   )
 
   const nodes = []
+  const layoutData = {
+    functionsWithInputs: [],
+    functionsWithoutInputs: [],
+  }
+
+  // const gettersId = contractName + '::Getters'
+  // const pureId = contractName + '::Pure'
+  // const mutatorsId = contractName + '::Mutators'
+  // let hasGetters = false, hasPure = false, hasMutators = false
 
   functionsAbi.forEach(entry => {
 
@@ -249,18 +263,45 @@ function getFunctionNodes (contractName, abi) {
     const functionId = contractName + ':' + entry.name
 
     // add function node
-    nodes.push({
+    const functionNode = {
       data: {
-        id: functionId, // extra colon to ensure no collisions
+        id: functionId,
         nodeName: getFormattedName(entry.name),
         abiName: entry.name,
         parent: contractName,
         type: 'function',
         abi: entry,
       },
-    })
+    }
 
-    // add input node(s)
+    // TODO: entry.constant and no inputs indicates values that could be
+    // programmatically retrieved and displayed in the UI
+    // if (entry.stateMutability === 'view') {
+
+    //   if (!hasGetters) hasGetters = true
+
+    //   functionNode.data.parent = gettersId
+    // } else if (entry.stateMutability === 'pure') {
+
+    //   if (!hasPure) hasPure = true
+
+    //   functionNode.data.parent = pureId
+    // } else {
+
+    //   if (!hasMutators) hasMutators = true
+
+    //   functionNode.data.parent = mutatorsId
+    // }
+
+    if (!entry.inputs || entry.inputs.length === 0) {
+      functionNode.data.hasChildren = false
+      layoutData.functionsWithoutInputs.push(functionId)
+    } else {
+      functionNode.data.hasChildren = true
+      layoutData.functionsWithInputs.push(functionId)
+    }
+
+    // add input nodes (if any)
     entry.inputs.forEach(input => {
 
       nodes.push({
@@ -276,9 +317,36 @@ function getFunctionNodes (contractName, abi) {
         position: { x: Math.random(), y: Math.random()},
       })
     })
+
+    nodes.push(functionNode)
   })
 
-  return nodes
+  // if (hasGetters) nodes.push({
+  //   data: {
+  //     id: gettersId,
+  //     nodeName: 'Getters',
+  //     parent: contractName,
+  //     type: 'ui',
+  //   }
+  // })
+  // if (hasPure) nodes.push({
+  //   data: {
+  //     id: pureId,
+  //     nodeName: 'Pure',
+  //     parent: contractName,
+  //     type: 'ui',
+  //   }
+  // })
+  // if (hasMutators) nodes.push({
+  //   data: {
+  //     id: mutatorsId,
+  //     nodeName: 'Mutators',
+  //     parent: contractName,
+  //     type: 'ui',
+  //   }
+  // })
+
+  return {nodes, layoutData}
 }
 
 function getEdges (abi) {

@@ -133,6 +133,11 @@ function getFunctionIds (nodes) {
       }
     })
 
+  functions.sort((a, b) => {
+    if (a.name === b.name) return 0 // sanity
+    return a.name < b.name ? -1 : 1
+  })
+
   return functions
 }
 

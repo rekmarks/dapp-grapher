@@ -10,7 +10,6 @@ class Grapher extends Component {
   constructor (props) {
     super(props)
     this.state = { cy: {}}
-    this.initGraph = this.initGraph.bind(this)
   }
 
   // initialize graph on mount
@@ -35,7 +34,7 @@ class Grapher extends Component {
   }
 
   // initialize graph and prepare for rendering
-  initGraph () {
+  initGraph = () => {
 
     this.props.graph.config.container = this.cyRef
 
@@ -51,10 +50,6 @@ class Grapher extends Component {
         }
       })
     }
-
-    // set initial zoom and pan
-    cy.zoom(0.6)
-    cy.center()
 
     // handle opening contract form
     let nodeSelector
@@ -79,12 +74,27 @@ class Grapher extends Component {
         nodeSelector = 'node' // some default
     }
 
-    if (this.props.graph.type !== contractGraphTypes.completeAbi) {
+    if (this.props.graph.type === contractGraphTypes.functions) {
 
       cy.on('taphold', nodeSelector, event => {
         this.props.openContractForm()
       })
+      // debugger
+      setFunctionsLayout(cy, this.props.graph.layoutData)
+
+      // const layout = cy.layout({
+      //   name: 'grid',
+      //   sort: sortNodes,
+      //   rows: 2,
+      //   condensed: true,
+      // })
+
+      // layout.run()
     }
+
+    // set initial zoom and pan
+    cy.zoom(0.6)
+    cy.center()
 
     this.setState({ cy: cy})
   }
@@ -102,3 +112,77 @@ Grapher.propTypes = {
 }
 
 export default Grapher
+
+function setFunctionsLayout (cy, layoutData) {
+
+  const layoutConfig = {
+    name: 'grid',
+    fit: false,
+    sort: sortNodes,
+    rows: 1,
+    // cols: 2,
+    condensed: true,
+  }
+
+  const hasParams = layoutData.functionsWithInputs
+  // const noParams = layoutData.functionsWithoutInputs
+  // const numFunctions = hasParams.length + noParams.length
+
+  let row = 0; let width = 0; let height = 0
+  const rowHeight = 200
+
+  hasParams.forEach(func => {
+
+    const inputNodes = cy.elements('node[parent = "' + func + '"]')
+    inputNodes.layout(layoutConfig).run()
+
+    if (Math.ceil(inputNodes.length * 50) + 50 > 600) {
+      row++
+      width = 0
+      height = height - (rowHeight * row)
+    }
+
+    inputNodes.positions((node, i) => {
+      return {
+        x: node.position('x') + width,
+        y: node.position('y') - height,
+      }
+    })
+
+    width += Math.ceil(inputNodes.length * 50) + 50
+  })
+}
+
+function sortNodes (a, b) {
+
+  const aType = a.data('type'); const bType = b.data('type')
+  const aParent = a.data('parent'); const bParent = b.data('parent')
+  const aName = a.data('nodeName'); const bName = b.data('nodeName')
+
+  if (aType === 'contract') return 1
+  if (bType === 'contract') return -1
+
+  // if (aType === 'function' && bType === 'function') {
+  //   if (a.data('hasChildren')) {
+  //     if (b.data('hasChildren')) return 0
+  //     else return 1
+  //   } else {
+  //     if (b.data('hasChildren')) return -1
+  //     else return 0
+  //   }
+  // }
+  // if (aType === 'function') return 1
+  // else if (bType === 'function') return -1
+
+  if (aType === bType) {
+    if (aParent === bParent) {
+      return aName < bName ? -1 : 1
+    } else {
+      return aParent < bParent ? -1 : 1
+    }
+  } else {
+    if (aType === 'function') return 1
+    if (bType === 'function') return -1
+  }
+  return 0
+}

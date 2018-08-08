@@ -86,9 +86,7 @@ const config = {
 
   elements: {},
 
-  layout: {
-    name: 'grid',
-  },
+  // layout: {}, // now done in the component
 }
 
 const style = {
