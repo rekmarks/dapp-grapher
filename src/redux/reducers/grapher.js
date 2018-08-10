@@ -2,7 +2,7 @@
 import uuid from 'uuid/v4'
 import { fromJS } from 'immutable'
 
-import parseContract, { contractGraphTypes } from '../../graphing/contractParser'
+import parseContract, { contractGraphTypes } from '../../graphing/parseContract'
 import { setContractGraphId, removeAllContractGraphIds } from './contracts'
 
 // testing
@@ -34,13 +34,6 @@ const excludeKeys = [
   'selectedGraphId',
   'selectedGraphName',
   'errors',
-]
-
-// for contract graph creation
-const contractSubtypes = [
-  'constructor',
-  'completeAbi',
-  'functions',
 ]
 
 export {
@@ -278,7 +271,7 @@ function getGraphCreationParameters (type, subType = null, contractName = null) 
 
   if (type === 'contract') {
 
-    if (!contractSubtypes.includes(subType)) {
+    if (!contractGraphTypes.includes(subType)) {
       throw new Error('missing contract graph subtype')
     }
     if (!contractName) throw new Error('missing contract name')

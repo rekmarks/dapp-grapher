@@ -3,18 +3,12 @@ import PropTypes from 'prop-types'
 import React, { Component } from 'react'
 import Collapse, { Panel } from 'rc-collapse'
 
-import { contractGraphTypes } from '../graphing/contractParser'
+import { contractGraphTypes } from '../graphing/parseContract'
 
 import 'rc-collapse/assets/index.css'
 import './style/ResourceMenu.css'
 
 export default class ResourceMenu extends Component {
-
-  constructor (props) {
-    super(props)
-    this.getContractInstancesJSX = this.getContractInstancesJSX.bind(this)
-    this.getContractsJSX = this.getContractsJSX.bind(this)
-  }
 
   // componentDidMount () {
   //   this.setState((prevProps, props) => {
@@ -58,7 +52,7 @@ export default class ResourceMenu extends Component {
    * Gets the JSX representing available contract types for deployment
    * @return {jsx}  one <ContractTypeButton> for every contract type in props
    */
-  getContractsJSX () {
+  getContractsJSX = () => {
 
     if (
       !this.props.contractTypes ||
@@ -97,7 +91,7 @@ export default class ResourceMenu extends Component {
    * @return {jsx}  Panel with one Collapse child for every deployed instance
    *                associated with the account and network id in props
    */
-  getContractInstancesJSX () {
+  getContractInstancesJSX = () => {
 
     if (
       !this.props.account ||
@@ -116,8 +110,6 @@ export default class ResourceMenu extends Component {
       if (instance.account === _this.props.account) {
 
         // instance.type is the same as contractName
-        const completeAbiGraphId =
-          _this.props.contractTypes[instance.type][contractGraphTypes.completeAbi]
         const functionsGraphId =
           _this.props.contractTypes[instance.type][contractGraphTypes.functions]
 
@@ -135,7 +127,6 @@ export default class ResourceMenu extends Component {
                 selectContractAddress={this.props.selectContractAddress}
                 addInstance={_this.props.addInstance}
                 hasInstance={!!instance.truffleInstance}
-                completeAbiGraphId={completeAbiGraphId}
                 functionsGraphId={functionsGraphId}
                 getCreateGraphParams={_this.props.getCreateGraphParams}
                 createGraph={_this.props.createGraph}
@@ -177,30 +168,25 @@ ResourceMenu.propTypes = {
 
 class ContractTypeButton extends Component {
 
-  constructor (props) {
-    super(props)
-    this._onClick = this._onClick.bind(this)
-  }
-
   render () {
     return (
       <button
         className="ResourceMenu-button"
         disabled={this.props.selectedGraphId &&
           this.props.selectedGraphId === this.props.graphId}
-        onClick={this._onClick}
+        onClick={this.onContractTypeClick}
       >
         {this.props.contractName}
       </button>
     )
   }
 
-  _onClick () {
+  onContractTypeClick = () => {
     if (this.props.graphId) {
       this.props.selectGraph(this.props.graphId)
     } else {
       this.props.createGraph(this.props.getCreateGraphParams(
-        'contract', 'constructor', this.props.contractName))
+        'contract', contractGraphTypes._constructor, this.props.contractName))
     }
   }
 }
@@ -216,23 +202,9 @@ ContractTypeButton.propTypes = {
 
 class ContractInstanceButtons extends Component {
 
-  constructor (props) {
-    super(props)
-    this.onCompleteAbiClick = this.onCompleteAbiClick.bind(this)
-    this.onFunctionsClick = this.onFunctionsClick.bind(this)
-  }
-
   render () {
     return (
       <div>
-        <button
-          className="ResourceMenu-button"
-          disabled={this.props.selectedGraphId &&
-            this.props.selectedGraphId === this.props.completeAbiGraphId}
-          onClick={this.onCompleteAbiClick}
-        >
-          Complete ABI
-        </button>
         <button
           className="ResourceMenu-button"
           disabled={this.props.selectedGraphId &&
@@ -245,16 +217,7 @@ class ContractInstanceButtons extends Component {
     )
   }
 
-  onCompleteAbiClick () {
-    if (this.props.completeAbiGraphId) {
-      this.props.selectGraph(this.props.completeAbiGraphId)
-    } else {
-      this.props.createGraph(this.props.getCreateGraphParams(
-        'contract', 'completeAbi', this.props.contractName))
-    }
-  }
-
-  onFunctionsClick () {
+  onFunctionsClick = () => {
     if (!this.props.hasInstance) {
       this.props.addInstance(this.props.contractName, this.props.address)
     }
@@ -262,7 +225,7 @@ class ContractInstanceButtons extends Component {
       this.props.selectGraph(this.props.functionsGraphId)
     } else {
       this.props.createGraph(this.props.getCreateGraphParams(
-      'contract', 'functions', this.props.contractName))
+      'contract', contractGraphTypes.functions, this.props.contractName))
     }
     // TODO: unsafe (addInstance could take too long)
     this.props.selectContractAddress(this.props.address)
@@ -281,6 +244,5 @@ ContractInstanceButtons.propTypes = {
   selectGraph: PropTypes.func,
   selectedGraphId: PropTypes.string,
   selectContractAddress: PropTypes.func,
-  completeAbiGraphId: PropTypes.string,
   functionsGraphId: PropTypes.string,
 }

@@ -37,7 +37,7 @@
 }
 
 .Header-links {
-  display: flex; // eliminates space between for some reason
+  display: flex;
   flex-direction: row;
   justify-content: flex-end;
 }

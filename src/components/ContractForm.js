@@ -4,7 +4,7 @@ import React, { Component } from 'react'
 import Form from 'react-jsonschema-form'
 
 import DropdownMenu from './DropdownMenu'
-import { contractGraphTypes } from '../graphing/contractParser'
+import { contractGraphTypes } from '../graphing/parseContract'
 
 import './style/ContractForm.css'
 

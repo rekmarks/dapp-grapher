@@ -4,11 +4,11 @@ const assert = require('assert')
 const util = require('util')
 
 import { Deployer, deploy, contracts } from 'chain-end'
-import parse from '../graphing/contractParser'
+import parse from '../graphing/parseContract'
 
 const StandardERC20_JSON = contracts.StandardERC20
 
-const elements = parse(StandardERC20_JSON, 0)
+const elements = parse(StandardERC20_JSON, 2)
 
 console.log(util.inspect(elements, {showHidden: false, depth: null}))
 

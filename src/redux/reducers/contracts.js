@@ -6,7 +6,7 @@ import {
   callInstance,
 } from 'chain-end'
 
-import { contractGraphTypes as graphTypes } from '../../graphing/contractParser'
+import { contractGraphTypes as graphTypes } from '../../graphing/parseContract'
 import { deleteGraph } from './grapher'
 
 const ACTIONS = {
