@@ -5,14 +5,6 @@ import { fromJS } from 'immutable'
 import parseContract, { contractGraphTypes } from '../../graphing/parseContract'
 import { setContractGraphId, removeAllContractGraphIds } from './contracts'
 
-// testing
-// import { contracts } from 'chain-end'
-// const testGraph = parseContract(contracts.StandardERC20, 1)
-// testing
-
-// TODO: available graphs must track the contracts reducer?
-  // Solution: write and export thunk that iterates through graphs
-  // and updates accordingly
 const ACTIONS = {
   ADD_GRAPH: 'GRAPHER:ADD_GRAPH',
   DELETE_GRAPH: 'GRAPHER:DELETE_GRAPH',
@@ -188,15 +180,15 @@ function createGraphThunk (params) {
       // select parser mode
       let parseMode, payloadKey
       switch (params.subType) {
-        case 'completeAbi':
-          parseMode = 0
-          payloadKey = contractGraphTypes.completeAbi
-          break
-        case 'constructor':
+        // case contractGraphTypes.completeAbi:
+        //   parseMode = 0
+        //   payloadKey = contractGraphTypes.completeAbi
+        //   break
+        case contractGraphTypes._constructor:
           parseMode = 1
           payloadKey = contractGraphTypes._constructor
           break
-        case 'functions':
+        case contractGraphTypes.functions:
           parseMode = 2
           payloadKey = contractGraphTypes.functions
           break
@@ -256,11 +248,6 @@ function deleteAllGraphsThunk (graphId) {
   }
 }
 
-// TODO
-// function addCompoundGraphThunk (params) {
-
-// }
-
 /* helpers */
 
 function getGraphCreationParameters (type, subType = null, contractName = null) {
@@ -271,7 +258,7 @@ function getGraphCreationParameters (type, subType = null, contractName = null) 
 
   if (type === 'contract') {
 
-    if (!contractGraphTypes.includes(subType)) {
+    if (!Object.values(contractGraphTypes).includes(subType)) {
       throw new Error('missing contract graph subtype')
     }
     if (!contractName) throw new Error('missing contract name')

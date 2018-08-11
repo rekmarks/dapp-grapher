@@ -5,7 +5,7 @@ import ReactModal from 'react-modal'
 import { connect } from 'react-redux'
 // import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom'
 
-// import ContractForm from './ContractForm'
+import ContractForm from './ContractForm'
 import Grapher from './Grapher'
 import Header from './Header'
 import ResourceMenu from './ResourceMenu'
@@ -59,8 +59,8 @@ class App extends Component {
 
   render () {
 
-    const currentGraph = true // TODO: jointjs temp
-    // if (this.props.selectedGraphObject) { currentGraph = this.props.selectedGraphObject.toJS() }
+    let currentGraph = null
+    if (this.props.selectedGraphObject) { currentGraph = this.props.selectedGraphObject.toJS() }
 
     return (
       <div className="App">
@@ -110,17 +110,16 @@ class App extends Component {
           >
             {
               currentGraph
-              ? null
-              // ? <ContractForm
-              //     contractAddress={this.props.selectedContractAddress}
-              //     nodes={currentGraph.config.elements.nodes}
-              //     contractName={currentGraph.name}
-              //     graphType={currentGraph.type}
-              //     deploy={this.props.deploy}
-              //     callInstance={this.props.callInstance}
-              //     closeContractForm={this.props.closeContractForm}
-              //     selectContractFunction={this.props.selectContractFunction}
-              //     selectedContractFunction={this.props.selectedContractFunction} />
+              ? <ContractForm
+                  contractAddress={this.props.selectedContractAddress}
+                  nodes={currentGraph.elements.nodes}
+                  contractName={currentGraph.name}
+                  graphType={currentGraph.type}
+                  deploy={this.props.deploy}
+                  callInstance={this.props.callInstance}
+                  closeContractForm={this.props.closeContractForm}
+                  selectContractFunction={this.props.selectContractFunction}
+                  selectedContractFunction={this.props.selectedContractFunction} />
               : null
             }
           </ReactModal>

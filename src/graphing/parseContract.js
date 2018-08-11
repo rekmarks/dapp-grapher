@@ -72,19 +72,19 @@ function getNodes (contractName, abi, mode) {
 
     // case 0:
     //   contractNode.type = 'contract'
-    //   contractNode.abiType = 'complete'
+    //   contractNode.contractType = 'complete'
     //   nodes = getCompleteAbiNodes(contractName, abi)
     //   break
 
     case 1:
       contractNode.type = 'contract'
-      contractNode.abiType = 'constructor'
+      contractNode.contractType = 'constructor'
       nodes = getConstructorNodes(contractName, abi)
       break
 
     case 2:
       contractNode.type = 'contract'
-      contractNode.abiType = 'functions'
+      contractNode.contractType = 'functions'
       nodes = getFunctionNodes(contractName, abi)
       break
 
@@ -127,6 +127,7 @@ function getConstructorNodes (contractName, abi) {
       id: inputId,
       displayName: getFormattedName(input.name),
       abiName: input.name,
+      abiType: input.type,
       parent: contractName,
       type: 'parameter',
       // abi: input,
@@ -167,26 +168,46 @@ function getFunctionNodes (contractName, abi) {
       abi: entry,
     }
 
-    if (entry.inputs && entry.inputs.length > 0) {
-      functionNode.inputNodes = []
-    }
+    if (entry.inputs && entry.inputs.length > 0) functionNode.inputNodes = []
+    if (entry.outputs && entry.outputs.length > 0) functionNode.outputNodes = []
     nodes[functionId] = functionNode // add function node
 
     // add input nodes (if any)
-    entry.inputs.forEach((input, i) => {
+    if (entry.inputs) {
+      entry.inputs.forEach((input, i) => {
 
-      const inputId = functionId + ':' + input.name
-      functionNode.inputNodes.push(inputId)
+        const inputId = functionId + ':input:' + input.name
+        functionNode.inputNodes.push(inputId)
 
-      nodes[inputId] = {
-        id: inputId,
-        displayName: getFormattedName(input.name),
-        abiName: input.name,
-        parent: functionId,
-        type: 'parameter',
-        paramOrder: i,
-      }
+        nodes[inputId] = {
+          id: inputId,
+          displayName: getFormattedName(input.name),
+          abiName: input.name,
+          abiType: input.type,
+          parent: functionId,
+          type: 'parameter',
+          paramOrder: i,
+        }
     })
+}
+
+    // add output nodes (if any)
+    if (entry.outputs) {
+      entry.outputs.forEach(output => {
+        
+        const outputId = functionId + ':output:' + output.type
+        functionNode.outputNodes.push(outputId)
+
+        nodes[outputId] = {
+          id: outputId,
+          displayName: output.type,
+          abiName: output.name,
+          abiType: output.type,
+          parent: functionId,
+          type: 'output',
+        }
+    })
+}
   })
 
   return nodes
