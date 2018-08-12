@@ -39,12 +39,12 @@ export default class Grapher extends Component {
   setJointGraph = () => {
 
     if (!this.state.jointGraph) return
-    
+
     this.state.jointGraph.clear()
 
-    if (!this.props.graph) return      
+    if (!this.props.graph) return
 
-    jh.generate(this.state.jointGraph, this.props.graph)
+    jh.setJointElements(this.state.jointGraph, this.props.graph)
   }
 
   // initialize jointGraph on mount
@@ -78,10 +78,10 @@ export default class Grapher extends Component {
             return false
           },
           dblClickZoomEnabled: false,
-          maxZoom: 2,
+          maxZoom: 10,
           minZoom: 0.25,
           zoomScaleSensitivity: 0.45,
-        })
+        }),
       })
     }
 

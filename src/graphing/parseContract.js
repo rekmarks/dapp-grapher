@@ -194,7 +194,7 @@ function getFunctionNodes (contractName, abi) {
     // add output nodes (if any)
     if (entry.outputs) {
       entry.outputs.forEach(output => {
-        
+
         const outputId = functionId + ':output:' + output.type
         functionNode.outputNodes.push(outputId)
 

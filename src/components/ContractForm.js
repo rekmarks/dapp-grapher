@@ -126,7 +126,7 @@ ContractForm.propTypes = {
 function getFunctionIds (nodes) {
 
   const functions = []
-  Object.values(nodes).forEach( node => {
+  Object.values(nodes).forEach(node => {
     if (node.type === 'function') {
       functions.push({
         id: node.id,
@@ -189,7 +189,7 @@ function generateFunctionForm (nodes, functionId = null) {
       schema.title = node.displayName
       schema.abiName = node.abiName
 
-    } else {
+    } else if (node.type === 'parameter') {
 
       // parse node data to create corresponding field object
       const field = {

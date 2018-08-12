@@ -55,9 +55,12 @@
   background-color: #fff;
   opacity: 1;
   overflow: auto;
-  /*WebkitOverflowScrolling: touch;*/ /* doesn't work, what does it do? */
   border-radius: 4px;
   outline: none;
   padding: 20px;
   z-index: 91;
 }
+
+/*.App-modal-content::-webkit-scrollbar { 
+    display: none; 
+}*/
