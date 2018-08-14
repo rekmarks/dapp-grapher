@@ -124,8 +124,8 @@ function generateFunctionsElements (dappGraph) {
 
   const functionElements = functionNodes.map(node => {
 
-    const ioNodes = allNodes.filter( n => n.parent === node.id)
-    
+    const ioNodes = allNodes.filter(n => n.parent === node.id)
+
     const funcElement = generateAtomic(
       node.displayName,
       {
@@ -295,7 +295,7 @@ function addPaperEventHandlers (paper, handlers) {
 
   // open contract form
   paper.on('element:pointerdblclick', (view, evt, x, y) => {
-    
+
     console.log(view, evt) // dev temp
 
     const nodeType = getCustomAttributeFromView(view, 'type')
