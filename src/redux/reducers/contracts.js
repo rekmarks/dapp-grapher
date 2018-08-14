@@ -44,7 +44,7 @@ const initialState = {
   errors: null,
   callHistory: null,
   selectedAddress: null,
-  ready: true, // TODO: use to prevent deploying while waiting?
+  ready: true,
 }
 
 const excludeKeys = [

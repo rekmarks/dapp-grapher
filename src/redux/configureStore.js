@@ -33,14 +33,3 @@ export default function configureStore () {
     enhancer
   )
 }
-
-// export default function configureStore () {
-//   return createStore(
-//     dappGrapher,
-//     initialState,
-//     applyMiddleware(
-//       thunkMiddleware,
-//       loggerMiddleware
-//     )
-//   )
-// }

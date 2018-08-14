@@ -71,12 +71,6 @@ const jointHelper = {
 export default jointHelper
 
 /**
- * CUSTOM ELEMENT DEFINITIONS
- */
-
-// TBD?
-
-/**
  * GRAPH GETTERS
  */
 
