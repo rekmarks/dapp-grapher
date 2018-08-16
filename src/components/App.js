@@ -2,7 +2,6 @@
 // Package imports
 
 import React, { Component, Fragment } from 'react'
-import ReactModal from 'react-modal'
 import PropTypes from 'prop-types'
 import classNames from 'classnames'
 import { connect } from 'react-redux'
@@ -19,6 +18,7 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft'
 
 // Custom component imports
 
+import AppModal from './AppModal'
 import ContractForm from './ContractForm'
 import Grapher from './Grapher'
 import Header from './Header'
@@ -58,9 +58,6 @@ import { getWeb3 } from '../redux/reducers/web3'
 
 import './style/App.css'
 import appStyles from './style/App.style'
-
-// ReactModal config
-ReactModal.setAppElement('#root')
 
 class App extends Component {
 
@@ -166,28 +163,30 @@ class App extends Component {
             }
           </main>
           <div className="App-modal-container" >
-            <ReactModal
-              isOpen={this.props.contractModal}
-              contentLabel="contractModal"
-              onRequestClose={this.props.closeContractForm}
-              overlayClassName="App-modal-overlay"
-              className="App-modal-content"
-            >
-              {
-                currentGraph
-                ? <ContractForm
-                    contractAddress={this.props.selectedContractAddress}
-                    nodes={currentGraph.elements.nodes}
-                    contractName={currentGraph.name}
-                    graphType={currentGraph.type}
-                    deploy={this.props.deploy}
-                    callInstance={this.props.callInstance}
-                    closeContractForm={this.props.closeContractForm}
-                    selectContractFunction={this.props.selectContractFunction}
-                    selectedContractFunction={this.props.selectedContractFunction} />
-                : null
-              }
-            </ReactModal>
+            {
+              currentGraph
+              ? (
+                  <AppModal
+                    classes={{ root: classes.root, paper: classes.paper }}
+                    open={this.props.contractModal}
+                    onClose={this.props.closeContractForm}
+                  >
+                    <ContractForm
+                      classes={{ container: classes.container, textField: classes.textField }}
+                      contractAddress={this.props.selectedContractAddress}
+                      nodes={currentGraph.elements.nodes}
+                      contractName={currentGraph.name}
+                      graphType={currentGraph.type}
+                      deploy={this.props.deploy}
+                      callInstance={this.props.callInstance}
+                      closeContractForm={this.props.closeContractForm}
+                      selectContractFunction={this.props.selectContractFunction}
+                      selectedContractFunction={this.props.selectedContractFunction} />
+                  </AppModal>
+                )
+              : null
+            }
+
           </div>
         </div>
       </Fragment>

@@ -204,53 +204,6 @@ ResourceMenu.propTypes = {
 
 /* subcomponents */
 
-class ContractInstanceButton extends Component {
-
-  render () {
-    return (
-      <div>
-        <button
-          className="ResourceMenu-button"
-          disabled={this.props.selectedGraphId &&
-            this.props.selectedGraphId === this.props.functionsGraphId}
-          onClick={this.onFunctionsClick}
-        >
-          Functions
-        </button>
-      </div>
-    )
-  }
-
-  onFunctionsClick = () => {
-    if (!this.props.hasInstance) {
-      this.props.addInstance(this.props.contractName, this.props.address)
-    }
-    if (this.props.functionsGraphId) {
-      this.props.selectGraph(this.props.functionsGraphId)
-    } else {
-      this.props.createGraph(this.props.getCreateGraphParams(
-      'contract', contractGraphTypes.functions, this.props.contractName))
-    }
-    // TODO: unsafe (addInstance could take too long)
-    this.props.selectContractAddress(this.props.address)
-  }
-}
-
-ContractInstanceButton.propTypes = {
-  address: PropTypes.string,
-  addInstance: PropTypes.func,
-  hasInstance: PropTypes.bool,
-  contractName: PropTypes.string,
-  createGraph: PropTypes.func,
-  deleteGraph: PropTypes.func,
-  deleteAllGraphs: PropTypes.func,
-  getCreateGraphParams: PropTypes.func,
-  selectGraph: PropTypes.func,
-  selectedGraphId: PropTypes.string,
-  selectContractAddress: PropTypes.func,
-  functionsGraphId: PropTypes.string,
-}
-
 class ContracTypeListButton extends Component {
 
   render () {
@@ -273,7 +226,9 @@ class ContracTypeListButton extends Component {
       this.props.selectGraph(this.props.graphId)
     } else {
       this.props.createGraph(this.props.getCreateGraphParams(
-        'contract', contractGraphTypes._constructor, this.props.contractName))
+        contractGraphTypes._constructor,
+        { contractName: this.props.contractName }
+      ))
     }
   }
 }

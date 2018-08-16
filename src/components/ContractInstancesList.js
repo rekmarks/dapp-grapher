@@ -155,7 +155,9 @@ class ContractInstanceListButton extends Component {
       this.props.selectGraph(this.props.functionsGraphId)
     } else {
       this.props.createGraph(this.props.getCreateGraphParams(
-      'contract', contractGraphTypes.functions, this.props.contractName))
+        contractGraphTypes.functions,
+        {contractName: this.props.contractName}
+      ))
     }
     // TODO: unsafe (addInstance could take too long)
     this.props.selectContractAddress(this.props.address)

@@ -250,30 +250,26 @@ function deleteAllGraphsThunk (graphId) {
 
 /* helpers */
 
-function getGraphCreationParameters (type, subType = null, contractName = null) {
+function getGraphCreationParameters (type, args) {
 
   if (!type) throw new Error('missing type')
+  if (!args) throw new Error('missing args')
 
-  const returnProperties = {}
+  const params = { subType: type, ...args }
 
-  if (type === 'contract') {
-
-    if (!Object.values(contractGraphTypes).includes(subType)) {
-      throw new Error('missing contract graph subtype')
+  if (Object.values(contractGraphTypes).includes(type)) {
+    if (
+      typeof args.contractName !== 'string' ||
+      args.contractName.length < 1
+    ) {
+      throw new Error('missing contract name')
     }
-    if (!contractName) throw new Error('missing contract name')
 
-    returnProperties.contractName = contractName
-    returnProperties.subType = subType
+    params.type = 'contract'
 
-  } else if (type === 'dapp') {
-    // TODO
   } else {
     throw new Error('invalid type')
   }
 
-  return {
-    type: type,
-    ...returnProperties,
-  }
+  return params
 }
