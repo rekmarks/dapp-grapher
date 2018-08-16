@@ -22,7 +22,7 @@ export default class Grapher extends Component {
    * Resizes Joint Paper to fit its container
    */
   resizeJointPaper = () => {
-
+    // debugger
     let height, width
     const container = this.props.graphContainer
     if (container && container.current) {
@@ -34,6 +34,7 @@ export default class Grapher extends Component {
       width = 1
     }
     this.state.jointPaper.setDimensions(width, height)
+    // this.state.jointPaper.setDimensions(1400, 488)
   }
 
   setJointGraph = () => {
@@ -78,9 +79,11 @@ export default class Grapher extends Component {
             return false
           },
           dblClickZoomEnabled: false,
-          maxZoom: 10,
-          minZoom: 0.25,
+          maxZoom: 15,
+          minZoom: 0.1,
           zoomScaleSensitivity: 0.45,
+          fit: false,
+          center: true,
         }),
       })
     }

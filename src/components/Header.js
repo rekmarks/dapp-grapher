@@ -1,7 +1,7 @@
 
+import React, { Component, Fragment } from 'react'
 import PropTypes from 'prop-types'
-import React, { Component } from 'react'
-// import { NavLink } from 'react-router-dom'
+// import classNames from 'classnames'
 
 import './style/Header.css'
 
@@ -20,30 +20,25 @@ export default class Header extends Component {
   }
 
   render () {
-    // console.log('Header render', this.props.version)
+
     return (
-      <div className="Header-container">
-        <header className="Header">
-          <div>
-            <h1 className="Header-title">Dapp Grapher</h1>
+      <Fragment>
+        <div className = "Header-items">
+          <div className="Header-info">
+            <p className="Header-info-label">
+              { this.props.web3Injected
+                ? 'Logged in with MetaMask'
+                : 'Please log in with MetaMask'
+              }
+            </p>
           </div>
-          <div className = "Header-items">
-            <div className="Header-info">
-              <p className="Header-info-label">
-                { this.props.web3Injected
-                  ? 'Logged in with MetaMask'
-                  : 'Please log in with MetaMask'
-                }
-              </p>
-            </div>
-            <div className="Header-links">
-              <a className="Header-link" href={this.state.storageHref} download="dapp-grapher-state.json">
-                Download State
-              </a>
-            </div>
+          <div className="Header-links">
+            <a className="Header-link" href={this.state.storageHref} download="dapp-grapher-state.json">
+              Download State
+            </a>
           </div>
-        </header>
-      </div>
+        </div>
+      </Fragment>
     )
   }
 }

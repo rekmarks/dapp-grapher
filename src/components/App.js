@@ -1,14 +1,31 @@
 
-import PropTypes from 'prop-types'
-import React, { Component } from 'react'
+// Package imports
+
+import React, { Component, Fragment } from 'react'
 import ReactModal from 'react-modal'
+import PropTypes from 'prop-types'
+import classNames from 'classnames'
 import { connect } from 'react-redux'
-// import { BrowserRouter, Redirect, Route, Switch } from 'react-router-dom'
+import { withStyles } from '@material-ui/core/styles'
+import CssBaseline from '@material-ui/core/CssBaseline'
+import Drawer from '@material-ui/core/Drawer'
+import AppBar from '@material-ui/core/AppBar'
+import Toolbar from '@material-ui/core/Toolbar'
+import Typography from '@material-ui/core/Typography'
+import Divider from '@material-ui/core/Divider'
+import IconButton from '@material-ui/core/IconButton'
+import MenuIcon from '@material-ui/icons/Menu'
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft'
+
+// Custom component imports
 
 import ContractForm from './ContractForm'
 import Grapher from './Grapher'
 import Header from './Header'
 import ResourceMenu from './ResourceMenu'
+import withRoot from '../withRoot'
+
+// Reducer imports
 
 import {
   addContractType,
@@ -32,12 +49,17 @@ import {
   closeContractForm,
   openContractForm,
   selectContractFunction,
+  toggleResourceMenu,
 } from '../redux/reducers/ui'
 
 import { getWeb3 } from '../redux/reducers/web3'
 
-import './style/App.css'
+// Style imports
 
+import './style/App.css'
+import appStyles from './style/App.style'
+
+// ReactModal config
 ReactModal.setAppElement('#root')
 
 class App extends Component {
@@ -47,9 +69,18 @@ class App extends Component {
     this.props.getWeb3()
     this.graphContainerRef = React.createRef()
     this.state = {
+      drawerOpen: false,
       graphHeight: null,
       graphWidth: null,
     }
+  }
+
+  handleDrawerOpen = () => {
+    this.setState({ drawerOpen: true })
+  }
+
+  handleDrawerClose = () => {
+    this.setState({ drawerOpen: false })
   }
 
   componentDidCatch (error, errorInfo) {
@@ -59,21 +90,57 @@ class App extends Component {
 
   render () {
 
+    const classes = this.props.classes
+
     let currentGraph = null
     if (this.props.selectedGraphObject) { currentGraph = this.props.selectedGraphObject.toJS() }
 
     return (
-      <div className="App">
-        <div className="App-rows" >
-          <div className="App-top-row" >
-            <Header
-              web3Injected={!!this.props.web3}
-              contractInstances={this.props.contractInstances}
-            />
-          </div>
-          <div className="App-bottom-row" >
-            <div className="App-ResourceMenu-container" >
-              <ResourceMenu
+      <Fragment>
+        <CssBaseline />
+        <div className={'App ' + classes.root} >
+          <AppBar
+            position="absolute"
+            className={classNames(classes.appBar, this.state.drawerOpen && classes.appBarShift)}
+          >
+            <Toolbar disableGutters={!this.state.drawerOpen} className={classes.toolbar}>
+              <IconButton
+                color="inherit"
+                aria-label="Open drawer"
+                onClick={this.handleDrawerOpen}
+                className={classNames(
+                  classes.menuButton,
+                  this.state.drawerOpen && classes.menuButtonHidden,
+                )}
+              >
+                <MenuIcon />
+              </IconButton>
+              <Typography variant="title" color="inherit" noWrap className={classes.title}>
+                Dapp Grapher
+              </Typography>
+              <Header
+                classes={classes}
+                contractInstances={this.props.contractInstances}
+                web3Injected={!!this.props.web3}
+              />
+            </Toolbar>
+          </AppBar>
+          <Drawer
+          variant="persistent"
+            classes={{
+              paper: classNames(classes.drawerPaper, !this.state.drawerOpen && classes.drawerPaperClose),
+            }}
+            open={this.state.drawerOpen}
+          >
+            <div className={classes.toolbarIcon}>
+              <IconButton onClick={this.handleDrawerClose}>
+                <ChevronLeftIcon />
+              </IconButton>
+            </div>
+            <Divider />
+            <ResourceMenu
+                classes={classes}
+                drawerOpen={this.state.drawerOpen}
                 account={this.props.account}
                 addInstance={this.props.addInstance}
                 networkId={this.props.networkId}
@@ -87,49 +154,49 @@ class App extends Component {
                 selectedGraphId={this.props.selectedGraphId}
                 selectContractAddress={this.props.selectContractAddress}
                 hasGraphs={this.props.hasGraphs} />
-            </div>
-            <div className="App-graph-container" ref={this.graphContainerRef} >
-              {
-                currentGraph
-                ? <Grapher
-                    graph={currentGraph}
-                    openContractForm={this.props.openContractForm}
-                    graphContainer={this.graphContainerRef} />
-                : <h2 className="App-no-graph-label">Please select a graph</h2>
-              }
-            </div>
-          </div>
-        </div>
-        <div className="App-modal-container" >
-          <ReactModal
-            isOpen={this.props.contractModal}
-            contentLabel="contractModal"
-            onRequestClose={this.props.closeContractForm}
-            overlayClassName="App-modal-overlay"
-            className="App-modal-content"
-          >
+          </Drawer>
+          <main className="App-graph-container" ref={this.graphContainerRef} >
             {
               currentGraph
-              ? <ContractForm
-                  contractAddress={this.props.selectedContractAddress}
-                  nodes={currentGraph.elements.nodes}
-                  contractName={currentGraph.name}
-                  graphType={currentGraph.type}
-                  deploy={this.props.deploy}
-                  callInstance={this.props.callInstance}
-                  closeContractForm={this.props.closeContractForm}
-                  selectContractFunction={this.props.selectContractFunction}
-                  selectedContractFunction={this.props.selectedContractFunction} />
-              : null
+              ? <Grapher
+                  graph={currentGraph}
+                  openContractForm={this.props.openContractForm}
+                  graphContainer={this.graphContainerRef} />
+              : <h2 className="App-no-graph-label">Please select a graph</h2>
             }
-          </ReactModal>
+          </main>
+          <div className="App-modal-container" >
+            <ReactModal
+              isOpen={this.props.contractModal}
+              contentLabel="contractModal"
+              onRequestClose={this.props.closeContractForm}
+              overlayClassName="App-modal-overlay"
+              className="App-modal-content"
+            >
+              {
+                currentGraph
+                ? <ContractForm
+                    contractAddress={this.props.selectedContractAddress}
+                    nodes={currentGraph.elements.nodes}
+                    contractName={currentGraph.name}
+                    graphType={currentGraph.type}
+                    deploy={this.props.deploy}
+                    callInstance={this.props.callInstance}
+                    closeContractForm={this.props.closeContractForm}
+                    selectContractFunction={this.props.selectContractFunction}
+                    selectedContractFunction={this.props.selectedContractFunction} />
+                : null
+              }
+            </ReactModal>
+          </div>
         </div>
-      </div>
+      </Fragment>
     )
   }
 }
 
 App.propTypes = {
+  classes: PropTypes.object,
   // contracts
   addContractType: PropTypes.func,
   deploy: PropTypes.func,
@@ -155,6 +222,8 @@ App.propTypes = {
   openContractForm: PropTypes.func,
   selectContractFunction: PropTypes.func,
   selectedContractFunction: PropTypes.string,
+  resourceMenuOpen: PropTypes.bool,
+  toggleResourceMenu: PropTypes.func,
   // web3
   account: PropTypes.string,
   networkId: PropTypes.string,
@@ -181,6 +250,7 @@ function mapStateToProps (state) {
     // ui
     contractModal: state.ui.contractForm.open,
     selectedContractFunction: state.ui.contractForm.selectedFunction,
+    resourceMenuOpen: state.ui.resourceMenu.open,
     // web3
     account: state.web3.account,
     networkId: state.web3.networkId,
@@ -210,6 +280,7 @@ function mapDispatchToProps (dispatch) {
     closeContractForm: () => dispatch(closeContractForm()),
     openContractForm: () => dispatch(openContractForm()),
     selectContractFunction: func => dispatch(selectContractFunction(func)),
+    toggleResourceMenu: () => dispatch(toggleResourceMenu()),
     // web3
     getWeb3: () => dispatch(getWeb3()),
   }
@@ -218,4 +289,4 @@ function mapDispatchToProps (dispatch) {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(App)
+)(withRoot(withStyles(appStyles)(App)))

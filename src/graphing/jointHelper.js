@@ -284,7 +284,7 @@ function initializePaper (jointElement, graph, eventHandlers) {
     panning: false,
   }
 
-  paper.scale(0.9)
+  paper.scale(0.8)
 
   addPaperEventHandlers(paper, eventHandlers)
 
