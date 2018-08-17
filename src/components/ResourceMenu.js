@@ -12,6 +12,7 @@ import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import DeleteIcon from '@material-ui/icons/Delete'
 import SubjectIcon from '@material-ui/icons/Subject'
+import GetAppIcon from '@material-ui/icons/GetApp'
 
 import { contractGraphTypes } from '../graphing/parseContract'
 
@@ -21,11 +22,18 @@ import './style/ResourceMenu.css'
 
 export default class ResourceMenu extends Component {
 
-  // componentDidMount () {
-  //   this.setState((prevProps, props) => {
+  constructor (props) {
 
-  //   }
-  // }
+    super(props)
+    this.state = { storageHref: getStorageHref()}
+  }
+
+  componentDidUpdate (prevProps) {
+
+    if (prevProps.contractInstances !== this.props.contractInstances) {
+      this.setState({ storageHref: getStorageHref()})
+    }
+  }
 
   render () {
 
@@ -47,8 +55,33 @@ export default class ResourceMenu extends Component {
 
     return (
       <Fragment>
+        <div className="Header-links">
+
+        </div>
+        <Divider/>
         <div className="ResourceMenu-delete-buttons">
           <List>
+            <ListItem button
+
+            >
+              <ListItemIcon>
+                <GetAppIcon />
+              </ListItemIcon>
+              <ListItemText>
+                <a
+                  href={this.state.storageHref}
+                  download="dapp-grapher-state.json"
+                  style={{
+                    textDecoration: 'inherit',
+                    color: 'inherit',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Download State
+                </a>
+              </ListItemText>
+            </ListItem>
+            <Divider/>
             <ListItem button
               disabled={!this.props.selectedGraphId}
               onClick={
@@ -240,4 +273,16 @@ ContracTypeListButton.propTypes = {
   selectGraph: PropTypes.func,
   selectedGraphId: PropTypes.string,
   graphId: PropTypes.string,
+}
+
+/**
+ * HELPERS
+ */
+
+/**
+ * encodes persisted storage as an href for downloading
+ * @return {string} href attribute for an HTML anchor
+ */
+function getStorageHref () {
+ return 'data:text/plain;charset=utf-8,' + encodeURIComponent(window.localStorage.getItem('dapp-grapher'))
 }

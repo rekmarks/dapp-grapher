@@ -170,6 +170,7 @@ class App extends Component {
                     classes={{ root: classes.root, paper: classes.paper }}
                     open={this.props.contractModal}
                     onClose={this.props.closeContractForm}
+                    heading={currentGraph.name}
                   >
                     <ContractForm
                       classes={{ container: classes.container, textField: classes.textField }}

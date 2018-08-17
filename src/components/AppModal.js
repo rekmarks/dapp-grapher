@@ -17,10 +17,10 @@ const styles = theme => ({
     width: '50%',
     marginTop: theme.spacing.unit * 4,
     marginBottom: theme.spacing.unit * 4,
-    // display: 'flex',
-    // flexDirection: 'column',
-    // alignItems: 'space-between',
-    // justifyContent: 'center',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'space-between',
+    justifyContent: 'center',
     backgroundColor: theme.palette.background.paper,
     boxShadow: theme.shadows[5],
     padding: theme.spacing.unit * 4,
@@ -44,11 +44,18 @@ class AppModal extends Component {
         >
           <div className={classes.paper}>
             <Typography variant="title" id="modal-title">
-              Text in a modal
+              {this.props.heading ? this.props.heading : ''}
             </Typography>
-            <Typography variant="subheading" id="simple-modal-description">
-              Duis mollis, est non commodo luctus, nisi erat porttitor ligula.
-            </Typography>
+            {
+              this.props.subHeading
+              ?
+                (
+                  <Typography variant="subheading" id="simple-modal-description">
+                    {this.props.subHeading}
+                  </Typography>
+                )
+              : ''
+            }
             {this.props.children}
           </div>
         </Modal>
@@ -62,6 +69,8 @@ AppModal.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   children: PropTypes.object,
+  heading: PropTypes.string,
+  subHeading: PropTypes.string,
 }
 
 export default withStyles(styles)(AppModal)
