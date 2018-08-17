@@ -99,6 +99,7 @@ class ContractInstancesList extends Component {
             contractName={type}
             address={address}
             selectContractAddress={_this.props.selectContractAddress}
+            selectedContractAddress={_this.props.selectedContractAddress}
             addInstance={_this.props.addInstance}
             hasInstance={instances[address]}
             functionsGraphId={functionsGraphId}
@@ -118,6 +119,7 @@ ContractInstancesList.propTypes = {
   contractTypes: PropTypes.object,
   instanceTypes: PropTypes.object,
   selectContractAddress: PropTypes.func,
+  selectedContractAddress: PropTypes.string,
   addInstance: PropTypes.func,
   getCreateGraphParams: PropTypes.func,
   createGraph: PropTypes.func,
@@ -136,7 +138,7 @@ class ContractInstanceListButton extends Component {
       <ListItem button
         className={classes.nested}
         disabled={this.props.selectedGraphId &&
-            this.props.selectedGraphId === this.props.functionsGraphId}
+            this.props.selectedContractAddress === this.props.address}
         onClick={this.onFunctionsClick}
       >
         <ListItemIcon>
@@ -177,5 +179,6 @@ ContractInstanceListButton.propTypes = {
   selectGraph: PropTypes.func,
   selectedGraphId: PropTypes.string,
   selectContractAddress: PropTypes.func,
+  selectedContractAddress: PropTypes.string,
   functionsGraphId: PropTypes.string,
 }

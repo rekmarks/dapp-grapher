@@ -208,6 +208,7 @@ export default class ResourceMenu extends Component {
         contractTypes={_this.props.contractTypes}
         instanceTypes={instanceTypes}
         selectContractAddress={_this.props.selectContractAddress}
+        selectedContractAddress={_this.props.selectedContractAddress}
         addInstance={_this.props.addInstance}
         getCreateGraphParams={_this.props.getCreateGraphParams}
         createGraph={_this.props.createGraph}
@@ -231,6 +232,7 @@ ResourceMenu.propTypes = {
   selectGraph: PropTypes.func,
   selectedGraphId: PropTypes.string,
   selectContractAddress: PropTypes.func,
+  selectedContractAddress: PropTypes.string,
   hasGraphs: PropTypes.bool,
   drawerOpen: PropTypes.bool,
 }

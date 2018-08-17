@@ -2,7 +2,6 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
-import Typography from '@material-ui/core/Typography'
 import Modal from '@material-ui/core/Modal'
 
 const styles = theme => ({
@@ -14,7 +13,7 @@ const styles = theme => ({
   paper: {
     position: 'absolute',
     flex: 1,
-    width: '50%',
+    minWidth: 300,
     marginTop: theme.spacing.unit * 4,
     marginBottom: theme.spacing.unit * 4,
     display: 'flex',
@@ -43,19 +42,6 @@ class AppModal extends Component {
           onClose={this.props.onClose}
         >
           <div className={classes.paper}>
-            <Typography variant="title" id="modal-title">
-              {this.props.heading ? this.props.heading : ''}
-            </Typography>
-            {
-              this.props.subHeading
-              ?
-                (
-                  <Typography variant="subheading" id="simple-modal-description">
-                    {this.props.subHeading}
-                  </Typography>
-                )
-              : ''
-            }
             {this.props.children}
           </div>
         </Modal>
@@ -69,8 +55,6 @@ AppModal.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   children: PropTypes.object,
-  heading: PropTypes.string,
-  subHeading: PropTypes.string,
 }
 
 export default withStyles(styles)(AppModal)

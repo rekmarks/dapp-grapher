@@ -1,12 +1,17 @@
 
 .ContractForm-formContainer {
-    align-content: center;
+  align-content: center;
 }
 
-.ContractForm-form {
-    padding-top: 65px;
-    vertical-align: middle;
-    align-self: center;
-    width: 75%;
-    padding-left: 25%;
+.ContractForm-fields {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding-left: 24px; /* mui:nested */
+}
+
+.ContractForm-button {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
 }

@@ -150,6 +150,7 @@ class App extends Component {
                 selectGraph={this.props.selectGraph}
                 selectedGraphId={this.props.selectedGraphId}
                 selectContractAddress={this.props.selectContractAddress}
+                selectedContractAddress={this.props.selectedContractAddress}
                 hasGraphs={this.props.hasGraphs} />
           </Drawer>
           <main className="App-graph-container" ref={this.graphContainerRef} >
@@ -170,10 +171,14 @@ class App extends Component {
                     classes={{ root: classes.root, paper: classes.paper }}
                     open={this.props.contractModal}
                     onClose={this.props.closeContractForm}
-                    heading={currentGraph.name}
                   >
                     <ContractForm
-                      classes={{ container: classes.container, textField: classes.textField }}
+                      classes={{
+                         container: classes.container,
+                         textField: classes.textField,
+                         button: classes.button,
+                         nested: classes.nested,
+                      }}
                       contractAddress={this.props.selectedContractAddress}
                       nodes={currentGraph.elements.nodes}
                       contractName={currentGraph.name}
@@ -182,7 +187,8 @@ class App extends Component {
                       callInstance={this.props.callInstance}
                       closeContractForm={this.props.closeContractForm}
                       selectContractFunction={this.props.selectContractFunction}
-                      selectedContractFunction={this.props.selectedContractFunction} />
+                      selectedContractFunction={this.props.selectedContractFunction}
+                      heading={currentGraph.name} />
                   </AppModal>
                 )
               : null

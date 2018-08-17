@@ -6,14 +6,27 @@
 
 import PropTypes from 'prop-types'
 import React, { Component } from 'react'
-import Button from '@material-ui/core/Button'
-import Menu from '@material-ui/core/Menu'
+import { withStyles } from '@material-ui/core/styles'
+import List from '@material-ui/core/List'
+import ListItem from '@material-ui/core/ListItem'
+import ListItemText from '@material-ui/core/ListItemText'
 import MenuItem from '@material-ui/core/MenuItem'
+import Menu from '@material-ui/core/Menu'
+
+const styles = theme => ({
+  root: {
+    width: '100%',
+    backgroundColor: theme.palette.background.paper,
+  },
+})
 
 class DropdownMenu extends Component {
 
+  button = null
+
   state = {
     anchorEl: null,
+    selectedIndex: null,
   }
 
   handleOpen = event => {
@@ -22,24 +35,27 @@ class DropdownMenu extends Component {
 
   handleClose = event => {
     this.setState({ anchorEl: null })
-    this.props.selectAction(event.target.dataset.itemid) // HTML data attribute access
   }
 
-  handleSelect = id => {
-    console.log(id)
-    this.handleClose()
+  handleSelect = (event, index) => {
+    
+    if (this.props.selectAction) {
+      this.props.selectAction(event.target.dataset.itemid)
+    }    
+    this.setState({ selectedIndex: index, anchorEl: null })
   }
 
   getMenuItems = () => {
 
-    return this.props.menuItemData.map(x => {
+    return this.props.menuItemData.map((item, index) => {
       return (
         <MenuItem
-          onClick={this.handleClose}
-          data-itemid={x.id} // HTML data attribute because MenuItem doesn't accept non-DOM element props
-          key={x.id}
+          onClick={event => this.handleSelect(event, index)}
+          data-itemid={item.id} // HTML data attribute because MenuItem doesn't accept non-DOM element props
+          key={item.id}
+          selected={index === this.state.selectedIndex}
         >
-          {x.name}
+          {item.name}
         </MenuItem>
       )
     })
@@ -48,18 +64,30 @@ class DropdownMenu extends Component {
   render () {
 
     const { anchorEl } = this.state
+    const items = this.props.menuItemData
 
     return (
-      <div>
-        <Button
-          aria-owns={anchorEl ? 'simple-menu' : null}
-          aria-haspopup="true"
-          onClick={this.handleOpen}
-        >
-          {this.props.menuTitle}
-        </Button>
+      <div className={this.props.classes.root}>
+        <List>
+          <ListItem
+            button
+            aria-haspopup="true"
+            aria-controls="lock-menu"
+            aria-label={this.props.menuTitle}
+            onClick={this.handleOpen}
+          >
+            <ListItemText
+              primary={this.props.menuTitle}
+              secondary={
+                this.state.selectedIndex !== null
+                ? items[this.state.selectedIndex].name
+                : 'Please select a function'
+              }
+            />
+          </ListItem>
+        </List>
         <Menu
-          id="simple-menu"
+          id="lock-menu"
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={this.handleClose}
@@ -71,10 +99,13 @@ class DropdownMenu extends Component {
   }
 }
 
+// className={this.props.classes.menu}
+
 DropdownMenu.propTypes = {
-  menuTitle: PropTypes.string,
-  menuItemData: PropTypes.array,
+  classes: PropTypes.object.isRequired,
+  menuTitle: PropTypes.string.isRequired,
+  menuItemData: PropTypes.array.isRequired,
   selectAction: PropTypes.func,
 }
 
-export default DropdownMenu
+export default withStyles(styles)(DropdownMenu)

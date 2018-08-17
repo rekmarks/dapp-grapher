@@ -4,6 +4,7 @@ import React, { Component, Fragment } from 'react'
 import { withStyles } from '@material-ui/core/styles'
 import TextField from '@material-ui/core/TextField'
 import Button from '@material-ui/core/Button'
+import Typography from '@material-ui/core/Typography'
 
 import DropdownMenu from './DropdownMenu'
 import { contractGraphTypes } from '../graphing/parseContract'
@@ -14,17 +15,20 @@ const styles = theme => ({
   container: {
     display: 'flex',
     flexWrap: 'wrap',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
+    justifyContent: 'flex-end',
   },
   textField: {
-    // marginLeft: theme.spacing.unit,
-    // marginRight: theme.spacing.unit,
+    marginRight: theme.spacing.unit * 2,
     width: 200,
   },
-  menu: {
-    width: 200,
+  button: {
+    marginRight: theme.spacing.unit * 2,
+    marginTop: theme.spacing.unit * 4,
   },
+  nested: {
+    marginLeft: 24, // to match DropDown menu
+  }
 })
 
 class ContractForm extends Component {
@@ -35,10 +39,27 @@ class ContractForm extends Component {
 
   render () {
 
-    console.log('ContractForm render')
+    const { classes } = this.props
 
     return (
       <div className="ContractForm-formContainer">
+        <Typography
+          className={classes.nested}
+          variant="title"
+          id="modal-title"
+        >
+          {this.props.heading ? this.props.heading : ''}
+        </Typography>
+        {
+          this.props.subHeading
+          ?
+            (
+              <Typography variant="subheading" id="simple-modal-description">
+                {this.props.subHeading}
+              </Typography>
+            )
+          : ''
+        }
         {this.getFunctionForm()}
       </div>
     )
@@ -71,6 +92,8 @@ class ContractForm extends Component {
         })
       : null
     )
+
+    this.setState({ fieldValues: {} })
   }
 
   handleConstructorSubmit = metaData => event => {
@@ -87,6 +110,8 @@ class ContractForm extends Component {
   }
 
   getFunctionForm = () => {
+
+    const { classes } = this.props
 
     let formData; let submitHandler; let functionCall = false
 
@@ -120,24 +145,29 @@ class ContractForm extends Component {
         {
           functionCall
           ? <DropdownMenu
-            menuItemData={getFunctionIds(this.props.nodes)}
-            menuTitle={this.props.contractName}
-            selectAction={this.props.selectContractFunction} />
+              classes={{ root: classes.root }}
+              menuItemData={getFunctionIds(this.props.nodes)}
+              menuTitle="Functions"
+              selectAction={this.props.selectContractFunction} />
           : null
         }
         {
           formData
           ?
             (
-              <form noValidate autoComplete="off"
-                className={this.props.classes.container}
+              <form
+                className={classes.container}
                 onSubmit={submitHandler(formData.metaData)}
               >
-                <div>
+                <div className="ContractForm-fields">
                   {formData.fields}
                 </div>
-                <div>
-                  <Button variant="contained" type="submit" >
+                <div className="ContractForm-button">
+                  <Button
+                    className={classes.button}
+                    variant="contained"
+                    type="submit"
+                  >
                     {functionCall ? 'Call Function' : 'Deploy'}
                   </Button>
                 </div>
@@ -174,7 +204,7 @@ class ContractForm extends Component {
     }
     const fields = []
 
-    Object.values(functionNodes).forEach(node => {
+    functionNodes.forEach(node => {
 
       if (node.type === 'contract' || node.type === 'function') {
 
@@ -208,9 +238,9 @@ class ContractForm extends Component {
               />
             )
         }
-      } else {
-        console.warn('ContractForm: ignoring unknown node type: ' + node.type)
-      }
+      } 
+      else if (node.type === 'output') console.log('ContractForm ignoring output node') // TODO: change?
+      else console.warn('ContractForm: ignoring unknown node type: ' + node.type)
     })
 
     fields.sort((a, b) => {
@@ -237,6 +267,8 @@ ContractForm.propTypes = {
   closeContractForm: PropTypes.func,
   selectContractFunction: PropTypes.func,
   selectedContractFunction: PropTypes.string,
+  heading: PropTypes.string,
+  subHeading: PropTypes.string,
 }
 
 /**
