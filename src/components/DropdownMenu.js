@@ -38,10 +38,10 @@ class DropdownMenu extends Component {
   }
 
   handleSelect = (event, index) => {
-    
+
     if (this.props.selectAction) {
       this.props.selectAction(event.target.dataset.itemid)
-    }    
+    }
     this.setState({ selectedIndex: index, anchorEl: null })
   }
 

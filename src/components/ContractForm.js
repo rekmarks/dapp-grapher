@@ -28,7 +28,7 @@ const styles = theme => ({
   },
   nested: {
     marginLeft: 24, // to match DropDown menu
-  }
+  },
 })
 
 class ContractForm extends Component {
@@ -238,8 +238,7 @@ class ContractForm extends Component {
               />
             )
         }
-      } 
-      else if (node.type === 'output') console.log('ContractForm ignoring output node') // TODO: change?
+      } else if (node.type === 'output') console.log('ContractForm ignoring output node') // TODO: change?
       else console.warn('ContractForm: ignoring unknown node type: ' + node.type)
     })
 
