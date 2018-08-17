@@ -21,6 +21,25 @@ const theme = createMuiTheme({
       light: '#ffcf33',
     },
   },
+  typography: {
+    fontFamily: '"Helvetica", "Arial", sans-serif',
+    fontSize: 12,
+    fontWeightLight: 300,
+    fontWeightRegular: 400,
+    fontWeightMedium: 500,
+  },
+  overrides: {
+    MuiListItemText: {
+      root: {
+        paddingLeft: 0,
+      },
+    },
+    MuiDrawer: {
+      docked: {
+        width: 0,
+      },
+    },
+  },
 })
 
 function withRoot (Component) {

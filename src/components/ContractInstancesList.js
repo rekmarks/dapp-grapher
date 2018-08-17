@@ -36,7 +36,7 @@ class ContractInstancesList extends Component {
     })
   }
 
-  handleItemClick = (id) => {
+  handleItemClick = id => {
     this.setState(state => ({ [id]: !state[id] }))
   }
 
@@ -68,7 +68,9 @@ class ContractInstancesList extends Component {
             <ListItemIcon>
               <StorageIcon />
             </ListItemIcon>
-            <ListItemText inset primary={type} />
+            <ListItemText
+              inset
+              primary={type} />
             {_this.state[type] ? <ExpandLess /> : <ExpandMore />}
           </ListItem>
           <Collapse in={_this.state[type]} timeout="auto" unmountOnExit>
@@ -134,6 +136,9 @@ class ContractInstanceListButton extends Component {
 
     const classes = this.props.classes
 
+    const displayAddress = this.props.address.slice(0, 7) + '...' +
+      this.props.address.slice(this.props.address.length - 5)
+
     return (
       <ListItem button
         className={classes.nested}
@@ -141,10 +146,10 @@ class ContractInstanceListButton extends Component {
             this.props.selectedContractAddress === this.props.address}
         onClick={this.onFunctionsClick}
       >
-        <ListItemIcon>
-          <StorageIcon />
-        </ListItemIcon>
-        <ListItemText inset primary={this.props.address} />
+        <ListItemText
+          inset
+          primary={displayAddress}
+          primaryTypographyProps={{ noWrap: true }} />
       </ListItem>
     )
   }
@@ -154,7 +159,10 @@ class ContractInstanceListButton extends Component {
       this.props.addInstance(this.props.contractName, this.props.address)
     }
     if (this.props.functionsGraphId) {
-      this.props.selectGraph(this.props.functionsGraphId)
+
+      if (this.props.selectedGraphId !== this.props.functionsGraphId) {
+        this.props.selectGraph(this.props.functionsGraphId)
+      }
     } else {
       this.props.createGraph(this.props.getCreateGraphParams(
         contractGraphTypes.functions,

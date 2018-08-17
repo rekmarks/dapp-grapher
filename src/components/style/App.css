@@ -10,6 +10,7 @@
   flex-direction: row;
   align-self: stretch;
   align-items: stretch;
+  text-align: center;
 }
 
 .App-no-graph-label {
@@ -45,6 +46,6 @@
   z-index: 91;
 }
 
-/*.App-modal-content::-webkit-scrollbar { 
+/*::-webkit-scrollbar { 
     display: none; 
 }*/

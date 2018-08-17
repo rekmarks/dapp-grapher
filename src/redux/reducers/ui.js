@@ -11,16 +11,12 @@ const initialState = {
     open: false,
     selectedFunction: null,
   },
-  resourceMenu: {
-    open: false,
-  },
 }
 
 export {
   getCloseContractFormModalAction as closeContractForm,
   getOpenContractFormModalAction as openContractForm,
   getSelectContractFunctionAction as selectContractFunction,
-  getToggleResourceMenuAction as toggleResourceMenu,
   initialState as uiInitialState,
 }
 
@@ -56,14 +52,6 @@ export default function reducer (state = initialState, action) {
         },
       }
 
-    case ACTIONS.TOGGLE_RESOURCE_MENU:
-      return {
-        ...state,
-        resourceMenu: {
-          open: !state.resourceMenu.open,
-        },
-      }
-
     default:
       return state
   }
@@ -87,12 +75,6 @@ function getSelectContractFunctionAction (func) {
   return {
     type: ACTIONS.SELECT_CONTRACT_FUNCTION,
     func: func,
-  }
-}
-
-function getToggleResourceMenuAction () {
-  return {
-    type: ACTIONS.TOGGLE_RESOURCE_MENU,
   }
 }
 

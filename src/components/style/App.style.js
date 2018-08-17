@@ -3,7 +3,7 @@
  * https://github.com/mui-org/material-ui/tree/master/docs/src/pages/page-layout-examples/dashboard
  */
 
-const drawerWidth = 240
+const drawerWidth = 260
 
 const appStyles = theme => ({
   root: {
@@ -76,6 +76,9 @@ const appStyles = theme => ({
   },
   tableContainer: {
     height: 320,
+  },
+  listItemText: {
+    paddingLeft: 0,
   },
 })
 

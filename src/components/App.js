@@ -49,7 +49,6 @@ import {
   closeContractForm,
   openContractForm,
   selectContractFunction,
-  toggleResourceMenu,
 } from '../redux/reducers/ui'
 
 import { getWeb3 } from '../redux/reducers/web3'
@@ -66,7 +65,7 @@ class App extends Component {
     this.props.getWeb3()
     this.graphContainerRef = React.createRef()
     this.state = {
-      drawerOpen: false,
+      drawerOpen: true,
       graphHeight: null,
       graphWidth: null,
     }
@@ -123,7 +122,8 @@ class App extends Component {
             </Toolbar>
           </AppBar>
           <Drawer
-          variant="persistent"
+            variant="persistent"
+            anchor="left"
             classes={{
               paper: classNames(classes.drawerPaper, !this.state.drawerOpen && classes.drawerPaperClose),
             }}
@@ -160,7 +160,19 @@ class App extends Component {
                   graph={currentGraph}
                   openContractForm={this.props.openContractForm}
                   graphContainer={this.graphContainerRef} />
-              : <h2 className="App-no-graph-label">Please select a graph</h2>
+              : (
+                  <Typography
+                    variant="title"
+                    color="inherit"
+                    noWrap
+                    className={classes.title}
+                    style={{
+                      alignSelf: 'center',
+                    }}
+                  >
+                    Please select a graph
+                  </Typography>
+                )
             }
           </main>
           <div className="App-modal-container" >
@@ -228,8 +240,6 @@ App.propTypes = {
   openContractForm: PropTypes.func,
   selectContractFunction: PropTypes.func,
   selectedContractFunction: PropTypes.string,
-  resourceMenuOpen: PropTypes.bool,
-  toggleResourceMenu: PropTypes.func,
   // web3
   account: PropTypes.string,
   networkId: PropTypes.string,
@@ -256,7 +266,6 @@ function mapStateToProps (state) {
     // ui
     contractModal: state.ui.contractForm.open,
     selectedContractFunction: state.ui.contractForm.selectedFunction,
-    resourceMenuOpen: state.ui.resourceMenu.open,
     // web3
     account: state.web3.account,
     networkId: state.web3.networkId,
@@ -286,7 +295,6 @@ function mapDispatchToProps (dispatch) {
     closeContractForm: () => dispatch(closeContractForm()),
     openContractForm: () => dispatch(openContractForm()),
     selectContractFunction: func => dispatch(selectContractFunction(func)),
-    toggleResourceMenu: () => dispatch(toggleResourceMenu()),
     // web3
     getWeb3: () => dispatch(getWeb3()),
   }

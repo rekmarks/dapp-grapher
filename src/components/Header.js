@@ -1,9 +1,7 @@
 
 import React, { Component, Fragment } from 'react'
 import PropTypes from 'prop-types'
-// import classNames from 'classnames'
-
-import './style/Header.css'
+import Typography from '@material-ui/core/Typography'
 
 export default class Header extends Component {
 
@@ -12,12 +10,12 @@ export default class Header extends Component {
     return (
       <Fragment>
         <div className = "Header-items">
-          <p className="Header-info-label">
+          <Typography variant="subheading" color="inherit">
             { this.props.web3Injected
               ? 'Logged in with MetaMask'
               : 'Please log in with MetaMask'
             }
-          </p>
+          </Typography>
         </div>
       </Fragment>
     )

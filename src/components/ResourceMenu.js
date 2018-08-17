@@ -1,31 +1,40 @@
 
 import PropTypes from 'prop-types'
 import React, { Component, Fragment } from 'react'
+// import { withStyles } from '@material-ui/core/styles'
 import Divider from '@material-ui/core/Divider'
 import Typography from '@material-ui/core/Typography'
 import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
-import ListItemIcon from '@material-ui/core/ListItemIcon'
 import ListItemText from '@material-ui/core/ListItemText'
+import Collapse from '@material-ui/core/Collapse'
 import ExpansionPanel from '@material-ui/core/ExpansionPanel'
 import ExpansionPanelSummary from '@material-ui/core/ExpansionPanelSummary'
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+
 import DeleteIcon from '@material-ui/icons/Delete'
-import SubjectIcon from '@material-ui/icons/Subject'
 import GetAppIcon from '@material-ui/icons/GetApp'
+import ListItemIcon from '@material-ui/core/ListItemIcon'
+import SubjectIcon from '@material-ui/icons/Subject'
+import ExpandLessIcon from '@material-ui/icons/ExpandLess'
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+import BuildIcon from '@material-ui/icons/Build'
 
 import { contractGraphTypes } from '../graphing/parseContract'
 
 import ContractInstancesList from './ContractInstancesList'
-
-import './style/ResourceMenu.css'
 
 export default class ResourceMenu extends Component {
 
   constructor (props) {
 
     super(props)
-    this.state = { storageHref: getStorageHref()}
+    this.state = {
+      storageHref: getStorageHref(),
+      contractsList: false,
+      contractInstancesList: false,
+      devActionsList: false,
+      web3InfoList: false,
+    }
   }
 
   componentDidUpdate (prevProps) {
@@ -35,9 +44,11 @@ export default class ResourceMenu extends Component {
     }
   }
 
-  render () {
+  handleParentListClick = id => {
+    this.setState(state => ({ [id]: !state[id] }))
+  }
 
-    const classes = this.props.classes
+  render () {
 
     const listHeadingStyle = {
       whiteSpace: 'nowrap',
@@ -55,78 +66,118 @@ export default class ResourceMenu extends Component {
 
     return (
       <Fragment>
-        <div className="Header-links">
-
-        </div>
-        <Divider/>
-        <div className="ResourceMenu-delete-buttons">
-          <List>
-            <ListItem button
-
-            >
-              <ListItemIcon>
-                <GetAppIcon />
-              </ListItemIcon>
-              <ListItemText>
-                <a
-                  href={this.state.storageHref}
-                  download="dapp-grapher-state.json"
-                  style={{
-                    textDecoration: 'inherit',
-                    color: 'inherit',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Download State
-                </a>
-              </ListItemText>
-            </ListItem>
-            <Divider/>
-            <ListItem button
-              disabled={!this.props.selectedGraphId}
-              onClick={
-                () => this.props.deleteGraph(this.props.selectedGraphId)
+        <div className="ResourceMenu-dev-buttons">
+          <List disablePadding>
+            <div id="ResourceMenu-devActionsList">
+              {
+                this.getNestedList(
+                  'devActionsList',
+                  (<BuildIcon />),
+                  'Dev',
+                  [
+                    this.getListButton(
+                      !this.props.selectedGraphId,
+                      () => this.props.deleteGraph(this.props.selectedGraphId),
+                      (<DeleteIcon />),
+                      'Delete Selected Graph'
+                    ),
+                    this.getListButton(
+                      !this.props.hasGraphs,
+                      this.props.deleteAllGraphs,
+                      (<DeleteIcon />),
+                      'Delete All Graphs'
+                    ),
+                  ]
+                )
               }
-            >
-              <ListItemIcon>
-                <DeleteIcon />
-              </ListItemIcon>
-              <ListItemText primary="Delete Selected Graph" />
-            </ListItem>
-            <ListItem button
-              disabled={!this.props.hasGraphs}
-              onClick={this.props.deleteAllGraphs}
-            >
-              <ListItemIcon>
-                <DeleteIcon />
-              </ListItemIcon>
-              <ListItemText primary="Delete All Graphs" />
-            </ListItem>
+            </div>
           </List>
         </div>
         <Divider />
         <ExpansionPanel
-          id="ResourceMenu-contractTypes-panel"
           disabled={hasNoContractTypes}
         >
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography className={classes.heading} style={listHeadingStyle}>
+            <Typography
+              variant="subheading"
+              style={listHeadingStyle}
+            >
               Contract Types
             </Typography>
           </ExpansionPanelSummary>
           {hasNoContractTypes ? null : this.getContractTypesJSX()}
         </ExpansionPanel>
         <ExpansionPanel
-          id="ResourceMenu-contractInstances-panel"
           disabled={hasNoContractInstances}
         >
           <ExpansionPanelSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography className={classes.heading} style={listHeadingStyle}>
+            <Typography
+              variant="subheading"
+              style={listHeadingStyle}
+            >
               Contract Instances
             </Typography>
           </ExpansionPanelSummary>
           {hasNoContractInstances ? null : this.getContractInstancesJSX()}
         </ExpansionPanel>
+        <List style={{ paddingTop: 0, paddingBottom: 0}}>
+          <Divider />
+          <ListItem button>
+            <ListItemIcon>
+              <GetAppIcon />
+            </ListItemIcon>
+            <ListItemText>
+              <a
+                href={this.state.storageHref}
+                download="dapp-grapher-state.json"
+                style={{
+                  textDecoration: 'inherit',
+                  color: 'inherit',
+                  cursor: 'pointer',
+                }}
+              >
+                Download State
+              </a>
+            </ListItemText>
+          </ListItem>
+        </List>
+      </Fragment>
+    )
+  }
+
+  getNestedList = (id, icon, displayText, children) => {
+    return (
+      <Fragment>
+        <ListItem button onClick={() => this.handleParentListClick([id])}>
+          <ListItemIcon>
+            {icon}
+          </ListItemIcon>
+          <ListItemText
+            inset
+            primary={displayText} />
+          {this.state[id] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+        </ListItem>
+        <Collapse in={this.state[id]} timeout="auto" unmountOnExit>
+          <List disablePadding>
+            {children}
+          </List>
+        </Collapse>
+      </Fragment>
+    )
+  }
+
+  getListButton = (disabled, onClick, icon, displayText) => {
+    return (
+      <Fragment>
+        <ListItem button
+          disabled={disabled}
+          onClick={onClick}
+        >
+          <ListItemIcon>
+            {icon}
+          </ListItemIcon>
+          <ListItemText primary={displayText}/>
+        </ListItem>
       </Fragment>
     )
   }
@@ -186,10 +237,10 @@ export default class ResourceMenu extends Component {
 
       if (instance.account === _this.props.account) {
         if (instanceTypes[instance.type]) {
-          instanceTypes[instance.type][address] = !!instance.truffleInstance
+          instanceTypes[instance.type][address] = !!instance.truffleContract
         } else {
           instanceTypes[instance.type] = {
-            [address]: !!instance.truffleInstance,
+            [address]: !!instance.truffleContract,
           }
         }
       }
