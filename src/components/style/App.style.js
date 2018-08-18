@@ -9,9 +9,9 @@ const appStyles = theme => ({
   root: {
     display: 'flex',
   },
-  toolbar: {
-    paddingRight: 24, // keep right padding when drawer closed
-  },
+  // toolbar: {
+  //   paddingRight: 24, // keep right padding when drawer closed
+  // },
   toolbarIcon: {
     display: 'flex',
     alignItems: 'center',

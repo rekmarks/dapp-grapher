@@ -7,6 +7,8 @@ import React from 'react'
 import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles'
 import CssBaseline from '@material-ui/core/CssBaseline'
 
+const spacingUnit = 8
+
 // A theme with custom primary and secondary color.
 const theme = createMuiTheme({
   palette: {
@@ -40,6 +42,9 @@ const theme = createMuiTheme({
       },
     },
   },
+  spacing: {
+    unit: spacingUnit,
+  },
 })
 
 function withRoot (Component) {
@@ -59,3 +64,6 @@ function withRoot (Component) {
 }
 
 export default withRoot
+export {
+  spacingUnit,
+}
