@@ -1,6 +1,6 @@
 
 import PropTypes from 'prop-types'
-import React, { Component, Fragment } from 'react'
+import React, { Component } from 'react'
 // import { withStyles } from '@material-ui/core/styles'
 import Divider from '@material-ui/core/Divider'
 import List from '@material-ui/core/List'
@@ -46,28 +46,44 @@ export default class ResourceMenu extends Component {
     }
 
     return (
-      <Fragment>
-        <div className="ResourceMenu-dev-buttons">
-          <List disablePadding>
-            <NestedList
-              icon={(<BuildIcon />)}
-              displayText="Dev"
-            >
-              <ListButton
-                disabled={!this.props.selectedGraphId}
-                onClick={
-                  () => this.props.deleteGraph(this.props.selectedGraphId)
-                }
-                icon={(<DeleteIcon />)}
-                displayText="Delete Selected Graph" />
-              <ListButton
-                disabled={!this.props.hasGraphs}
-                onClick={this.props.deleteAllGraphs}
-                icon={(<DeleteIcon />)}
-                displayText="Delete All Graphs" />
-            </NestedList>
-          </List>
-        </div>
+      <div id="ResourceMenu-main" style={{overflowY: 'auto'}}>
+        <List disablePadding>
+          <NestedList
+            icon={(<BuildIcon />)}
+            displayText="Dev Tools"
+          >
+            <ListButton
+              disabled={!this.props.hasGraphs}
+              onClick={this.props.deleteAllGraphs}
+              icon={(<DeleteIcon />)}
+              displayText="Delete All Graphs" />
+            <ListButton
+              disabled={!this.props.selectedGraphId}
+              onClick={
+                () => this.props.deleteGraph(this.props.selectedGraphId)
+              }
+              icon={(<DeleteIcon />)}
+              displayText="Delete Selected Graph" />
+            <ListItem button>
+              <ListItemIcon>
+                <GetAppIcon />
+              </ListItemIcon>
+              <ListItemText>
+                <a
+                  href={this.state.storageHref}
+                  download="dapp-grapher-state.json"
+                  style={{
+                    textDecoration: 'inherit',
+                    color: 'inherit',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Download State
+                </a>
+              </ListItemText>
+            </ListItem>
+          </NestedList>
+        </List>
         <Divider />
         <NestedList
           icon={(<StorageIcon />)}
@@ -85,28 +101,7 @@ export default class ResourceMenu extends Component {
             selectGraph={this.props.selectGraph}
             selectedGraphId={this.props.selectedGraphId} />
         </NestedList>
-        <List style={{ paddingTop: 0, paddingBottom: 0}}>
-          <Divider />
-          <ListItem button>
-            <ListItemIcon>
-              <GetAppIcon />
-            </ListItemIcon>
-            <ListItemText>
-              <a
-                href={this.state.storageHref}
-                download="dapp-grapher-state.json"
-                style={{
-                  textDecoration: 'inherit',
-                  color: 'inherit',
-                  cursor: 'pointer',
-                }}
-              >
-                Download State
-              </a>
-            </ListItemText>
-          </ListItem>
-        </List>
-      </Fragment>
+      </div>
     )
   }
 
@@ -118,8 +113,6 @@ export default class ResourceMenu extends Component {
       !this.props.contractInstances[this.props.networkId]
     ) return null
 
-    const _this = this
-
     // get all instances for current account and networkId by type
     const instanceTypes = {}
     Object.keys(
@@ -127,9 +120,9 @@ export default class ResourceMenu extends Component {
     ).forEach(address => {
 
       const instance =
-        _this.props.contractInstances[_this.props.networkId][address]
+        this.props.contractInstances[this.props.networkId][address]
 
-      if (instance.account === _this.props.account) {
+      if (instance.account === this.props.account) {
         if (instanceTypes[instance.type]) {
           instanceTypes[instance.type][address] = !!instance.truffleContract
         } else {

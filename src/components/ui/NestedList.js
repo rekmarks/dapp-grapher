@@ -22,6 +22,7 @@ export default class NestedList extends Component {
     return (
       <Fragment>
         <ListItem button
+          disabled={this.props.disabled || !this.props.children}
           onClick={this.handleParentClick}
           style={
             this.props.buttonPadding
@@ -41,7 +42,11 @@ export default class NestedList extends Component {
           <ListItemText
             inset
             primary={this.props.displayText} />
-          {this.state.open ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+          {
+            this.props.disabled || !this.props.children
+            ? ''
+            : this.state.open ? <ExpandLessIcon /> : <ExpandMoreIcon />
+          }
         </ListItem>
         <Collapse in={this.state.open} timeout="auto" unmountOnExit>
           <List disablePadding>
@@ -54,8 +59,13 @@ export default class NestedList extends Component {
 }
 
 NestedList.propTypes = {
-  children: PropTypes.object,
+  children: PropTypes.oneOfType([
+    PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.element)),
+    PropTypes.arrayOf(PropTypes.element),
+    PropTypes.element,
+  ]),
+  disabled: PropTypes.bool,
   icon: PropTypes.object,
-  displayText: PropTypes.string,
+  displayText: PropTypes.string.isRequired,
   buttonPadding: PropTypes.number,
 }

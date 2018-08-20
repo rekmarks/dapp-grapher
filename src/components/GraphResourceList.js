@@ -38,12 +38,10 @@ class ContractsResourceList extends Component {
     const contractTypeNames = Object.keys(this.props.contractTypes)
     contractTypeNames.sort()
 
-    const _this = this
-
     return contractTypeNames.map(contractName => {
 
       const currentGraphId =
-        _this.props.contractTypes[contractName][contractGraphTypes._constructor]
+        this.props.contractTypes[contractName][contractGraphTypes._constructor]
 
       return (
 
@@ -56,14 +54,17 @@ class ContractsResourceList extends Component {
           <ConstructorListButton
             contractName={contractName}
             graphId={currentGraphId}
-            getCreateGraphParams={_this.props.getCreateGraphParams}
-            createGraph={_this.props.createGraph}
-            selectGraph={_this.props.selectGraph}
-            selectedGraphId={_this.props.selectedGraphId} />
+            getCreateGraphParams={this.props.getCreateGraphParams}
+            createGraph={this.props.createGraph}
+            selectGraph={this.props.selectGraph}
+            selectedGraphId={this.props.selectedGraphId} />
           <NestedList
             icon={(<CloudQueueIcon />)}
             displayText="Instances"
-            disabled={!!this.props.instanceTypes}
+            disabled={
+              !this.props.instanceTypes ||
+              !this.props.instanceTypes[contractName]
+            }
             buttonPadding={spacingUnit * 6}
           >
             {
@@ -72,7 +73,7 @@ class ContractsResourceList extends Component {
                   contractName,
                   this.props.instanceTypes[contractName]
                 )
-              : ''
+              : null
             }
           </NestedList>
         </NestedList>
@@ -82,28 +83,28 @@ class ContractsResourceList extends Component {
 
   getInstanceListItems = (type, instances) => {
 
-    const _this = this
+    if (!instances) return null
 
     return Object.keys(instances).sort().map(address => {
 
       const functionsGraphId =
-          _this.props.contractTypes[type][contractGraphTypes.functions]
+          this.props.contractTypes[type][contractGraphTypes.functions]
 
       return (
         <InstanceListButton
           key={address}
-          classes={_this.props.classes}
+          classes={this.props.classes}
           contractName={type}
           address={address}
-          selectContractAddress={_this.props.selectContractAddress}
-          selectedContractAddress={_this.props.selectedContractAddress}
-          addInstance={_this.props.addInstance}
+          selectContractAddress={this.props.selectContractAddress}
+          selectedContractAddress={this.props.selectedContractAddress}
+          addInstance={this.props.addInstance}
           hasInstance={instances[address]}
-          functionsGraphId={functionsGraphId}
-          getCreateGraphParams={_this.props.getCreateGraphParams}
-          createGraph={_this.props.createGraph}
-          selectGraph={_this.props.selectGraph}
-          selectedGraphId={_this.props.selectedGraphId} />
+          graphId={functionsGraphId}
+          getCreateGraphParams={this.props.getCreateGraphParams}
+          createGraph={this.props.createGraph}
+          selectGraph={this.props.selectGraph}
+          selectedGraphId={this.props.selectedGraphId} />
       )
 
     })
@@ -134,8 +135,10 @@ class ConstructorListButton extends Component {
   render () {
     return (
       <ListItem button
-        disabled={this.props.selectedGraphId &&
-          this.props.selectedGraphId === this.props.graphId}
+        disabled={
+          this.props.selectedGraphId &&
+          this.props.selectedGraphId === this.props.graphId
+        }
         onClick={this.handleClick}
         style={{ paddingLeft: spacingUnit * 6 }}
       >
@@ -180,8 +183,13 @@ class InstanceListButton extends Component {
     return (
       <ListItem button
         className={classes.nested}
-        disabled={this.props.selectedGraphId &&
-            this.props.selectedContractAddress === this.props.address}
+        disabled={
+          this.props.selectedGraphId &&
+          this.props.selectedGraphId === this.props.graphId &&
+          !!this.props.selectedContractAddress
+          ? this.props.selectedContractAddress === this.props.address
+          : false
+        }
         onClick={this.handleClick}
       >
         <ListItemText
@@ -196,10 +204,10 @@ class InstanceListButton extends Component {
     if (!this.props.hasInstance) {
       this.props.addInstance(this.props.contractName, this.props.address)
     }
-    if (this.props.functionsGraphId) {
+    if (this.props.graphId) {
 
-      if (this.props.selectedGraphId !== this.props.functionsGraphId) {
-        this.props.selectGraph(this.props.functionsGraphId)
+      if (this.props.selectedGraphId !== this.props.graphId) {
+        this.props.selectGraph(this.props.graphId)
       }
     } else {
       this.props.createGraph(this.props.getCreateGraphParams(
@@ -214,17 +222,15 @@ class InstanceListButton extends Component {
 
 InstanceListButton.propTypes = {
   classes: PropTypes.object.isRequired,
-  address: PropTypes.string,
-  addInstance: PropTypes.func,
-  hasInstance: PropTypes.bool,
-  contractName: PropTypes.string,
-  createGraph: PropTypes.func,
-  deleteGraph: PropTypes.func,
-  deleteAllGraphs: PropTypes.func,
-  getCreateGraphParams: PropTypes.func,
-  selectGraph: PropTypes.func,
+  address: PropTypes.string.isRequired,
+  addInstance: PropTypes.func.isRequired,
+  hasInstance: PropTypes.bool.isRequired,
+  contractName: PropTypes.string.isRequired,
+  createGraph: PropTypes.func.isRequired,
+  getCreateGraphParams: PropTypes.func.isRequired,
+  selectGraph: PropTypes.func.isRequired,
   selectedGraphId: PropTypes.string,
-  selectContractAddress: PropTypes.func,
+  selectContractAddress: PropTypes.func.isRequired,
   selectedContractAddress: PropTypes.string,
-  functionsGraphId: PropTypes.string,
+  graphId: PropTypes.string.isRequired,
 }
