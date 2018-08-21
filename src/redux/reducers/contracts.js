@@ -7,6 +7,13 @@ import {
 } from 'chain-end'
 
 import { contractGraphTypes as graphTypes } from '../../graphing/parseContract'
+
+import {
+  dappDeploymentSuccess,
+  dappDeploymentFailure,
+  dappDeploymentEnd,
+} from './dapps'
+
 import { deleteGraph } from './grapher'
 
 const ACTIONS = {
@@ -15,9 +22,15 @@ const ACTIONS = {
   REMOVE_ALL_GRAPH_IDS: 'CONTRACTS:REMOVE_ALL_GRAPH_IDS',
   REMOVE_CONTRACT_TYPE: 'CONTRACTS:REMOVE_CONTRACT_TYPE',
   CLEAR_ERRORS: 'CONTRACTS:CLEAR_ERRORS',
-  DEPLOY: 'CONTRACTS:DEPLOY',
+  BEGIN_DEPLOYMENT: 'CONTRACTS:BEGIN_DEPLOYMENT',
+  END_DEPLOYMENT: 'CONTRACTS:END_DEPLOYMENT',
   DEPLOYMENT_SUCCESS: 'CONTRACTS:DEPLOYMENT_SUCCESS',
   DEPLOYMENT_FAILURE: 'CONTRACTS:DEPLOYMENT_FAILURE',
+  ENQUEUE_DEPLOYMENTS: 'CONTRACTS:ENQUEUE_DEPLOYMENTS',
+  // DEQUEUE_DEPLOYMENT: 'CONTRACTS:DEQUEUE_DEPLOYMENT',
+  RESET_DEPLOYMENT_QUEUE: 'CONTRACTS:RESET_DEPLOYMENT_QUEUE',
+  ADD_DAPP_ID: 'CONTRACTS:ADD_DAPP_ID', // TODO
+  REMOVE_DAPP_ID: 'CONTRACTS:REMOVE_DAPP_ID', // TODO
   ADD_INSTANCE: 'CONTRACTS:ADD_INSTANCE',
   ADD_INSTANCE_SUCCESS: 'CONTRACTS:ADD_INSTANCE_SUCCESS',
   ADD_INSTANCE_FAILURE: 'CONTRACTS:ADD_INSTANCE_FAILURE',
@@ -40,6 +53,7 @@ Object.entries(defaultContracts).forEach(([key, value]) => {
 
 const initialState = {
   instances: {},
+  deploymentQueue: [],
   types: contracts, // TODO: store these by a unique id, not name?
   errors: null,
   callHistory: null,
@@ -59,7 +73,9 @@ export {
   getSetGraphIdAction as setContractGraphId,
   getRemoveAllGraphIdsAction as removeAllContractGraphIds,
   removeContractTypeThunk as removeContractType,
-  deployThunk as deploy,
+  getEnqueueDeploymentsAction as enqueueContractDeployments,
+  deployThunk as deployContract,
+  deployQueueThunk as deployEnqueuedContracts,
   getSelectAddressAction as selectContractAddress,
   addInstanceThunk as addInstance,
   callInstanceThunk as callInstance,
@@ -126,34 +142,54 @@ export default function reducer (state = initialState, action) {
       delete newState.types[action.contractName]
       return newState
 
-    case ACTIONS.DEPLOY:
+    case ACTIONS.ENQUEUE_DEPLOYMENTS:
+      return {
+        ...state,
+        deploymentQueue: state.deploymentQueue.concat(action.deployments),
+      }
+
+    case ACTIONS.RESET_DEPLOYMENT_QUEUE:
+      return {
+        ...state,
+        deploymentQueue: [],
+      }
+
+    case ACTIONS.BEGIN_DEPLOYMENT:
       return {
         ...state,
         ready: false,
       }
 
+    case ACTIONS.END_DEPLOYMENT:
+      return {
+        ...state,
+        ready: true,
+      }
+
     case ACTIONS.DEPLOYMENT_SUCCESS:
+
+      const networkId = action.payload.networkId
+
       // also adds Truffle instance
       return {
         ...state,
-        instances: {
 
+        instances: {
           ...state.instances,
 
-          [action.data.networkId]: {
+          [networkId]: {
+            ...state.instances[networkId],
 
-            ...state.instances[action.data.networkId],
+            [action.payload.address]: {
 
-            [action.data.truffleContract.address]: {
-
-              account: action.data.account,
-              type: action.data.contractName,
-              constructorParams: action.data.constructorParams,
-              truffleContract: action.data.truffleContract,
+              account: action.payload.account,
+              type: action.payload.contractName,
+              constructorParams: action.payload.constructorParams,
+              truffleContract: action.payload.truffleContract,
+              dappTemplateIds: action.payload.dappTemplateIds || [],
             },
           },
         },
-        ready: true,
       }
 
     case ACTIONS.DEPLOYMENT_FAILURE:
@@ -265,7 +301,9 @@ export default function reducer (state = initialState, action) {
   }
 }
 
-/* Synchronous action creators */
+/**
+ * SYNCHRONOUS ACTION CREATORS
+ */
 
 function getAddContractTypeAction (contractName, artifact) {
   return {
@@ -298,16 +336,29 @@ function getRemoveContractTypeAction (contractName) {
   }
 }
 
-function getDeployAction () {
+function getBeginDeploymentAction () {
   return {
-    type: ACTIONS.DEPLOY,
+    type: ACTIONS.BEGIN_DEPLOYMENT,
+  }
+}
+
+function getEnqueueDeploymentsAction (deployments) {
+  return {
+    type: ACTIONS.ENQUEUE_DEPLOYMENTS,
+    deployments: deployments,
+  }
+}
+
+function getResetDeploymentQueueAction () {
+  return {
+    type: ACTIONS.RESET_DEPLOYMENT_QUEUE,
   }
 }
 
 function getDeploymentSuccessAction (payload) {
   return {
     type: ACTIONS.DEPLOYMENT_SUCCESS,
-    data: payload,
+    payload: payload,
   }
 }
 
@@ -315,6 +366,12 @@ function getDeploymentFailureAction (error) {
   return {
     type: ACTIONS.DEPLOYMENT_FAILURE,
     error: error,
+  }
+}
+
+function getEndDeploymentAction () {
+  return {
+    type: ACTIONS.END_DEPLOYMENT,
   }
 }
 
@@ -429,14 +486,16 @@ function removeContractTypeThunk (contractName) {
   }
 }
 
-/* Asynchronous action creators */
+/**
+ * ASYNCHRONOUS ACTION CREATORS
+ */
 
 /**
  * Attempts to deploy the given contract by calling its constructor with the
- * given parameters. Dispatches actions at start and success or failure.
+ * given parameters. Handles success and failure.
  *
  * @param  {string} contractName      the name of the contract to deploy
- * @param  {array} constructorParams  the parameters, in the order they must be
+ * @param  {array}  constructorParams the parameters, in the order they must be
  *                                    passed to the constructor
  */
 function deployThunk (contractName, constructorParams) {
@@ -444,59 +503,90 @@ function deployThunk (contractName, constructorParams) {
   return async (dispatch, getState) => {
 
     const state = getState()
-    if (!state.contracts.ready) {
-      dispatch(getDeploymentFailureAction(new Error('contracts not ready')))
-      return
-    }
-    if (!state.web3.ready) {
-      dispatch(getAddInstanceFailureAction(new Error('web3 not ready')))
+
+    if (!prepareForDeployment(
+      dispatch,
+      state.contracts,
+      state.web3
+    )) {
       return
     }
 
-    dispatch(getDeployAction())
-
-    const contractJSON = state.contracts.types[contractName].artifact
-
-    if (!state.web3.provider) {
-      dispatch(getDeploymentFailureAction(new Error('missing web3 provider')))
-      return
-    }
-    if (!state.web3.account) {
-      dispatch(getDeploymentFailureAction(new Error('missing web3 account')))
-      return
-    }
-    if (!contractJSON) {
-      dispatch(getDeploymentFailureAction(new Error(
-        'no contract found of type ' + contractName)))
-      return
-    }
-
-    let instance
-    try {
-      instance = await _deploy(
-        contractJSON,
-        constructorParams,
-        state.web3.provider,
-        state.web3.account
+    const success = Boolean(
+      await deployContract(
+        dispatch,
+        state.web3,
+        state.contracts.types,
+        contractName,
+        constructorParams
       )
-    } catch (error) {
-      dispatch(getDeploymentFailureAction(error))
+    )
+
+    if (success) { dispatch(getEndDeploymentAction()) }
+  }
+}
+
+/**
+ * Attempts to deploy all contracts in the deployment queue. Handles success
+ * and failure.
+ */
+function deployQueueThunk (dappDisplayName, dappTemplateId) {
+
+  return async (dispatch, getState) => {
+
+    const state = getState()
+
+    if (!prepareForDeployment(
+        dispatch,
+        state.contracts,
+        state.web3,
+      )) {
       return
     }
 
-    if (!instance) {
-      dispatch(getDeploymentFailureAction(new Error('deployment returned false')))
-      return
-    }
+    const queue = state.contracts.deploymentQueue
 
-    const payload = {
-      truffleContract: instance,
+    const dappData = {
+      displayName: dappDisplayName,
+      templateId: dappTemplateId,
       account: state.web3.account,
-      contractName: contractName,
-      constructorParams: constructorParams,
       networkId: state.web3.networkId,
+      contractInstances: [],
     }
-    dispatch(getDeploymentSuccessAction(payload))
+
+    for (let i = 0; i < queue.length; i++) {
+
+      const deployment = queue[i]
+
+      const result = await deployContract(
+        dispatch,
+        state.web3,
+        state.contracts.types,
+        deployment.contractName,
+        deployment.constructorParams,
+        dappTemplateId
+      )
+
+      if (result) {
+
+        dappData.contractInstances.push(result.address)
+
+      } else {
+
+        dispatch(getResetDeploymentQueueAction())
+        dispatch(getEndDeploymentAction())
+        dispatch(dappDeploymentFailure(new Error(
+          'deployment ' + i + ': ' + deployment.contractName + ' failed'
+        )))
+        dispatch(dappDeploymentEnd())
+        return
+      }
+    }
+
+    dispatch(getResetDeploymentQueueAction())
+    dispatch(getEndDeploymentAction())
+    dispatch(dappDeploymentSuccess(dappData))
+    dispatch(dappDeploymentEnd())
   }
 }
 
@@ -568,12 +658,12 @@ function addInstanceThunk (contractName, address) {
 }
 
 /**
- * [callInstanceThunk description]
- * @param  {[type]} address      [description]
- * @param  {[type]} functionName [description]
- * @param  {[type]} params       [description]
- * @param  {[type]} sender       [description]
- * @return {[type]}              [description]
+ * Attempts to call a function associated with an instance stored in state.
+ * Fails if instance not found in state or due to a web3 error.
+ * @param  {string} address      the address of the instance
+ * @param  {string} functionName the name of the function to call
+ * @param  {array} params        the parameters to pass to the function
+ * @param  {string} sender       the sending account
  */
 function callInstanceThunk (address, functionName, params = null, sender = null) {
 
@@ -623,4 +713,105 @@ function callInstanceThunk (address, functionName, params = null, sender = null)
       result: result,
     }))
   }
+}
+
+/**
+ * HELPERS
+ */
+
+/**
+ * Validates pre-deployment state and, on success, sets contracts.ready to
+ * false to indicate that deployment is in progress.
+ * @param  {func}   dispatch     dispatch function from calling thunk
+ * @param  {object} contracts    contracts substate
+ * @param  {object} web3         web3 substate
+ * @return {bool}                true if validation successful, false otherwise
+ */
+function prepareForDeployment (dispatch, contracts, web3) {
+
+  if (!contracts.ready) {
+    dispatch(getDeploymentFailureAction(new Error('contracts not ready')))
+    return false
+  }
+  if (!web3.ready) {
+    dispatch(getDeploymentFailureAction(new Error('web3 not ready')))
+    return false
+  }
+  if (!web3.provider) {
+    dispatch(getDeploymentFailureAction(new Error('missing web3 provider')))
+    return false
+  }
+  if (!web3.account) {
+    dispatch(getDeploymentFailureAction(new Error('missing web3 account')))
+    return false
+  }
+  dispatch(getBeginDeploymentAction())
+  return true
+}
+
+/**
+ * Helper performing actual deployment work.
+ * Validates that the contract's artifact exists and that the web3 call is
+ * successful.
+ * @param  {func}   dispatch          dispatch function from calling thunk
+ * @param  {object} web3              web3 substate
+ * @param  {object} contractTypes     contract types from state
+ * @param  {string} contractName      name of contract to deploy
+ * @param  {array}  constructorParams constructor parameters
+ * @param  {string} dappTemplateId    id of associated dapp template (optional)
+ * @return {object}                   deployment data if successful, null
+ *                                    otherwise
+ */
+async function deployContract (
+    dispatch,
+    web3,
+    contractTypes,
+    contractName,
+    constructorParams,
+    dappTemplateId = null
+  ) {
+
+  if (
+    !contractTypes[contractName] ||
+    !contractTypes[contractName].artifact
+  ) {
+    dispatch(getDeploymentFailureAction(new Error(
+      'no contract with name ' + contractName + ' found'
+    )))
+    return null
+  }
+
+  const contractJSON = contractTypes[contractName].artifact
+
+  let instance
+  try {
+    instance = await _deploy(
+      contractJSON,
+      constructorParams,
+      web3.provider,
+      web3.account
+    )
+  } catch (error) {
+    dispatch(getDeploymentFailureAction(error))
+    return null
+  }
+
+  if (!instance) {
+    dispatch(getDeploymentFailureAction(new Error(
+      'deployment returned no instance'
+    )))
+    return null
+  }
+
+  const deploymentData = {
+    truffleContract: instance,
+    address: instance.address,
+    account: web3.account,
+    contractName: contractJSON.contractName,
+    constructorParams: constructorParams,
+    networkId: web3.networkId,
+    dappTemplateIds: dappTemplateId ? [dappTemplateId] : null,
+  }
+  dispatch(getDeploymentSuccessAction(deploymentData))
+  return deploymentData
 }

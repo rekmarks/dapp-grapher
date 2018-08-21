@@ -7,13 +7,15 @@ import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemText from '@material-ui/core/ListItemText'
 
+import AppsIcon from '@material-ui/icons/Apps'
 import DeleteIcon from '@material-ui/icons/Delete'
 import GetAppIcon from '@material-ui/icons/GetApp'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import StorageIcon from '@material-ui/icons/Storage'
 import BuildIcon from '@material-ui/icons/Build'
 
-import GraphResourceList from './GraphResourceList'
+import ContractResourceList from './ContractResourceList'
+import DappResourceList from './DappResourceList'
 import NestedList from './ui/NestedList'
 import ListButton from './ui/ListButton'
 
@@ -89,7 +91,7 @@ export default class ResourceMenu extends Component {
           icon={(<StorageIcon />)}
           displayText="Contracts"
         >
-          <GraphResourceList
+          <ContractResourceList
             classes={graphResourceClasses}
             contractTypes={this.props.contractTypes}
             instanceTypes={this.getInstanceTypes()}
@@ -100,6 +102,13 @@ export default class ResourceMenu extends Component {
             createGraph={this.props.createGraph}
             selectGraph={this.props.selectGraph}
             selectedGraphId={this.props.selectedGraphId} />
+        </NestedList>
+        <NestedList
+          icon={(<AppsIcon />)}
+          displayText="Dapps"
+        >
+          <DappResourceList
+            dapps={this.props.dapps} />
         </NestedList>
       </div>
     )
@@ -158,6 +167,7 @@ ResourceMenu.propTypes = {
   selectedContractAddress: PropTypes.string,
   hasGraphs: PropTypes.bool,
   drawerOpen: PropTypes.bool,
+  dapps: PropTypes.object,
 }
 
 /**

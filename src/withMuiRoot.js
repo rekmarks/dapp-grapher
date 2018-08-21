@@ -47,8 +47,8 @@ const theme = createMuiTheme({
   },
 })
 
-function withRoot (Component) {
-  function WithRoot (props) {
+function withMuiRoot (Component) {
+  function WithMuiRoot (props) {
     // MuiThemeProvider makes the theme available down the React tree
     // thanks to React context.
     return (
@@ -60,10 +60,11 @@ function withRoot (Component) {
     )
   }
 
-  return WithRoot
+  return WithMuiRoot
 }
 
-export default withRoot
+export default withMuiRoot
+
 export {
   spacingUnit,
 }

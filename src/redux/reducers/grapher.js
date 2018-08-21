@@ -16,7 +16,11 @@ const ACTIONS = {
 const initialState = {
   selectedGraphId: null,
   selectedGraphName: null,
-  graphs: {},
+  graphs: {
+    /**
+     * uuid: Graph,
+     */
+  },
   errors: null,
 }
 

@@ -18,12 +18,12 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft'
 
 // Custom component imports
 
-import AppModal from './AppModal'
+import AppModal from './ui/AppModal'
 import ContractForm from './ContractForm'
 import Grapher from './Grapher'
 import Header from './Header'
 import ResourceMenu from './ResourceMenu'
-import withRoot from '../withRoot'
+import withMuiRoot from '../withMuiRoot'
 
 // Reducer imports
 
@@ -31,9 +31,11 @@ import {
   addContractType,
   addInstance,
   callInstance,
-  deploy,
+  deployContract,
   selectContractAddress,
 } from '../redux/reducers/contracts'
+
+import { deployDapp, addDappTemplate } from '../redux/reducers/dapps'
 
 import {
   createGraph,
@@ -80,7 +82,8 @@ class App extends Component {
   }
 
   componentDidCatch (error, errorInfo) {
-    // Catch errors in any components below and, in the future, re-render with error message
+    // Catch errors in any components below and, in the future,
+    // re-render with error message
     this.props.logRenderError(error, errorInfo)
   }
 
@@ -89,7 +92,9 @@ class App extends Component {
     const classes = this.props.classes
 
     let currentGraph = null
-    if (this.props.selectedGraphObject) { currentGraph = this.props.selectedGraphObject.toJS() }
+    if (this.props.selectedGraphObject) {
+      currentGraph = this.props.selectedGraphObject.toJS()
+    }
 
     return (
       <Fragment>
@@ -97,9 +102,15 @@ class App extends Component {
         <div className={'App ' + classes.root} >
           <AppBar
             position="absolute"
-            className={classNames(classes.appBar, this.state.drawerOpen && classes.appBarShift)}
+            className={classNames(
+              classes.appBar,
+              this.state.drawerOpen && classes.appBarShift
+            )}
           >
-            <Toolbar disableGutters={!this.state.drawerOpen} className={classes.toolbar}>
+            <Toolbar
+              disableGutters={!this.state.drawerOpen}
+              className={classes.toolbar}
+            >
               <IconButton
                 color="inherit"
                 aria-label="Open drawer"
@@ -111,7 +122,12 @@ class App extends Component {
               >
                 <MenuIcon />
               </IconButton>
-              <Typography variant="title" color="inherit" noWrap className={classes.title}>
+              <Typography
+                variant="title"
+                color="inherit"
+                noWrap
+                className={classes.title}
+              >
                 Dapp Grapher
               </Typography>
               <Header
@@ -125,7 +141,10 @@ class App extends Component {
             variant="persistent"
             anchor="left"
             classes={{
-              paper: classNames(classes.drawerPaper, !this.state.drawerOpen && classes.drawerPaperClose),
+              paper: classNames(
+                classes.drawerPaper,
+                !this.state.drawerOpen && classes.drawerPaperClose
+              ),
             }}
             open={this.state.drawerOpen}
           >
@@ -151,7 +170,8 @@ class App extends Component {
                 selectedGraphId={this.props.selectedGraphId}
                 selectContractAddress={this.props.selectContractAddress}
                 selectedContractAddress={this.props.selectedContractAddress}
-                hasGraphs={this.props.hasGraphs} />
+                hasGraphs={this.props.hasGraphs}
+                dapps={this.props.dapps} />
           </Drawer>
           <main className="App-graph-container" ref={this.graphContainerRef} >
             {
@@ -195,7 +215,7 @@ class App extends Component {
                       nodes={currentGraph.elements.nodes}
                       contractName={currentGraph.name}
                       graphType={currentGraph.type}
-                      deploy={this.props.deploy}
+                      deployContract={this.props.deployContract}
                       callInstance={this.props.callInstance}
                       closeContractForm={this.props.closeContractForm}
                       selectContractFunction={this.props.selectContractFunction}
@@ -217,13 +237,17 @@ App.propTypes = {
   classes: PropTypes.object,
   // contracts
   addContractType: PropTypes.func,
-  deploy: PropTypes.func,
+  deployContract: PropTypes.func,
   addInstance: PropTypes.func,
   callInstance: PropTypes.func,
   contractInstances: PropTypes.object,
   contractTypes: PropTypes.object,
   selectedContractAddress: PropTypes.string,
   selectContractAddress: PropTypes.func,
+  // dapps
+  dapps: PropTypes.object,
+  addDappTemplate: PropTypes.func,
+  deployDapp: PropTypes.func,
   // grapher
   createGraph: PropTypes.func,
   deleteGraph: PropTypes.func,
@@ -247,7 +271,8 @@ App.propTypes = {
   web3: (props, propName, componentName) => {
     if (props[propName] !== null && typeof props[propName] !== 'object') {
       return new Error(
-        'Invalid ' + propName + ': Neither null nor an object for component ' + componentName
+        'Invalid ' + propName +
+        ': Neither null nor an object for component ' + componentName
       )
     }
   },
@@ -259,6 +284,8 @@ function mapStateToProps (state) {
     contractInstances: state.contracts.instances,
     contractTypes: state.contracts.types,
     selectedContractAddress: state.contracts.selectedAddress,
+    // dapps
+    dapps: state.dapps.templates,
     // grapher
     selectedGraphId: state.grapher.selectedGraphId,
     selectedGraphObject: state.grapher.graphs[state.grapher.selectedGraphId],
@@ -277,13 +304,17 @@ function mapDispatchToProps (dispatch) {
   return {
     // contracts // TODO: where add contract type?
     addContractType: contractJSON => dispatch(addContractType(contractJSON)),
-    deploy: (contractName, constructorParams) =>
-      dispatch(deploy(contractName, constructorParams)),
+    deployContract: (contractName, constructorParams) =>
+      dispatch(deployContract(contractName, constructorParams)),
     addInstance: (contractName, address) =>
       dispatch(addInstance(contractName, address)),
     callInstance: (address, functionName, params = null, sender = null) =>
       dispatch(callInstance(address, functionName, params, sender)),
     selectContractAddress: address => dispatch(selectContractAddress(address)),
+    // dapps
+    addDappTemplate: template => dispatch(addDappTemplate(template)),
+    deployDapp: (displayName, templateId, constructorCalls) =>
+      dispatch(deployDapp((displayName, templateId, constructorCalls))),
     // grapher
     createGraph: params => dispatch(createGraph(params)),
     deleteGraph: graphId => dispatch(deleteGraph(graphId)),
@@ -303,4 +334,4 @@ function mapDispatchToProps (dispatch) {
 export default connect(
   mapStateToProps,
   mapDispatchToProps
-)(withRoot(withStyles(appStyles)(App)))
+)(withMuiRoot(withStyles(appStyles)(App)))

@@ -14,11 +14,23 @@ export default class ListButton extends Component {
         <ListItem button
           disabled={this.props.disabled}
           onClick={this.props.onClick}
+          style={this.props.style ? this.props.style : {}}
         >
-          <ListItemIcon>
-            {this.props.icon}
-          </ListItemIcon>
-          <ListItemText primary={this.props.displayText}/>
+          {
+            this.props.icon
+            ? <ListItemIcon>
+                {this.props.icon}
+              </ListItemIcon>
+            : null
+          }
+          <ListItemText
+            primary={this.props.displayText}
+            inset={this.props.inset ? this.props.inset : false}
+            primaryTypographyProps={
+              this.props.primaryTypographyProps
+              ? this.props.primaryTypographyProps
+              : {}
+            } />
         </ListItem>
       </Fragment>
     )
@@ -30,4 +42,7 @@ ListButton.propTypes = {
   onClick: PropTypes.func,
   icon: PropTypes.object,
   displayText: PropTypes.string,
+  style: PropTypes.object,
+  inset: PropTypes.bool,
+  primaryTypographyProps: PropTypes.object,
 }

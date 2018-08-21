@@ -188,8 +188,8 @@ function getFunctionNodes (contractName, abi) {
           type: 'parameter',
           paramOrder: i,
         }
-    })
-}
+      })
+    }
 
     // add output nodes (if any)
     if (entry.outputs) {
@@ -206,8 +206,8 @@ function getFunctionNodes (contractName, abi) {
           parent: functionId,
           type: 'output',
         }
-    })
-}
+      })
+    }
   })
 
   return nodes

@@ -100,7 +100,7 @@ class ContractForm extends Component {
 
     event.preventDefault()
 
-    this.props.deploy(
+    this.props.deployContract(
       this.props.contractName,
       metaData.paramOrder.map(id => {
         return this.state.fieldValues[id]
@@ -262,7 +262,7 @@ ContractForm.propTypes = {
   contractName: PropTypes.string,
   graphType: PropTypes.string,
   nodes: PropTypes.object,
-  deploy: PropTypes.func,
+  deployContract: PropTypes.func,
   closeContractForm: PropTypes.func,
   selectContractFunction: PropTypes.func,
   selectedContractFunction: PropTypes.string,
