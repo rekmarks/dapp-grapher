@@ -18,7 +18,7 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft'
 
 // Custom component imports
 
-import AppModal from './ui/AppModal'
+import AppModal from './common/AppModal'
 import ContractForm from './ContractForm'
 import Grapher from './Grapher'
 import Header from './Header'

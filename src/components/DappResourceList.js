@@ -10,8 +10,8 @@ import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline'
 // import CloudQueueIcon from '@material-ui/icons/CloudQueue'
 // import SubjectIcon from '@material-ui/icons/Subject'
 
-// import NestedList from './ui/NestedList'
-// import ListButton from './ui/ListButton'
+// import NestedList from './common/NestedList'
+// import ListButton from './common/ListButton'
 
 // import { contractGraphTypes } from '../graphing/parseContract'
 import { spacingUnit } from '../withMuiRoot'

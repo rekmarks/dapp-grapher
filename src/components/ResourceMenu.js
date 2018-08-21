@@ -16,8 +16,8 @@ import BuildIcon from '@material-ui/icons/Build'
 
 import ContractResourceList from './ContractResourceList'
 import DappResourceList from './DappResourceList'
-import NestedList from './ui/NestedList'
-import ListButton from './ui/ListButton'
+import NestedList from './common/NestedList'
+import ListButton from './common/ListButton'
 
 export default class ResourceMenu extends Component {
 
