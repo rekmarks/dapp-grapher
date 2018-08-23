@@ -1,13 +1,20 @@
 
+import { getDisplayAddress } from '../utils'
+
 const graphTypes = {
-  // completeAbi: 'contract:completeAbi',
   _constructor: 'contract:constructor',
   functions: 'contract:functions',
 }
 
+export default getContractGraph
 export {
   graphTypes as contractGraphTypes,
+  getAccountGraph,
 }
+
+/**
+ * GRAPH GETTERS
+ */
 
 /**
  * Parses a Soldity contract ABI to a legible format for use in visual graphs
@@ -19,14 +26,11 @@ export {
  *                                 2  functions and their parameters (excluding constructor)
  * @return {object}              a graph
  */
-export default function parseContract (contract, mode) {
+function getContractGraph (contract, mode) {
 
   const graph = {}
   graph.name = contract.contractName
   switch (mode) {
-    // case 0:
-    //   graph.type = graphTypes.completeAbi
-    //   break
     case 1:
       graph.type = graphTypes._constructor
       break
@@ -38,10 +42,40 @@ export default function parseContract (contract, mode) {
   }
   graph.id = graph.name + ':' + graph.type
   graph.elements = {
-    nodes: getNodes(contract.contractName, contract.abi, mode),
-    edges: getEdges(contract.contractName, contract.abi, mode), // currently a placeholder
+    nodes: getContractNodes(contract.contractName, contract.abi, mode),
+    edges: getContractEdges(contract.contractName, contract.abi, mode), // currently a placeholder
   }
   return graph
+}
+
+/**
+ * [getAccountGraph description]
+ * @param  {[type]} address [description]
+ * @return {[type]}         [description]
+ */
+function getAccountGraph (address) {
+
+  return {
+    id: 'account',
+    type: 'account',
+    elements: {
+      nodes: {
+        account: {
+          id: 'account',
+          displayName: 'Account',
+          type: 'ui',
+        },
+        'account:address': {
+          id: 'account:address',
+          address: address,
+          displayName: getDisplayAddress(address),
+          parent: 'account',
+          type: 'output',
+        }
+      },
+      edges: {},
+    }
+  }
 }
 
 /**
@@ -55,7 +89,7 @@ export default function parseContract (contract, mode) {
  * @param  {[type]} mode         [description]
  * @return {[type]}              [description]
  */
-function getNodes (contractName, abi, mode) {
+function getContractNodes (contractName, abi, mode) {
 
   let nodes
 
@@ -69,12 +103,6 @@ function getNodes (contractName, abi, mode) {
   }
 
   switch (mode) {
-
-    // case 0:
-    //   contractNode.type = 'contract'
-    //   contractNode.contractType = 'complete'
-    //   nodes = getCompleteAbiNodes(contractName, abi)
-    //   break
 
     case 1:
       contractNode.type = 'contract'
@@ -118,12 +146,12 @@ function getConstructorNodes (contractName, abi) {
   // in case of parameter-less constructor
   if (!constructorAbi.inputs || constructorAbi.inputs.length < 1) return {}
 
-  const inputNodes = {}
+  const nodes = {}
   for (const input of constructorAbi.inputs) {
 
     const inputId = contractName + ':constructor:' + input.name
 
-    inputNodes[inputId] = {
+    nodes[inputId] = {
       id: inputId,
       displayName: getFormattedName(input.name),
       abiName: input.name,
@@ -134,7 +162,17 @@ function getConstructorNodes (contractName, abi) {
     }
   }
 
-  return inputNodes
+  // constructor output node
+  const outputId = contractName + ':constructor:newContract'
+  nodes[outputId] = {
+    id: outputId,
+    displayName: 'New Instance',
+    abiType: 'address',
+    parent: contractName,
+    type: 'output',
+  }
+
+  return nodes
 }
 
 /**
@@ -213,7 +251,7 @@ function getFunctionNodes (contractName, abi) {
   return nodes
 }
 
-function getEdges (abi) {
+function getContractEdges (abi) {
   // TODO
   return {}
 }
@@ -223,85 +261,11 @@ function getEdges (abi) {
 // }
 
 /**
- * Gets all nodes for a smart contract graph from its ABI, including events,
- * functions, and the constructor
- * @param  {string} contractName the name of the contract being parsed
- * @param  {object} abi          the ABI of the contract being parsed
- * @return {array}               an array of node objects
- */
-// function getCompleteAbiNodes (contractName, abi) {
-
-//   const contractInterfaceNodes = []
-//   const eventsId = contractName + '::Events'
-//   const functionsId = contractName + '::Functions'
-//   let hasFunctions = false; let hasEvents = false
-
-//   abi.forEach(entry => {
-//     if (!(entry.type === 'function') &&
-//       !(entry.type === 'constructor') &&
-//       !(entry.type === 'event')) {
-//       throw new Error('Invalid abi entry type:\n\n' + util.inspect(
-//         entry, {showHidden: false, depth: null}
-//         ) + '\n'
-//       )
-//     }
-
-//     const data = { abi: {} }
-//     if (entry.type === 'constructor') {
-//       data.id = contractName + ':constructor'
-//       data.displayName = 'Constructor'
-//       data.type = 'constructor'
-//       data.parent = contractName
-//     } else {
-//       if (!entry.name) throw new Error('getNode: invalid ABI entry: missing name')
-//       data.id = contractName + ':' + entry.name
-//       data.abiName = entry.name
-//       data.displayName = getFormattedName(entry.name)
-//       data.type = entry.type ? entry.type : 'function' // abi type defaults to function if omitted
-//       data.parent = data.type === 'event' ? eventsId : functionsId
-//     }
-
-//     if (!hasEvents) hasEvents = data.parent === eventsId
-//     if (!hasFunctions) hasFunctions = data.parent === functionsId
-
-//     data.abi = Object.assign(data.abi, entry) // abi may or may not have the type property
-
-//     contractInterfaceNodes.push({
-//       data: data,
-//       // some layouts allegedly require non-zero and/or non-overlapping positions
-//       position: { x: Math.random(), y: Math.random()},
-//     })
-//   })
-
-//   if (hasEvents) {
-//     contractInterfaceNodes.push({
-//       data: {
-//         id: contractName + '::Events', // extra colon to ensure no collisions
-//         displayName: 'Events',
-//         parent: contractName,
-//         type: 'ui',
-//       },
-//     })
-//   }
-//   if (hasFunctions) {
-//     contractInterfaceNodes.push({
-//       data: {
-//         id: contractName + '::Functions', // extra colon to ensure no collisions
-//         displayName: 'Functions',
-//         parent: contractName,
-//         type: 'ui',
-//       },
-//     })
-//   }
-
-//   return contractInterfaceNodes
-// }
-
-/**
  * HELPERS
  */
 
 function getFormattedName (name) {
-  const formattedName = name.substring(name.search(/[a-z]/i)) // regex: /i indicates ignorecase
+  // regex: /i indicates ignorecase
+  const formattedName = name.substring(name.search(/[a-z]/i))
   return formattedName.charAt(0).toUpperCase() + formattedName.slice(1)
 }

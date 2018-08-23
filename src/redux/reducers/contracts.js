@@ -6,7 +6,7 @@ import {
   callInstance,
 } from 'chain-end'
 
-import { contractGraphTypes as graphTypes } from '../../graphing/parseContract'
+import { contractGraphTypes as graphTypes } from '../../graphing/graphGenerator'
 
 import {
   dappDeploymentSuccess,

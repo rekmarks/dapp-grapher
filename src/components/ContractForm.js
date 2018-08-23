@@ -7,7 +7,7 @@ import Button from '@material-ui/core/Button'
 import Typography from '@material-ui/core/Typography'
 
 import DropdownMenu from './common/DropdownMenu'
-import { contractGraphTypes } from '../graphing/parseContract'
+import { contractGraphTypes } from '../graphing/graphGenerator'
 
 import './style/ContractForm.css'
 

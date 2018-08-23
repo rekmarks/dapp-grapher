@@ -38,6 +38,8 @@ import {
 import { deployDapp, addDappTemplate } from '../redux/reducers/dapps'
 
 import {
+  grapherModes,
+  setGrapherMode,
   createGraph,
   deleteGraph,
   deleteAllGraphs,
@@ -48,8 +50,8 @@ import {
 import { logRenderError } from '../redux/reducers/renderErrors'
 
 import {
-  closeContractForm,
-  openContractForm,
+  closeAppModal,
+  openAppModal,
   selectContractFunction,
 } from '../redux/reducers/ui'
 
@@ -70,6 +72,8 @@ class App extends Component {
       drawerOpen: true,
       graphHeight: null,
       graphWidth: null,
+      selectedGraph: null,
+      insertionGraph: null,
     }
   }
 
@@ -91,9 +95,16 @@ class App extends Component {
 
     const classes = this.props.classes
 
-    let currentGraph = null
+    let selectedGraph = null
+    let insertionGraph = null
+
     if (this.props.selectedGraphObject) {
-      currentGraph = this.props.selectedGraphObject.toJS()
+
+      selectedGraph = this.props.selectedGraphObject.toJS()
+
+    } else if (this.props.insertionGraphObject) {
+
+      insertionGraph = this.props.insertionGraphObject.toJS()
     }
 
     return (
@@ -132,7 +143,6 @@ class App extends Component {
               </Typography>
               <Header
                 classes={classes}
-                contractInstances={this.props.contractInstances}
                 web3Injected={!!this.props.web3}
               />
             </Toolbar>
@@ -156,6 +166,8 @@ class App extends Component {
             <Divider />
             <ResourceMenu
                 classes={classes}
+                grapherMode={this.props.grapherMode}
+                setGrapherMode={this.props.setGrapherMode}
                 drawerOpen={this.state.drawerOpen}
                 account={this.props.account}
                 addInstance={this.props.addInstance}
@@ -171,15 +183,23 @@ class App extends Component {
                 selectContractAddress={this.props.selectContractAddress}
                 selectedContractAddress={this.props.selectedContractAddress}
                 hasGraphs={this.props.hasGraphs}
-                dapps={this.props.dapps} />
+                dapps={this.props.dapps}
+                insertionGraphId={this.props.insertionGraphId} />
           </Drawer>
           <main className="App-graph-container" ref={this.graphContainerRef} >
             {
-              currentGraph
+              selectedGraph ||
+              this.props.grapherMode === grapherModes.createDapp
               ? <Grapher
-                  graph={currentGraph}
-                  openContractForm={this.props.openContractForm}
-                  graphContainer={this.graphContainerRef} />
+                  accountGraph={this.props.accountGraph}
+                  graphContainer={this.graphContainerRef}
+                  grapherMode={this.props.grapherMode}
+                  graphInsertions={this.props.graphInsertions}
+                  insertionGraph={insertionGraph}
+                  insertionGraphId={this.props.insertionGraphId}
+                  openContractForm={this.props.openAppModal}
+                  selectedGraph={selectedGraph}
+                  selectedGraphId={this.props.selectedGraphId} />
               : (
                   <Typography
                     variant="title"
@@ -196,14 +216,14 @@ class App extends Component {
             }
           </main>
           <div className="App-modal-container" >
-            {
-              currentGraph
-              ? (
-                  <AppModal
-                    classes={{ root: classes.root, paper: classes.paper }}
-                    open={this.props.contractModal}
-                    onClose={this.props.closeContractForm}
-                  >
+            <AppModal
+              classes={{ root: classes.root, paper: classes.paper }}
+              open={this.props.appModal}
+              onClose={this.props.closeAppModal}
+            >
+              {
+                selectedGraph
+                ? (
                     <ContractForm
                       classes={{
                          container: classes.container,
@@ -212,20 +232,19 @@ class App extends Component {
                          nested: classes.nested,
                       }}
                       contractAddress={this.props.selectedContractAddress}
-                      nodes={currentGraph.elements.nodes}
-                      contractName={currentGraph.name}
-                      graphType={currentGraph.type}
+                      nodes={selectedGraph.elements.nodes}
+                      contractName={selectedGraph.name}
+                      graphType={selectedGraph.type}
                       deployContract={this.props.deployContract}
                       callInstance={this.props.callInstance}
-                      closeContractForm={this.props.closeContractForm}
+                      closeContractForm={this.props.closeAppModal}
                       selectContractFunction={this.props.selectContractFunction}
                       selectedContractFunction={this.props.selectedContractFunction}
-                      heading={currentGraph.name} />
-                  </AppModal>
-                )
-              : null
-            }
-
+                      heading={selectedGraph.name} />
+                  )
+                : null
+              }
+            </AppModal>
           </div>
         </div>
       </Fragment>
@@ -249,19 +268,25 @@ App.propTypes = {
   addDappTemplate: PropTypes.func,
   deployDapp: PropTypes.func,
   // grapher
+  accountGraph: PropTypes.object,
   createGraph: PropTypes.func,
   deleteGraph: PropTypes.func,
   deleteAllGraphs: PropTypes.func,
+  grapherMode: PropTypes.string,
+  graphInsertions: PropTypes.number,
+  hasGraphs: PropTypes.bool,
+  insertionGraphId: PropTypes.string,
+  insertionGraphObject: PropTypes.object,
   selectGraph: PropTypes.func,
   selectedGraphId: PropTypes.string,
   selectedGraphObject: PropTypes.object,
-  hasGraphs: PropTypes.bool,
+  setGrapherMode: PropTypes.func,
   // renderErrors
   logRenderError: PropTypes.func,
   // ui
-  contractModal: PropTypes.bool,
-  closeContractForm: PropTypes.func,
-  openContractForm: PropTypes.func,
+  appModal: PropTypes.bool,
+  closeAppModal: PropTypes.func,
+  openAppModal: PropTypes.func,
   selectContractFunction: PropTypes.func,
   selectedContractFunction: PropTypes.string,
   // web3
@@ -287,11 +312,16 @@ function mapStateToProps (state) {
     // dapps
     dapps: state.dapps.templates,
     // grapher
+    accountGraph: state.grapher.accountGraph,
+    grapherMode: state.grapher.mode,
+    insertionGraphId: state.grapher.insertionGraphId,
+    insertionGraphObject: state.grapher.graphs[state.grapher.insertionGraphId],
+    graphInsertions: state.grapher.insertions,
     selectedGraphId: state.grapher.selectedGraphId,
     selectedGraphObject: state.grapher.graphs[state.grapher.selectedGraphId],
     hasGraphs: Object.keys(state.grapher.graphs).length >= 1,
     // ui
-    contractModal: state.ui.contractForm.open,
+    appModal: state.ui.appModal.open,
     selectedContractFunction: state.ui.contractForm.selectedFunction,
     // web3
     account: state.web3.account,
@@ -323,9 +353,10 @@ function mapDispatchToProps (dispatch) {
     // renderErrors
     logRenderError: (error, errorInfo) => dispatch(logRenderError(error, errorInfo)),
     // ui
-    closeContractForm: () => dispatch(closeContractForm()),
-    openContractForm: () => dispatch(openContractForm()),
+    closeAppModal: () => dispatch(closeAppModal()),
+    openAppModal: () => dispatch(openAppModal()),
     selectContractFunction: func => dispatch(selectContractFunction(func)),
+    setGrapherMode: contentKey => dispatch(setGrapherMode(contentKey)),
     // web3
     getWeb3: () => dispatch(getWeb3()),
   }

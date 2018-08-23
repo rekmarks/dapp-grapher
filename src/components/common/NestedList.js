@@ -17,8 +17,11 @@ export default class NestedList extends Component {
     this.setState(state => ({ open: !state.open }))
   }
 
-  render () {
+  componentDidMount () {
+    if (this.props.isOpen) this.setState({ open: true })
+  }
 
+  render () {
     return (
       <Fragment>
         <ListItem button
@@ -68,4 +71,5 @@ NestedList.propTypes = {
   icon: PropTypes.object,
   displayText: PropTypes.string.isRequired,
   buttonPadding: PropTypes.number,
+  isOpen: PropTypes.bool,
 }

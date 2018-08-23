@@ -1,7 +1,7 @@
 
 import joint from 'jointjs'
 
-import { contractGraphTypes } from './parseContract'
+import { contractGraphTypes } from './graphGenerator'
 import exampleGraphs from '../temp/graphExamples.js' // TODO: temp
 
 /**
@@ -35,6 +35,7 @@ const paperConfig = {
     return parentView.model instanceof joint.shapes.devs.Coupled
   },
   validateConnection: function (sourceView, sourceMagnet, targetView, targetMagnet) {
+    // TODO: make robust
     return sourceMagnet !== targetMagnet
   },
 }
@@ -61,7 +62,7 @@ const jointHelper = {
     setAttribute: setCustomAttributeInView,
   },
   setDummyElements,
-  setJointElements,
+  addJointElements,
   paper: {
     addEventHandlers: addPaperEventHandlers,
     initialize: initializePaper,
@@ -71,10 +72,16 @@ const jointHelper = {
 export default jointHelper
 
 /**
- * GRAPH GETTERS
+ * MODEL GETTERS AND SETTERS
  */
 
-function setJointElements (jointGraph, dappGraph) {
+/**
+ * [addJointElements description]
+ * @param {[type]} jointGraph [description]
+ * @param {[type]} dappGraph  [description]
+ * @param {[type]} meta       [description]
+ */
+function addJointElements (jointGraph, dappGraph, meta) {
 
   let cells
   switch (dappGraph.type) {
@@ -87,31 +94,77 @@ function setJointElements (jointGraph, dappGraph) {
       cells = generateFunctionsElements(dappGraph)
       break
 
+    case 'account':
+      cells = generateAccountElements(dappGraph)
+      break
+
     default:
       throw new Error('unknown graph type')
   }
+
   jointGraph.addCells(cells)
-  setLayout(jointGraph)
+  if (meta.setsLayout) setLayout(jointGraph)
 }
 
+
+function generateAccountElements (dappGraph) {
+
+  const displayName = dappGraph.elements.nodes.account.displayName
+
+  const accountElement = generateAtomic(
+    displayName,
+    {
+      size: { width: 50, height: 50 },
+      _dappGrapher: {
+        id: dappGraph.elements.nodes.account.id,
+        type: dappGraph.elements.nodes.account.type,
+      },
+    },
+    {
+      '.body': { 'rx': 90, 'ry': 90},
+      '.label': { 'text-anchor': 'middle', 'ref-x': 22.5, 'ref-y': -20 },
+    },
+    [dappGraph.elements.nodes['account:address']]
+  )
+  return [accountElement]
+}
+
+/**
+ * [generateConstructorElements description]
+ * @param  {[type]} dappGraph [description]
+ * @return {[type]}           [description]
+ */
 function generateConstructorElements (dappGraph) {
 
   const ioNodes = Object.keys(dappGraph.elements.nodes).map(key => {
     return dappGraph.elements.nodes[key]
   }).filter(obj => obj.type === 'parameter' || obj.type === 'output')
 
-  const contractElement = generateCoupled(
+  const contractElement = generateAtomic(
     dappGraph.name,
-    { type: dappGraph.type }
+    {
+      size: { width: 175, height: 100 },
+      _dappGrapher: {
+        contractName: dappGraph.name,
+        id: dappGraph.id,
+        type: dappGraph.type,
+      },
+    },
+    {
+      '.label': { 'text-anchor': 'middle', 'ref-y': 40 },
+      '.body': { 'rx': 10, 'ry': 10 },
+    },
+    ioNodes
   )
 
-  const ioCircles = generateIOCircles(ioNodes)
-
-  ioCircles.forEach(circle => contractElement.embed(circle))
-
-  return [contractElement].concat(ioCircles)
+  return [contractElement]
 }
 
+/**
+ * [generateFunctionsElements description]
+ * @param  {[type]} dappGraph [description]
+ * @return {[type]}           [description]
+ */
 function generateFunctionsElements (dappGraph) {
 
   const contractElement = generateCoupled(
@@ -129,10 +182,14 @@ function generateFunctionsElements (dappGraph) {
     const funcElement = generateAtomic(
       node.displayName,
       {
-        id: node.id,
-        abiName: node.abiName,
-        abiType: node.abiType,
+        size: { width: 75, height: 150 },
+        _dappGrapher: {
+          id: node.id,
+          abiName: node.abiName,
+          abiType: node.abiType,
+        },
       },
+      null,
       ioNodes.length > 0 ? ioNodes : null
     )
     contractElement.embed(funcElement)
@@ -143,13 +200,13 @@ function generateFunctionsElements (dappGraph) {
 }
 
 /**
- * ELEMENT GENERATORS
+ * ELEMENT FACTORIES
  */
 
-function generateCoupled (displayName, props = null) {
+function generateCoupled (displayName, props = {}) {
 
   const coupled = new joint.shapes.devs.Coupled({
-    _dappGrapher: props ? { ...props } : {},
+    _dappGrapher: { ...props },
   })
   coupled.attr({
     text: { text: displayName, fill: 'black'},
@@ -161,68 +218,111 @@ function generateCoupled (displayName, props = null) {
   return coupled
 }
 
-function generateIOCircles (ioNodes) {
+// function generateCircle (circleNode, size, labelAttr, ioNodes = null) {
 
-  const circles = []
+//   let outGroup
+//   if (ioNodes) {
+//     outGroup = {
+//       position: { name: 'right' },
+//       label: {
+//         position: {
+//           args: { y: 10 },
+//           name: 'right',
+//         },
+//       },
+//       attrs: {
+//         '.port-body': {
+//           fill: "#fff",
+//           stroke: "#000",
+//           r: 10,
+//           magnet: true,
+//         },
+//         '.port-label': { fill: "#000" },
+//       },
+//     }
+//   } else outGroup = {}
 
-  if (ioNodes) {
 
-    ioNodes.forEach(node => {
+//   const circle = new joint.shapes.standard.Circle({
+//     _dappGrapher: { ...circleNode },
+//     ports: { groups: { out: outGroup }, items: [] },
+//   })
+//   circle.resize(size, size)
+//   circle.attr({
+//     label: {
+//       text: circleNode.displayName,
+//       fill: 'black',
+//       ...labelAttr,
+//     },
+//     // TODO: wrap label for layout purposes
+//     // the below doesn't work
+//     // outline: {
+//     //   ref: 'label',
+//     //   refX: 0,
+//     //   refY: 0,
+//     //   refWidth: '100%',
+//     //   refHeight: '100%',
+//     //   strokeWidth: 1,
+//     //   stroke: '#000000',
+//     //   fill: 'none',
+//     // },
+//   })
 
-      if (node.type !== 'parameter' && node.type !== 'output') { throw new Error('invalid port node; neither parameter nor output') }
+//   if (ioNodes) {
 
-      const circle = new joint.shapes.standard.Circle({
-        _dappGrapher: {
-          id: node.id,
-          abiName: node.abiName,
-          abiType: node.abiType,
-        },
-      })
-      circle.resize(25, 25)
-      circle.attr({
-        label: {
-          text: node.displayName,
-          fill: 'black',
-          textAnchor: 'left',
-          refX: '125%',
-          refY: '55%',
-        },
-        // TODO: wrap label for layout purposes
-        // the below doesn't work
-        // outline: {
-        //   ref: 'label',
-        //   refX: 0,
-        //   refY: 0,
-        //   refWidth: '100%',
-        //   refHeight: '100%',
-        //   strokeWidth: 1,
-        //   stroke: '#000000',
-        //   fill: 'none',
-        // },
-      })
+//     const ports = generatePorts(ioNodes)
+//     ports.forEach(port => {
+//       circle.addPort(port)
+//     })
+//   }
 
-      circles.push(circle)
-  })
-}
+//   return circle
+// }
 
-  return circles
-}
+// function generateIOCircles (ioNodes) {
 
-function generateAtomic (displayName, nodeProps = null, ioNodes = null) {
+//   const circles = []
+
+//   if (ioNodes) {
+
+//     const labelAttr = {
+//       textAnchor: 'left',
+//       refX: '125%',
+//       refY: '55%',
+//     }
+
+//     ioNodes.forEach(node => {
+
+//       if (node.type !== 'parameter' && node.type !== 'output') {
+//         throw new Error('invalid port node; neither parameter nor output')
+//       }
+
+//       circles.push(generateCircle(node, 25, labelAttr))
+//     })
+//   }
+//   return circles
+// }
+
+function generateAtomic (
+  displayName,
+  constructorProps = {},
+  attributes = {},
+  ioNodes = null
+) {
 
   const atomic = new joint.shapes.devs.Atomic({
-    size: { width: 75, height: 150 },
-    _dappGrapher: nodeProps ? { ...nodeProps } : {},
+    ...constructorProps,
   })
   atomic.attr({
     text: { text: displayName, fill: 'black'},
+    ...attributes,
   })
 
   if (ioNodes) {
     // atomic.attributes.ports.groups.in.position.name = 'top'
     // atomic.attributes.ports.groups.in.label.position.name = 'top'
     // atomic.attributes.ports.groups.in.label.position.args.y = -10
-    const ports = generatePorts(ioNodes)
+    const ports = generatePorts(ioNodes, true)
     ports.forEach(port => {
       if (port.type === 'in') atomic.addInPort(port.name, port.opts)
       else atomic.addOutPort(port.name, port.opts)
@@ -232,7 +332,7 @@ function generateAtomic (displayName, nodeProps = null, ioNodes = null) {
   return atomic
 }
 
-function generatePorts (ioNodes) {
+function generatePorts (ioNodes, isInOut = false) {
 
   const ports = []
 
@@ -244,8 +344,22 @@ function generatePorts (ioNodes) {
         throw new Error('invalid port node; neither parameter nor output')
       }
 
+      const typeProp = node.type === 'output' ? 'out' : 'in'
+
+      let props
+      if (isInOut) {
+        props = {
+          type: typeProp,
+          name: node.displayName,
+        }
+      } else {
+        props = {
+          group: typeProp,
+          attrs: { text: { text: node.displayName } },
+        }
+      }
+
       ports.push({
-        name: node.displayName,
         opts: {
           _dappGrapher: {
             id: node.id,
@@ -253,7 +367,7 @@ function generatePorts (ioNodes) {
             abiType: node.abiType,
           },
         },
-        type: node.type === 'output' ? 'out' : 'in',
+        ...props,
       })
   })
 }
@@ -296,8 +410,6 @@ function addPaperEventHandlers (paper, handlers) {
   // open contract form
   paper.on('element:pointerdblclick', (view, evt, x, y) => {
 
-    console.log(view, evt) // dev temp
-
     const nodeType = getCustomAttributeFromView(view, 'type')
 
     if (!nodeType) {
@@ -306,7 +418,11 @@ function addPaperEventHandlers (paper, handlers) {
     }
 
     if (Object.values(contractGraphTypes).includes(nodeType)) {
-      handlers.openContractForm()
+
+      handlers.openForm()
+
+    } else if (nodeType === 'ui') {
+      // do nothing
     } else {
       console.warn('unhandled node type')
     }
@@ -318,9 +434,49 @@ function addPaperEventHandlers (paper, handlers) {
   })
 
   // toggle panning
-  paper.on('blank:pointerdblclick', () => {
+  paper.on('blank:pointerdblclick', (view, evt) => {
     paper._dappGrapher.panning = !paper._dappGrapher.panning
+    temp(paper)
   })
+}
+
+function temp (paper) {
+
+  const cells = paper.options.model.getCells()
+  const elements = { nodes: [], edges: [] }
+
+  let linkCount = 0
+
+  cells.forEach(cell => {
+
+    const data = cell.attributes._dappGrapher
+
+    if (cell.isLink()) {
+
+      const source = cell.getSourceElement()
+      const target = cell.getTargetElement()
+
+      console.log(source, target)
+
+      elements.edges.push({
+        id: linkCount,
+        source: {
+          node: source.attributes._dappGrapher.id,
+          port: cell.attributes.source.port,
+        },
+        target: {
+          node: target.attributes._dappGrapher.id,
+          port: cell.attributes.target.port,
+        },
+      })
+
+      linkCount++
+
+    } else {
+      elements.nodes.push({ ...data })
+    }
+  })
+  console.log(elements)
 }
 
 function connect (graph, source, sourcePort, target, targetPort) {
@@ -345,11 +501,11 @@ function setLayout (graph) {
 
   joint.layout.DirectedGraph.layout(graph, {
     setLinkVertices: false,
-    rankDir: 'TB', // left-right
+    rankDir: 'TB', // top to bottom
     rankSep: 100,
     edgeSep: 25,
-    marginX: 100,
-    marginY: 100,
+    marginX: 300, // TODO: set dynamically
+    marginY: 300,
     clusterPadding: { top: 30, left: 30, right: 30, bottom: 30 },
   })
 }

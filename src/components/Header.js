@@ -26,5 +26,4 @@ Header.propTypes = {
   web3Injected: PropTypes.bool,
   setCanvas: PropTypes.func,
   canvasComponent: PropTypes.string,
-  contractInstances: PropTypes.object,
 }

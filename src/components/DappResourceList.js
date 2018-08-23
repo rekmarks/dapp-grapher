@@ -13,7 +13,8 @@ import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline'
 // import NestedList from './common/NestedList'
 // import ListButton from './common/ListButton'
 
-// import { contractGraphTypes } from '../graphing/parseContract'
+// import { contractGraphTypes } from '../graphing/graphGenerator'
+import { grapherModes } from '../redux/reducers/grapher'
 import { spacingUnit } from '../withMuiRoot'
 
 const styles = theme => ({
@@ -37,7 +38,7 @@ class DappResourceList extends Component {
     return (
       <Fragment>
         <ListItem button
-          onClick={e => { console.log('clicky clik') }}
+          onClick={ () => this.props.setGrapherMode(grapherModes.createDapp) }
           style={{ paddingLeft: spacingUnit * 4 }}
         >
           <ListItemIcon>
@@ -73,6 +74,7 @@ class DappResourceList extends Component {
 DappResourceList.propTypes = {
   // classes: PropTypes.object.isRequired,
   dapps: PropTypes.object.isRequired,
+  setGrapherMode: PropTypes.func,
 }
 
 export default withStyles(styles)(DappResourceList)

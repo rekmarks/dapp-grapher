@@ -13,11 +13,14 @@ import GetAppIcon from '@material-ui/icons/GetApp'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 import StorageIcon from '@material-ui/icons/Storage'
 import BuildIcon from '@material-ui/icons/Build'
+import SaveIcon from '@material-ui/icons/Save'
 
 import ContractResourceList from './ContractResourceList'
 import DappResourceList from './DappResourceList'
 import NestedList from './common/NestedList'
 import ListButton from './common/ListButton'
+
+import { grapherModes } from '../redux/reducers/grapher'
 
 export default class ResourceMenu extends Component {
 
@@ -47,8 +50,11 @@ export default class ResourceMenu extends Component {
       root: this.props.classes.root,
     }
 
-    return (
-      <div id="ResourceMenu-main" style={{overflowY: 'auto'}}>
+    const resources = {}
+
+    if (this.props.grapherMode === grapherModes.main) {
+
+      resources.top = (
         <List disablePadding>
           <NestedList
             icon={(<BuildIcon />)}
@@ -86,6 +92,44 @@ export default class ResourceMenu extends Component {
             </ListItem>
           </NestedList>
         </List>
+      )
+
+      resources.bottom = (
+        <NestedList
+          icon={(<AppsIcon />)}
+          displayText="Dapps"
+          isOpen
+        >
+          <DappResourceList
+            dapps={this.props.dapps}
+            setGrapherMode={this.props.setGrapherMode} />
+        </NestedList>
+      )
+    } else if (this.props.grapherMode === grapherModes.createDapp) {
+
+      resources.top = (
+        <List disablePadding>
+          <ListButton
+            disabled={false} // TODO: dapp graph is valid
+            onClick={() => console.log('save dapp template')}
+            icon={(<SaveIcon />)}
+            displayText="Save" />
+          <ListButton
+            disabled={false} // TODO: dapp graph is valid
+            onClick={() => this.props.setGrapherMode(grapherModes.main)}
+            icon={(<DeleteIcon />)}
+            displayText="Discard" />
+        </List>
+      )
+
+      resources.bottom = (
+        ''
+      )
+    }
+
+    return (
+      <div id="ResourceMenu-main" style={{overflowY: 'auto'}}>
+        {resources.top}
         <Divider />
         <NestedList
           icon={(<StorageIcon />)}
@@ -93,6 +137,7 @@ export default class ResourceMenu extends Component {
         >
           <ContractResourceList
             classes={graphResourceClasses}
+            grapherMode={this.props.grapherMode}
             contractTypes={this.props.contractTypes}
             instanceTypes={this.getInstanceTypes()}
             selectContractAddress={this.props.selectContractAddress}
@@ -103,13 +148,7 @@ export default class ResourceMenu extends Component {
             selectGraph={this.props.selectGraph}
             selectedGraphId={this.props.selectedGraphId} />
         </NestedList>
-        <NestedList
-          icon={(<AppsIcon />)}
-          displayText="Dapps"
-        >
-          <DappResourceList
-            dapps={this.props.dapps} />
-        </NestedList>
+        {resources.bottom}
       </div>
     )
   }
@@ -168,6 +207,8 @@ ResourceMenu.propTypes = {
   hasGraphs: PropTypes.bool,
   drawerOpen: PropTypes.bool,
   dapps: PropTypes.object,
+  grapherMode: PropTypes.string,
+  setGrapherMode: PropTypes.func,
 }
 
 /**

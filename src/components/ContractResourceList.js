@@ -10,8 +10,9 @@ import SubjectIcon from '@material-ui/icons/Subject'
 import NestedList from './common/NestedList'
 import ListButton from './common/ListButton'
 
-import { contractGraphTypes } from '../graphing/parseContract'
+import { contractGraphTypes } from '../graphing/graphGenerator'
 import { spacingUnit } from '../withMuiRoot'
+import { getDisplayAddress } from '../utils'
 
 const styles = theme => ({
   root: {
@@ -86,8 +87,7 @@ class ContractResourceList extends Component {
       const graphId =
           this.props.contractTypes[contractName][contractGraphTypes.functions]
 
-      const displayAddress = address.slice(0, 7) + '...' +
-        address.slice(address.length - 5)
+      const displayAddress = getDisplayAddress(address)
 
       const hasInstance = Boolean(instances[address])
 
@@ -158,6 +158,7 @@ ContractResourceList.propTypes = {
   createGraph: PropTypes.func,
   selectGraph: PropTypes.func,
   selectedGraphId: PropTypes.string,
+  grapherMode: PropTypes.string,
 }
 
 export default withStyles(styles)(ContractResourceList)
