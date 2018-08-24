@@ -102,7 +102,8 @@ export default class ResourceMenu extends Component {
         >
           <DappResourceList
             dapps={this.props.dapps}
-            setGrapherMode={this.props.setGrapherMode} />
+            setGrapherMode={this.props.setGrapherMode}
+            selectGraph={this.props.selectGraph} />
         </NestedList>
       )
     } else if (this.props.grapherMode === grapherModes.createDapp) {
@@ -110,8 +111,11 @@ export default class ResourceMenu extends Component {
       resources.top = (
         <List disablePadding>
           <ListButton
-            disabled={false} // TODO: dapp graph is valid
-            onClick={() => console.log('save dapp template')}
+            disabled={!this.props.hasWipGraph}
+            onClick={() => {
+              this.props.saveWipGraph()
+              this.props.setGrapherMode(grapherModes.main)
+            }}
             icon={(<SaveIcon />)}
             displayText="Save" />
           <ListButton
@@ -209,6 +213,8 @@ ResourceMenu.propTypes = {
   dapps: PropTypes.object,
   grapherMode: PropTypes.string,
   setGrapherMode: PropTypes.func,
+  saveWipGraph: PropTypes.func,
+  hasWipGraph: PropTypes.bool,
 }
 
 /**

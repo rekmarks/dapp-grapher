@@ -1,5 +1,6 @@
 
 import joint from 'jointjs'
+import uuid from 'uuid/v4'
 
 import { contractGraphTypes } from './graphGenerator'
 import exampleGraphs from '../temp/graphExamples.js' // TODO: temp
@@ -83,11 +84,13 @@ export default jointHelper
  */
 function addJointElements (jointGraph, dappGraph, meta) {
 
+  const graphNodes = dappGraph.elements.nodes
+
   let cells
   switch (dappGraph.type) {
 
     case contractGraphTypes._constructor:
-      cells = generateConstructorElements(dappGraph)
+      cells = generateConstructorElement(dappGraph.name, graphNodes)
       break
 
     case contractGraphTypes.functions:
@@ -95,8 +98,17 @@ function addJointElements (jointGraph, dappGraph, meta) {
       break
 
     case 'account':
-      cells = generateAccountElements(dappGraph)
+      cells = generateAccountElement(
+        graphNodes.account,
+        Object.values(graphNodes).filter(node => {
+          return node.parent === 'account'
+        })
+      )
       break
+
+    case 'dapp':
+      setDappCells(jointGraph, dappGraph, meta)
+      return
 
     default:
       throw new Error('unknown graph type')
@@ -106,48 +118,49 @@ function addJointElements (jointGraph, dappGraph, meta) {
   if (meta.setsLayout) setLayout(jointGraph)
 }
 
+function generateAccountElement (accountNode, accountChildren) {
 
-function generateAccountElements (dappGraph) {
-
-  const displayName = dappGraph.elements.nodes.account.displayName
+  const displayName = accountNode.displayName
 
   const accountElement = generateAtomic(
     displayName,
     {
       size: { width: 50, height: 50 },
       _dappGrapher: {
-        id: dappGraph.elements.nodes.account.id,
-        type: dappGraph.elements.nodes.account.type,
+        id: accountNode.id,
+        type: accountNode.type,
       },
     },
     {
       '.body': { 'rx': 90, 'ry': 90},
       '.label': { 'text-anchor': 'middle', 'ref-x': 22.5, 'ref-y': -20 },
     },
-    [dappGraph.elements.nodes['account:address']]
+    accountChildren
   )
-  return [accountElement]
+  return accountElement
 }
 
 /**
- * [generateConstructorElements description]
+ * [generateConstructorElement description]
  * @param  {[type]} dappGraph [description]
  * @return {[type]}           [description]
  */
-function generateConstructorElements (dappGraph) {
+function generateConstructorElement (graphName, graphNodes) {
 
-  const ioNodes = Object.keys(dappGraph.elements.nodes).map(key => {
-    return dappGraph.elements.nodes[key]
-  }).filter(obj => obj.type === 'parameter' || obj.type === 'output')
+  const ioNodes = Object.values(graphNodes)
+    .filter(node => node.type === 'parameter' || node.type === 'output')
+
+  const constructorNode = Object.values(graphNodes)
+    .filter(node => node.type === contractGraphTypes._constructor)[0]
 
   const contractElement = generateAtomic(
-    dappGraph.name,
+    graphName,
     {
       size: { width: 175, height: 100 },
       _dappGrapher: {
-        contractName: dappGraph.name,
-        id: dappGraph.id,
-        type: dappGraph.type,
+        contractName: constructorNode.abiName,
+        id: constructorNode.id,
+        type: constructorNode.type,
       },
     },
     {
@@ -157,7 +170,79 @@ function generateConstructorElements (dappGraph) {
     ioNodes
   )
 
-  return [contractElement]
+  return contractElement
+}
+
+/**
+ * [setDappCells description]
+ * @param {[type]} jointGraph [description]
+ * @param {[type]} dappGraph  [description]
+ * @param {[type]} meta       [description]
+ */
+function setDappCells (jointGraph, dappGraph, meta) {
+
+  const cells = []
+
+  const graphNodes = dappGraph.elements.nodes
+  const graphEdges = dappGraph.elements.edges
+
+  const idMapping = {}
+
+  // get account element
+  const accountNode = Object.values(graphNodes).filter(node => {
+    return node.id === 'account'
+  })[0]
+
+  const accountChildren = Object.values(graphNodes).filter(node => {
+    return node.parent === 'account'
+  })
+
+  const accountElement = generateAccountElement(accountNode, accountChildren)
+
+  idMapping[accountNode.id] = accountElement.id
+
+  cells.push(accountElement)
+
+  // get constructor elements
+  const constructorNodeIds = Object.values(graphNodes).filter(node => {
+    return node.type === contractGraphTypes._constructor
+  }).map(node => node.id)
+
+  constructorNodeIds.forEach(constructorId => {
+
+    const contractElements = {}
+
+    Object.values(graphNodes).forEach(node => {
+      if (node.id === constructorId || node.parent === constructorId) {
+        contractElements[node.id] = { ...node }
+      }
+    })
+
+    const constructorElement = generateConstructorElement(
+      graphNodes[constructorId].displayName,
+      contractElements 
+    )
+
+    idMapping[constructorId] = constructorElement.id
+
+    cells.push(constructorElement)
+  })
+
+  // add elements to graph
+  jointGraph.addCells(cells)
+
+  // get and add links to graph
+  Object.values(graphEdges).forEach(edge => {
+    connect(
+      jointGraph,
+      jointGraph.getCell(idMapping[edge.sourceParent]),
+      graphNodes[edge.source].displayName,
+      jointGraph.getCell(idMapping[edge.targetParent]),
+      graphNodes[edge.target].displayName,
+    )
+  })
+
+  if (meta.setsLayout) setLayout(jointGraph)
 }
 
 /**
@@ -217,91 +302,6 @@ function generateCoupled (displayName, props = {}) {
   })
   return coupled
 }
-
-// function generateCircle (circleNode, size, labelAttr, ioNodes = null) {
-
-//   let outGroup
-//   if (ioNodes) {
-//     outGroup = {
-//       position: { name: 'right' },
-//       label: {
-//         position: {
-//           args: { y: 10 },
-//           name: 'right',
-//         },
-//       },
-//       attrs: {
-//         '.port-body': {
-//           fill: "#fff",
-//           stroke: "#000",
-//           r: 10,
-//           magnet: true,
-//         },
-//         '.port-label': { fill: "#000" },
-//       },
-//     }
-//   } else outGroup = {}
-
-
-//   const circle = new joint.shapes.standard.Circle({
-//     _dappGrapher: { ...circleNode },
-//     ports: { groups: { out: outGroup }, items: [] },
-//   })
-//   circle.resize(size, size)
-//   circle.attr({
-//     label: {
-//       text: circleNode.displayName,
-//       fill: 'black',
-//       ...labelAttr,
-//     },
-//     // TODO: wrap label for layout purposes
-//     // the below doesn't work
-//     // outline: {
-//     //   ref: 'label',
-//     //   refX: 0,
-//     //   refY: 0,
-//     //   refWidth: '100%',
-//     //   refHeight: '100%',
-//     //   strokeWidth: 1,
-//     //   stroke: '#000000',
-//     //   fill: 'none',
-//     // },
-//   })
-
-//   if (ioNodes) {
-
-//     const ports = generatePorts(ioNodes)
-//     ports.forEach(port => {
-//       circle.addPort(port)
-//     })
-//   }
-
-//   return circle
-// }
-
-// function generateIOCircles (ioNodes) {
-
-//   const circles = []
-
-//   if (ioNodes) {
-
-//     const labelAttr = {
-//       textAnchor: 'left',
-//       refX: '125%',
-//       refY: '55%',
-//     }
-
-//     ioNodes.forEach(node => {
-
-//       if (node.type !== 'parameter' && node.type !== 'output') {
-//         throw new Error('invalid port node; neither parameter nor output')
-//       }
-
-//       circles.push(generateCircle(node, 25, labelAttr))
-//     })
-//   }
-//   return circles
-// }
 
 function generateAtomic (
   displayName,
@@ -410,6 +410,8 @@ function addPaperEventHandlers (paper, handlers) {
   // open contract form
   paper.on('element:pointerdblclick', (view, evt, x, y) => {
 
+    console.log(view.model)
+
     const nodeType = getCustomAttributeFromView(view, 'type')
 
     if (!nodeType) {
@@ -424,59 +426,50 @@ function addPaperEventHandlers (paper, handlers) {
     } else if (nodeType === 'ui') {
       // do nothing
     } else {
-      console.warn('unhandled node type')
+      console.warn('unhandled node type: ' + nodeType)
     }
   })
 
+  // when a link is added
+  paper.on('link:connect', linkView => {
+
+    const link = linkView.model
+
+    // if there's an id, we don't want it
+    if (link.attributes._dappGrapher.id) return
+
+    const linkId = uuid()
+
+    link.attributes._dappGrapher.id = linkId
+
+    const edge = {}
+
+    edge.id = link.attributes._dappGrapher.id
+
+    const source = link.getSourceElement()
+    const target = link.getTargetElement()
+
+    edge.sourceParent = source.attributes._dappGrapher.id
+    edge.targetParent = target.attributes._dappGrapher.id
+
+    edge.sourceName = link.attributes.source.port
+    edge.targetName = link.attributes.target.port
+
+    handlers.addEdge(edge)
+  })
+
   // link removal
-  paper.on('link:pointerdblclick', (view) => {
-      view.model.remove()
+  paper.on('link:pointerdblclick', linkView => {
+
+    handlers.removeEdge(linkView.model.attributes._dappGrapher.id)
+    linkView.model.remove()
   })
 
   // toggle panning
   paper.on('blank:pointerdblclick', (view, evt) => {
+
     paper._dappGrapher.panning = !paper._dappGrapher.panning
-    temp(paper)
   })
-}
-
-function temp (paper) {
-
-  const cells = paper.options.model.getCells()
-  const elements = { nodes: [], edges: [] }
-
-  let linkCount = 0
-
-  cells.forEach(cell => {
-
-    const data = cell.attributes._dappGrapher
-
-    if (cell.isLink()) {
-
-      const source = cell.getSourceElement()
-      const target = cell.getTargetElement()
-
-      console.log(source, target)
-
-      elements.edges.push({
-        id: linkCount,
-        source: {
-          node: source.attributes._dappGrapher.id,
-          port: cell.attributes.source.port,
-        },
-        target: {
-          node: target.attributes._dappGrapher.id,
-          port: cell.attributes.target.port,
-        },
-      })
-
-      linkCount++
-
-    } else {
-      elements.nodes.push({ ...data })
-    }
-  })
-  console.log(elements)
 }
 
 function connect (graph, source, sourcePort, target, targetPort) {
@@ -501,7 +494,7 @@ function setLayout (graph) {
 
   joint.layout.DirectedGraph.layout(graph, {
     setLinkVertices: false,
-    rankDir: 'TB', // top to bottom
+    rankDir: 'LR', // left to right
     rankSep: 100,
     edgeSep: 25,
     marginX: 300, // TODO: set dynamically
@@ -585,7 +578,7 @@ function setDummyElements (jointGraph) {
 
   atom2.addInPort('in')
 
-  const moarNodes = generateConstructorElements(exampleGraphs._constructor)
+  const moarNodes = generateConstructorElement(exampleGraphs._constructor)
 
   const cells = [coupled1, rect, rect2, rect3, atom1, atom2].concat(moarNodes)
   // coupled cells must be added before embedded cells or the latter end up on the bottom
@@ -601,29 +594,4 @@ function setDummyElements (jointGraph) {
   connect(jointGraph, rect, 'out', atom2, 'in')
 
   setLayout(jointGraph)
-
-  // TODO: non-functional attempt at resetting position of child is moved out of parent
-  //       based on old API,=
-  // atom1.on('change:position', function(cell, position) {
-
-  //   var parentId = cell.get('parent')
-  //   if (!parentId) return
-
-  //   var parent = jointGraph.getCell(parentId)
-  //   var parentBbox = parent.getBBox()
-  //   var cellBbox = cell.getBBox()
-
-  //   if (parentBbox.containsPoint(cellBbox.origin()) &&
-  //     parentBbox.containsPoint(cellBbox.topRight()) &&
-  //     parentBbox.containsPoint(cellBbox.corner()) &&
-  //     parentBbox.containsPoint(cellBbox.bottomLeft())) {
-
-  //     // All the four corners of the child are inside
-  //     // the parent area.
-  //     return
-  //   }
-  //   debugger
-  //   // Revert the child position.
-  //   cell.set('position', cell.previous('position'))
-  // })
 }

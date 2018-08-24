@@ -6,7 +6,10 @@ import parseContract, {
   contractGraphTypes,
   getAccountGraph,
 } from '../../graphing/graphGenerator'
+
 import { setContractGraphId, removeAllContractGraphIds } from './contracts'
+
+import { addDappTemplate } from './dapps'
 
 const ACTIONS = {
   SET_MODE: 'GRAPHER:SET_MODE',
@@ -17,6 +20,7 @@ const ACTIONS = {
   SELECT_GRAPH: 'GRAPHER:SELECT_GRAPH',
   SELECT_INSERTION_GRAPH: 'GRAPHER:SELECT_INSERTION_GRAPH',
   INCREMENT_INSERTIONS: 'GRAPHER:INCREMENT_INSERTIONS',
+  UPDATE_WIP_GRAPH: 'GRAPHER:UPDATE_WIP_GRAPH',
   // ADD_GRAPH_TO_CANVAS: 'GRAPHER:ADD_GRAPH_TO_CANVAS',
   LOG_ERROR: 'GRAPHER:LOG_ERROR',
 }
@@ -31,6 +35,7 @@ const initialState = {
   insertionGraphId: null,
   insertions: 0,
   accountGraph: null,
+  wipGraph: null,
   mode: grapherModes.main,
   // mode: grapherModes.createDapp,
   graphs: {
@@ -55,6 +60,8 @@ export {
   deleteGraphThunk as deleteGraph,
   deleteAllGraphsThunk as deleteAllGraphs,
   grapherModes,
+  getUpdateWipGraphAction as updateWipGraph,
+  saveWipGraphThunk as saveWipGraph,
   excludeKeys as grapherExcludeKeys,
   initialState as grapherInitialState,
 }
@@ -69,6 +76,7 @@ export default function reducer (state = initialState, action) {
         mode: action.mode,
         selectedGraphId: null,
         insertionGraphId: null,
+        wipGraph: null,
         insertions: 0,
       }
 
@@ -129,6 +137,12 @@ export default function reducer (state = initialState, action) {
       return {
         ...state,
         insertions: state.insertions + 1,
+      }
+
+    case ACTIONS.UPDATE_WIP_GRAPH:
+      return {
+        ...state,
+        wipGraph: action.wipGraph,
       }
 
     case ACTIONS.LOG_ERROR:
@@ -198,6 +212,13 @@ function getSelectInsertionGraphAction (graphId) {
 function getIncrementInsertionsAction () {
   return {
     type: ACTIONS.INCREMENT_INSERTIONS,
+  }
+}
+
+function getUpdateWipGraphAction (wipGraph) {
+  return {
+    type: ACTIONS.UPDATE_WIP_GRAPH,
+    wipGraph: wipGraph,
   }
 }
 
@@ -303,6 +324,11 @@ function createGraphThunk (params) {
 
       const graphId = uuid()
 
+      if (!graphId) {
+        dispatch(getLogErrorAction(new Error('graph has no id')))
+        return
+      }
+
       dispatch(getSaveGraphAction(graphId, fromJS(graph)))
       dispatch(setContractGraphId(
         contractName, {[contractsPayloadKey]: graphId}
@@ -319,6 +345,19 @@ function createGraphThunk (params) {
         'invalid graph type: ' + params.type)))
       return
     }
+  }
+}
+
+function saveWipGraphThunk () {
+
+  return (dispatch, getState) => {
+
+    const wipGraph = getState().grapher.wipGraph
+
+    if (!wipGraph.id) throw new Error('wipGraph has no id')
+
+    dispatch(getSaveGraphAction(wipGraph.id, fromJS(wipGraph)))
+    dispatch(addDappTemplate(wipGraph.id, wipGraph))
   }
 }
 

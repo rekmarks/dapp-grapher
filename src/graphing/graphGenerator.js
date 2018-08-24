@@ -1,14 +1,14 @@
 
 import { getDisplayAddress } from '../utils'
 
-const graphTypes = {
+const contractGraphTypes = {
   _constructor: 'contract:constructor',
   functions: 'contract:functions',
 }
 
 export default getContractGraph
 export {
-  graphTypes as contractGraphTypes,
+  contractGraphTypes,
   getAccountGraph,
 }
 
@@ -32,10 +32,10 @@ function getContractGraph (contract, mode) {
   graph.name = contract.contractName
   switch (mode) {
     case 1:
-      graph.type = graphTypes._constructor
+      graph.type = contractGraphTypes._constructor
       break
     case 2:
-      graph.type = graphTypes.functions
+      graph.type = contractGraphTypes.functions
       break
     default:
       throw new Error('invalid mode: ' + mode)
@@ -71,6 +71,7 @@ function getAccountGraph (address) {
           displayName: getDisplayAddress(address),
           parent: 'account',
           type: 'output',
+          abiType: 'address',
         }
       },
       edges: {},
@@ -105,14 +106,13 @@ function getContractNodes (contractName, abi, mode) {
   switch (mode) {
 
     case 1:
-      contractNode.type = 'contract'
-      contractNode.contractType = 'constructor'
+      contractNode.type = contractGraphTypes._constructor
+      contractNode.abiType = 'constructor'
       nodes = getConstructorNodes(contractName, abi)
       break
 
     case 2:
-      contractNode.type = 'contract'
-      contractNode.contractType = 'functions'
+      contractNode.type = contractGraphTypes.functions
       nodes = getFunctionNodes(contractName, abi)
       break
 
@@ -163,10 +163,10 @@ function getConstructorNodes (contractName, abi) {
   }
 
   // constructor output node
-  const outputId = contractName + ':constructor:newContract'
+  const outputId = contractName + ':constructor:instance'
   nodes[outputId] = {
     id: outputId,
-    displayName: 'New Instance',
+    displayName: 'New',
     abiType: 'address',
     parent: contractName,
     type: 'output',

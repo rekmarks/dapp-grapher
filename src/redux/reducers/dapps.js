@@ -3,6 +3,9 @@ import uuid from 'uuid/v4'
 
 import { enqueueContractDeployments, deployEnqueuedContracts } from './contracts'
 
+import { contractGraphTypes } from '../../graphing/graphGenerator'
+// import { deleteGraph } from './grapher'
+
 const ACTIONS = {
   ADD_TEMPLATE: 'DAPPS:ADD_TEMPLATE',
   BEGIN_DEPLOYMENT: 'DAPPS:BEGIN_DEPLOYMENT',
@@ -24,7 +27,15 @@ const initialState = {
   templates: {
     /**
      * uuid: {
-     *   template: Template,
+     *   dappGraphId: _uuid,
+     *   deploymentOrder: [],
+     *   parameterValues: {
+     *     __uuid: {
+     *       id: __uuid,
+     *       abiType: string,
+     *       source: string,
+     *     },
+     *   },
      *   deployed: {
      *     uuid: Deployed,
      *   }
@@ -39,7 +50,7 @@ const excludeKeys = [
 ]
 
 export {
-  getAddTemplateAction as addDappTemplate,
+  addTemplateThunk as addDappTemplate,
   deployThunk as deployDapp,
   getDeploymentSuccessAction as dappDeploymentSuccess,
   getDeploymentFailureAction as dappDeploymentFailure,
@@ -57,10 +68,7 @@ export default function reducer (state = initialState, action) {
         ...state,
         templates: {
           ...state.templates,
-          [action.id]: {
-            template: action.template,
-            deployed: null,
-          },
+          [action.id]: action.template,
         },
       }
 
@@ -154,6 +162,53 @@ function getDeploymentFailureAction (error) {
 }
 
 /**
+ * Only handles constructor contract nodes as of now.
+ * 
+ * @param {[type]} graphId   [description]
+ * @param {[type]} dappGraph [description]
+ */
+function addTemplateThunk (graphId, dappGraph, templateName=null) {
+
+  return (dispatch, getState) => {
+
+    const deploymentOrder = getDappGraphDeploymentOrder(dappGraph)
+
+    const nodes = dappGraph.elements.nodes
+
+    const parameterValues = {}
+    Object.values(dappGraph.elements.edges).forEach(edge => {
+
+      const abiType = nodes[edge.target].abiType
+
+      let source
+      if (abiType === 'address') {
+        source = nodes[edge.sourceParent].id
+      } else {
+        source = nodes[edge.sourceNode].id
+      }
+
+      parameterValues[edge.target] = {
+        id: edge.target,
+        abiType: abiType,
+        source: source,
+      }
+    })
+
+    dispatch(getAddTemplateAction({
+      dappGraphId: graphId,
+      deploymentOrder: deploymentOrder,
+      parameterValues: parameterValues,
+      name: (
+        templateName
+        ? templateName
+        : (Object.keys(getState().dapps.templates).length + 1).toString()
+      ),
+      deployed: {},
+    }))
+  }
+}
+
+/**
  * ASYNCHRONOUS ACITON CREATORS
  */
 
@@ -193,4 +248,85 @@ function deployThunk (displayName, templateId, constructorCalls) {
     dispatch(enqueueContractDeployments(constructorCalls))
     dispatch(deployEnqueuedContracts(displayName, templateId))
   }
+}
+
+/**
+ * HELPERS
+ */
+
+/**
+ * Finds contract deployment order from dappgraph by running topological
+ * sort. Throws if graph is cyclic.
+ *
+ * Implements: https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm
+ * 
+ * @param  {object} dappGraph the graph whose deployment order must be found
+ * @return {array}            an array of contract nodes in order of deployment
+ */
+function getDappGraphDeploymentOrder (dappGraph) {
+
+  const edges = { ...dappGraph.elements.edges }
+
+  const parentNodes = {}
+  Object.values(dappGraph.elements.nodes).forEach(node => {
+    
+    if (
+      Object.values(contractGraphTypes).includes(node.type) ||
+      node.id === 'account'
+    ) {
+      parentNodes[node.id] = { ...node }
+    }
+  })
+
+  const deploymentOrder = []
+  const noIncomingEdges = []
+  Object.values(parentNodes).forEach(parentNode => {
+
+    let noIncoming = true
+
+    Object.values(edges).forEach(edge => {
+      if (edge.targetParent === parentNode.id) noIncoming = false
+    })
+
+    if (noIncoming) {
+      noIncomingEdges.push(parentNode)
+      delete parentNodes[parentNode.id]
+    }
+  })
+
+  if (noIncomingEdges.length === 0) throw new Error('cyclic dependencies')
+
+  while (noIncomingEdges.length !== 0) {
+
+    const sourceNode = noIncomingEdges.shift()
+    deploymentOrder.push(sourceNode)
+
+    Object.values(parentNodes).forEach(targetNode => {
+
+      Object.values(edges).forEach(edge => {
+
+        if (
+          edge.sourceParent === sourceNode.id &&
+          edge.targetParent === targetNode.id
+        ) delete edges[edge.id]
+      })
+
+      let noMoreIncoming = true
+      for (const edge of Object.values(edges)) {
+        if (edge.targetParent === targetNode.id) {
+          noMoreIncoming = false
+          break
+        }
+      }
+      if (noMoreIncoming) {
+        deploymentOrder.push(targetNode)
+        delete parentNodes[targetNode.id]
+      }
+    })
+  }
+
+  if (Object.keys(edges).length !== 0) throw new Error('cyclic dependencies')
+
+  // return deploymentOrder, without account node
+  return deploymentOrder.filter(node => node.id !== 'account')
 }

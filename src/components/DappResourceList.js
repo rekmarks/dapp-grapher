@@ -7,11 +7,11 @@ import ListItemText from '@material-ui/core/ListItemText'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline'
-// import CloudQueueIcon from '@material-ui/icons/CloudQueue'
-// import SubjectIcon from '@material-ui/icons/Subject'
+import ExtensionIcon from '@material-ui/icons/Extension'
+import CloudQueueIcon from '@material-ui/icons/CloudQueue'
 
-// import NestedList from './common/NestedList'
-// import ListButton from './common/ListButton'
+import NestedList from './common/NestedList'
+import ListButton from './common/ListButton'
 
 // import { contractGraphTypes } from '../graphing/graphGenerator'
 import { grapherModes } from '../redux/reducers/grapher'
@@ -51,23 +51,48 @@ class DappResourceList extends Component {
     )
   }
 
-  getTemplateListItems = (dapps) => {
+  getTemplateListItems = dapps => {
 
     const dappIds = Object.keys(dapps)
 
     if (dappIds.length < 1) return null
 
-    // return dappIds.map( id => {
+    return dappIds.map( id => {
 
-    //   return (
-    //     <NestedList
-    //       key={id}
-    //     >
-    //       <TemplateListButton />
-    //     </NestedList>
-    //   )
-    // })
-    return ''
+      const hasDeployed = Object.keys(dapps[id].deployed).length > 0
+
+      return (
+        <NestedList
+          key={id}
+          icon={(<ExtensionIcon />)}
+          displayText={dapps[id].name}
+          buttonPadding={spacingUnit * 4}
+        >
+          <ListButton
+            disabled={false}
+            displayText={"Deploy New"}
+            icon={(<AddCircleOutlineIcon />)}
+            onClick={ () => this.props.selectGraph(dapps[id].dappGraphId)}
+            style={{ paddingLeft: spacingUnit * 6 }} />
+          <NestedList
+            icon={(<CloudQueueIcon />)}
+            displayText="Deployed"
+            disabled={!hasDeployed}
+            buttonPadding={spacingUnit * 6}
+          >
+            {
+              hasDeployed
+              ? this.getDeployedListItems(dapps[id].deployed)
+              : null
+            }
+          </NestedList>
+        </NestedList>
+      )
+    })
+  }
+
+  getDeployedListItems = deployed => {
+
   }
 }
 
@@ -75,6 +100,7 @@ DappResourceList.propTypes = {
   // classes: PropTypes.object.isRequired,
   dapps: PropTypes.object.isRequired,
   setGrapherMode: PropTypes.func,
+  selectGraph: PropTypes.func,
 }
 
 export default withStyles(styles)(DappResourceList)

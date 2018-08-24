@@ -18,7 +18,6 @@ export default class Grapher extends Component {
       jointPaper: null,
       svgPanZoom: null,
       creatingDapp: false,
-      wipGraph: null,
     }
   }
 
@@ -53,15 +52,16 @@ export default class Grapher extends Component {
     if (this.props.grapherMode === grapherModes.main) {
 
       if (this.state.creatingDapp) {
- this.setState({
-        creatingDapp: false,
-        wipGraph: null,
-      })
-}
+
+        this.setState({
+          creatingDapp: false,
+        })
+      }
 
       this.state.jointGraph.clear()
 
       if (this.props.selectedGraph) {
+
         jh.addJointElements(
           this.state.jointGraph, this.props.selectedGraph, { setsLayout: true }
         )
@@ -74,9 +74,13 @@ export default class Grapher extends Component {
       if (!this.state.creatingDapp) {
 
         const wipGraph = { ...this.props.accountGraph }
-        wipGraph.id = uuid()
+        wipGraph.contracts = {}
+        delete wipGraph.id
+        // absence of id used to indicate that user cannot save the wipGraph
+        // see ResourceMenu prop, hasWipGraph
 
         this.state.jointGraph.clear()
+
         jh.addJointElements(
           this.state.jointGraph,
           wipGraph,
@@ -85,10 +89,7 @@ export default class Grapher extends Component {
 
         wipGraph.type = 'dapp'
 
-        this.setState({
-          creatingDapp: true,
-          wipGraph: wipGraph,
-        })
+        this.props.updateWipGraph(wipGraph)
       }
     }
   }
@@ -99,7 +100,11 @@ export default class Grapher extends Component {
     const paper = jh.paper.initialize(
       this.jointElement,
       this.state.jointGraph,
-      { openForm: this.openForm }
+      {
+        openForm: this.openForm,
+        addEdge: this.addWipGraphEdge,
+        removeEdge: this.removeWipGraphEdge,
+      }
     )
 
     this.setState({
@@ -171,30 +176,51 @@ export default class Grapher extends Component {
 
   updateWipGraph = () => {
 
-    if (!this.state.wipGraph) return
+    if (!this.props.wipGraph) return
 
-    const wipGraph = { ...this.state.wipGraph }
-    const newElements = { ...this.props.insertionGraph.elements }
-    const newId = uuid()
+    const wipGraph = { ...this.props.wipGraph }
 
-    Object.values(newElements.nodes).forEach(node => {
-      node.id = newId + ':' + node.abiName
+    if (!wipGraph.id) wipGraph.id = uuid()
+
+    const contractId = uuid()
+    const insertionGraph = { ...this.props.insertionGraph }
+    insertionGraph.id = contractId + ':graph'
+    
+    if (!wipGraph.contracts[insertionGraph.name]) {
+      wipGraph.contracts[insertionGraph.name] = []
+    }
+
+    wipGraph.contracts[insertionGraph.name].push(contractId)
+
+    Object.values(insertionGraph.elements.nodes).forEach(node => {
+
+      if (Object.values(contractGraphTypes).includes(node.type)) {
+        node.id = contractId
+      }
+      else if (node.abiName) {
+        node.id = contractId + ':' + node.abiName
+        node.parent = contractId
+      } 
+      else if (node.type === 'output') {
+        // constructor output nodes have no abi names
+        node.id = contractId + ':instance'
+        node.parent = contractId
+      }
       wipGraph.elements.nodes[node.id] = node
     })
-    Object.values(newElements.edges).forEach(edge => {
-      edge.id = newId + ':' + edge.id
+
+    Object.values(insertionGraph.elements.edges).forEach(edge => {
+      edge.id = contractId + ':' + edge.id
       wipGraph.elements.edges[edge.id] = edge
     })
 
-    this.setState({ wipGraph })
-
     jh.addJointElements(
       this.state.jointGraph,
-      { type: contractGraphTypes._constructor, elements: newElements },
+      insertionGraph,
       { setsLayout: false }
     )
 
-    console.log(wipGraph)
+    this.props.updateWipGraph(wipGraph)
   }
 
   /**
@@ -213,6 +239,53 @@ export default class Grapher extends Component {
       // do nothing for now
     }
   }
+
+
+  addWipGraphEdge = edge => {
+
+    const wipGraph = { ...this.props.wipGraph }
+
+    for (const node of Object.values(wipGraph.elements.nodes)) {
+
+      // TODO: does not handle duplicate display names among
+      // children of the parent node (likely edge case)
+      if (!edge.source || !edge.target) {
+
+        if (
+          node.parent === edge.sourceParent &&
+          node.displayName === edge.sourceName
+        ) {
+          edge.source = node.id
+          edge.sourceAbiType = node.abiType
+        }
+
+        if (
+          node.parent === edge.targetParent &&
+          node.displayName === edge.targetName
+        ) {
+          edge.target = node.id
+          edge.targetAbiType = node.abiType
+        }
+      }
+      else break
+    }
+    
+    delete edge.sourceName
+    delete edge.targetName
+
+    wipGraph.elements.edges[edge.id] = edge
+
+    this.props.updateWipGraph(wipGraph)
+  }
+
+  removeWipGraphEdge = edgeId => {
+
+    const wipGraph = { ...this.props.wipGraph }
+
+    delete wipGraph.elements.edges[edgeId]
+
+    this.props.updateWipGraph(wipGraph)
+  }
 }
 
 Grapher.propTypes = {
@@ -225,4 +298,6 @@ Grapher.propTypes = {
   openContractForm: PropTypes.func,
   selectedGraph: PropTypes.object,
   selectedGraphId: PropTypes.string,
+  updateWipGraph: PropTypes.func,
+  wipGraph: PropTypes.object,
 }

@@ -35,7 +35,7 @@ import {
   selectContractAddress,
 } from '../redux/reducers/contracts'
 
-import { deployDapp, addDappTemplate } from '../redux/reducers/dapps'
+import { deployDapp } from '../redux/reducers/dapps'
 
 import {
   grapherModes,
@@ -45,6 +45,8 @@ import {
   deleteAllGraphs,
   getCreateGraphParams,
   selectGraph,
+  saveWipGraph,
+  updateWipGraph,
 } from '../redux/reducers/grapher'
 
 import { logRenderError } from '../redux/reducers/renderErrors'
@@ -184,7 +186,13 @@ class App extends Component {
                 selectedContractAddress={this.props.selectedContractAddress}
                 hasGraphs={this.props.hasGraphs}
                 dapps={this.props.dapps}
-                insertionGraphId={this.props.insertionGraphId} />
+                insertionGraphId={this.props.insertionGraphId}
+                saveWipGraph={this.props.saveWipGraph}
+                hasWipGraph={
+                  this.props.wipGraph
+                  ? Boolean(this.props.wipGraph.id)
+                  : false
+                } />
           </Drawer>
           <main className="App-graph-container" ref={this.graphContainerRef} >
             {
@@ -199,7 +207,9 @@ class App extends Component {
                   insertionGraphId={this.props.insertionGraphId}
                   openContractForm={this.props.openAppModal}
                   selectedGraph={selectedGraph}
-                  selectedGraphId={this.props.selectedGraphId} />
+                  selectedGraphId={this.props.selectedGraphId}
+                  updateWipGraph={this.props.updateWipGraph}
+                  wipGraph={this.props.wipGraph} />
               : (
                   <Typography
                     variant="title"
@@ -265,7 +275,6 @@ App.propTypes = {
   selectContractAddress: PropTypes.func,
   // dapps
   dapps: PropTypes.object,
-  addDappTemplate: PropTypes.func,
   deployDapp: PropTypes.func,
   // grapher
   accountGraph: PropTypes.object,
@@ -281,6 +290,9 @@ App.propTypes = {
   selectedGraphId: PropTypes.string,
   selectedGraphObject: PropTypes.object,
   setGrapherMode: PropTypes.func,
+  saveWipGraph: PropTypes.func,
+  updateWipGraph: PropTypes.func,
+  wipGraph: PropTypes.object,
   // renderErrors
   logRenderError: PropTypes.func,
   // ui
@@ -320,6 +332,7 @@ function mapStateToProps (state) {
     selectedGraphId: state.grapher.selectedGraphId,
     selectedGraphObject: state.grapher.graphs[state.grapher.selectedGraphId],
     hasGraphs: Object.keys(state.grapher.graphs).length >= 1,
+    wipGraph: state.grapher.wipGraph,
     // ui
     appModal: state.ui.appModal.open,
     selectedContractFunction: state.ui.contractForm.selectedFunction,
@@ -342,7 +355,6 @@ function mapDispatchToProps (dispatch) {
       dispatch(callInstance(address, functionName, params, sender)),
     selectContractAddress: address => dispatch(selectContractAddress(address)),
     // dapps
-    addDappTemplate: template => dispatch(addDappTemplate(template)),
     deployDapp: (displayName, templateId, constructorCalls) =>
       dispatch(deployDapp((displayName, templateId, constructorCalls))),
     // grapher
@@ -350,6 +362,8 @@ function mapDispatchToProps (dispatch) {
     deleteGraph: graphId => dispatch(deleteGraph(graphId)),
     deleteAllGraphs: () => dispatch(deleteAllGraphs()),
     selectGraph: graphId => dispatch(selectGraph(graphId)),
+    saveWipGraph: () => dispatch(saveWipGraph()),
+    updateWipGraph: wipGraph => dispatch(updateWipGraph(wipGraph)),
     // renderErrors
     logRenderError: (error, errorInfo) => dispatch(logRenderError(error, errorInfo)),
     // ui

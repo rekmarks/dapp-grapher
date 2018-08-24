@@ -206,7 +206,10 @@ class ContractForm extends Component {
 
     functionNodes.forEach(node => {
 
-      if (node.type === 'contract' || node.type === 'function') {
+      if (
+        Object.values(contractGraphTypes).includes(node.type) ||
+        node.type === 'function'
+      ) {
 
         metaData.title = node.displayName
         metaData.abiName = node.abiName
