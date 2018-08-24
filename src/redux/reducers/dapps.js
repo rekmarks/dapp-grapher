@@ -12,18 +12,25 @@ const ACTIONS = {
   END_DEPLOYMENT: 'DAPPS:END_DEPLOYMENT',
   DEPLOYMENT_SUCCESS: 'DAPPS:DEPLOYMENT_SUCCESS',
   DEPLOYMENT_FAILURE: 'DAPPS:DEPLOYMENT_FAILURE',
+  SELECT_TEMPLATE: 'DAPPS:SELECT_TEMPLATE',
+  UPDATE_WIP_DEPLOYMENT: 'DAPPS:UPDATE_WIP_DEPLOYMENT',
+  CLEAR_SELECTED_TEMPLATE: 'DAPPS:CLEAR_SELECTED_TEMPLATE',
   // TODO
-  DELETE_TEMPLATE: 'DAPPS:DELETE_TEMPLATE',
-  DELETE_ALL_TEMPLATES: 'DAPPS:DELETE_ALL_TEMPLATES',
-  REMOVE_DEPLOYED: 'DAPPS:REMOVE_DEPLOYED',
   ADD_DEPLOYED: 'DAPPS:ADD_DEPLOYED',
   ADD_DEPLOYED_SUCCESS: 'DAPPS:ADD_DEPLOYED_SUCCESS',
   ADD_DEPLOYED_FAILURE: 'DAPPS:ADD_DEPLOYED_FAILURE',
+  SELECT_DEPLOYED: 'DAPPS:SELECT_DEPLOYED',
+  REMOVE_DEPLOYED: 'DAPPS:REMOVE_DEPLOYED',
+  DELETE_TEMPLATE: 'DAPPS:DELETE_TEMPLATE',
+  DELETE_ALL_TEMPLATES: 'DAPPS:DELETE_ALL_TEMPLATES',
 }
 
 const initialState = {
   errors: null,
   ready: true,
+  selectedTemplateId: null,
+  wipDeployment: null,
+  selectedDeployedId: null, // actions todo
   templates: {
     /**
      * uuid: {
@@ -51,10 +58,10 @@ const excludeKeys = [
 
 export {
   addTemplateThunk as addDappTemplate,
+  getSelectTemplateAction as selectDappTemplate,
+  getUpdateWipDeploymentAction as updateWipDeployment,
   deployThunk as deployDapp,
-  getDeploymentSuccessAction as dappDeploymentSuccess,
-  getDeploymentFailureAction as dappDeploymentFailure,
-  getEndDeploymentAction as dappDeploymentEnd,
+  deploymentResultThunk as dappDeploymentResult,
   initialState as dappsInitialState,
   excludeKeys as dappsExcludeKeys,
 }
@@ -70,6 +77,25 @@ export default function reducer (state = initialState, action) {
           ...state.templates,
           [action.id]: action.template,
         },
+      }
+
+    case ACTIONS.SELECT_TEMPLATE:
+      return {
+        ...state,
+        selectedTemplateId: action.templateId,
+      }
+
+    case ACTIONS.UPDATE_WIP_DEPLOYMENT:
+      return {
+        ...state,
+        wipDeployment: action.wipDeployment,
+      }
+
+    case ACTIONS.CLEAR_SELECTED_TEMPLATE:
+      return {
+        ...state,
+        selectedTemplateId: null,
+        wipDeployment: null,
       }
 
     case ACTIONS.BEGIN_DEPLOYMENT:
@@ -131,7 +157,27 @@ function getAddTemplateAction (template) {
   return {
     type: ACTIONS.ADD_TEMPLATE,
     template: template,
-    id: uuid(),
+    id: template.id,
+  }
+}
+
+function getSelectTemplateAction (templateId) {
+  return {
+    type: ACTIONS.SELECT_TEMPLATE,
+    templateId: templateId,
+  }
+}
+
+function getUpdateWipDeploymentAction (wipDeployment) {
+  return {
+    type: ACTIONS.UPDATE_WIP_DEPLOYMENT,
+    wipDeployment: wipDeployment,
+  }
+}
+
+function getClearSelectedTemplateAction () {
+  return {
+    type: ACTIONS.CLEAR_SELECTED_TEMPLATE,
   }
 }
 
@@ -163,11 +209,11 @@ function getDeploymentFailureAction (error) {
 
 /**
  * Only handles constructor contract nodes as of now.
- * 
+ *
  * @param {[type]} graphId   [description]
  * @param {[type]} dappGraph [description]
  */
-function addTemplateThunk (graphId, dappGraph, templateName=null) {
+function addTemplateThunk (graphId, dappGraph, templateName = null) {
 
   return (dispatch, getState) => {
 
@@ -195,16 +241,28 @@ function addTemplateThunk (graphId, dappGraph, templateName=null) {
     })
 
     dispatch(getAddTemplateAction({
+      id: uuid(),
       dappGraphId: graphId,
       deploymentOrder: deploymentOrder,
       parameterValues: parameterValues,
       name: (
-        templateName
-        ? templateName
-        : (Object.keys(getState().dapps.templates).length + 1).toString()
+        templateName || (Object.keys(getState().dapps.templates).length + 1).toString()
       ),
       deployed: {},
     }))
+  }
+}
+
+function deploymentResultThunk (success, data) {
+
+  return (dispatch, getState) => {
+
+    dispatch(getClearSelectedTemplateAction())
+
+    if (success) dispatch(getDeploymentSuccessAction(data))
+    else dispatch(getDeploymentFailureAction(data))
+
+    dispatch(getEndDeploymentAction())
   }
 }
 
@@ -223,7 +281,7 @@ function addTemplateThunk (graphId, dappGraph, templateName=null) {
  * @param  {string} templateId       the id of the template used
  * @param  {array}  constructorCalls [description]
  */
-function deployThunk (displayName, templateId, constructorCalls) {
+function deployThunk (displayName) {
 
   return (dispatch, getState) => {
 
@@ -245,8 +303,8 @@ function deployThunk (displayName, templateId, constructorCalls) {
     // TODO: input validation?
     // const template = state.dapps.templates[templateId].template
 
-    dispatch(enqueueContractDeployments(constructorCalls))
-    dispatch(deployEnqueuedContracts(displayName, templateId))
+    dispatch(enqueueContractDeployments(state.dapps.wipDeployment))
+    dispatch(deployEnqueuedContracts(displayName, state.dapps.selectedTemplateId))
   }
 }
 
@@ -259,7 +317,7 @@ function deployThunk (displayName, templateId, constructorCalls) {
  * sort. Throws if graph is cyclic.
  *
  * Implements: https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm
- * 
+ *
  * @param  {object} dappGraph the graph whose deployment order must be found
  * @return {array}            an array of contract nodes in order of deployment
  */
@@ -269,7 +327,7 @@ function getDappGraphDeploymentOrder (dappGraph) {
 
   const parentNodes = {}
   Object.values(dappGraph.elements.nodes).forEach(node => {
-    
+
     if (
       Object.values(contractGraphTypes).includes(node.type) ||
       node.id === 'account'

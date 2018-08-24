@@ -72,10 +72,10 @@ function getAccountGraph (address) {
           parent: 'account',
           type: 'output',
           abiType: 'address',
-        }
+        },
       },
       edges: {},
-    }
+    },
   }
 }
 

@@ -101,7 +101,7 @@ class ContractForm extends Component {
     event.preventDefault()
 
     this.props.deployContract(
-      this.props.contractName,
+      this.props.selectedGraph.name,
       metaData.paramOrder.map(id => {
         return this.state.fieldValues[id]
       })
@@ -109,18 +109,32 @@ class ContractForm extends Component {
     this.props.closeContractForm()
   }
 
+  handleDappFunctionSubmit = metaData => event => {
+
+    event.preventDefault()
+
+    this.props.updateWipDappDeployment(
+      // TODO: 8-24
+    )
+    this.props.closeContractForm()
+  }
+
   getFunctionForm = () => {
 
     const { classes } = this.props
+    const nodes = this.props.selectedGraph.elements.nodes
+    const graphType = this.props.selectedGraph.type
+    const selectedNodeId = this.props.selectedContractFunction
+    const selectedNode = nodes[selectedNodeId]
 
     let formData; let submitHandler; let functionCall = false
 
-    switch (this.props.graphType) {
+    switch (graphType) {
 
       case contractGraphTypes._constructor:
 
-        submitHandler = this.handleConstructorSubmit
         formData = this.getFunctionFormFields()
+        submitHandler = this.handleConstructorSubmit
 
         break
 
@@ -128,11 +142,27 @@ class ContractForm extends Component {
 
         functionCall = true
 
+        // here, a function is only selected if selected by user from
+        // DropdownMenu component in form (see below)
         if (this.props.selectedContractFunction) {
 
           formData = this.getFunctionFormFields()
           submitHandler = this.handleFunctionSubmit
         }
+
+        break
+
+      case 'dapp':
+
+        // in the case of a dapp, a function id is selected in Grapher,
+        // by an event handler in the Joint paper
+
+        if (selectedNode.type === contractGraphTypes.functions) {
+          functionCall = true
+        }
+
+        formData = this.getFunctionFormFields()
+        submitHandler = this.handleDappFunctionSubmit
 
         break
 
@@ -146,7 +176,7 @@ class ContractForm extends Component {
           functionCall
           ? <DropdownMenu
               classes={{ root: classes.root }}
-              menuItemData={getFunctionIds(this.props.nodes)}
+              menuItemData={getFunctionAndConstructorIds(nodes)}
               menuTitle="Functions"
               selectAction={this.props.selectContractFunction} />
           : null
@@ -168,7 +198,13 @@ class ContractForm extends Component {
                     variant="contained"
                     type="submit"
                   >
-                    {functionCall ? 'Call Function' : 'Deploy'}
+                    {
+                      graphType === 'dapp'
+                      ? 'Submit'
+                      : functionCall
+                        ? 'Call Function'
+                        : 'Deploy'
+                    }
                   </Button>
                 </div>
               </form>
@@ -181,28 +217,30 @@ class ContractForm extends Component {
 
   getFunctionFormFields = () => {
 
+    const nodes = this.props.selectedGraph.elements.nodes
+    const edges = this.props.selectedGraph.elements.edges
+    const graphType = this.props.selectedGraph.type
     const functionId = this.props.selectedContractFunction
     const functionNodes = []
 
-    if (!functionId) { // all nodes belong to function
-
-      Object.values(this.props.nodes).forEach(node => {
+    Object.values(nodes).forEach(node => {
+      if (node.id === functionId || node.parent === functionId) {
         functionNodes.push(node)
-      })
-    } else { // only certain nodes belong to function
-
-      Object.values(this.props.nodes).forEach(node => {
-        if (node.id === functionId || node.parent === functionId) {
-          functionNodes.push(node)
-        }
-      })
-    }
+      }
+    })
 
     const metaData = {
       params: {},
       paramOrder: [],
     }
     const fields = []
+
+    if (graphType === 'dapp' && Object.keys(edges).length > 0) {
+      // TODO: 8-24
+      // Need to figure out which field values are determined by the
+      // graph and set them accordingly. This information is stored in
+      // the edges.
+    }
 
     functionNodes.forEach(node => {
 
@@ -262,26 +300,27 @@ ContractForm.propTypes = {
   classes: PropTypes.object.isRequired,
   contractAddress: PropTypes.string,
   callInstance: PropTypes.func,
-  contractName: PropTypes.string,
-  graphType: PropTypes.string,
-  nodes: PropTypes.object,
   deployContract: PropTypes.func,
   closeContractForm: PropTypes.func,
   selectContractFunction: PropTypes.func,
   selectedContractFunction: PropTypes.string,
   heading: PropTypes.string,
   subHeading: PropTypes.string,
+  selectedGraph: PropTypes.object,
+  updateWipDappDeployment: PropTypes.func,
+  selectedDappTemplate:PropTypes.object,
+  wipDappDeployment:PropTypes.object,
 }
 
 /**
  * HELPERS
  */
 
-function getFunctionIds (nodes) {
+function getFunctionAndConstructorIds (nodes) {
 
   const functions = []
   Object.values(nodes).forEach(node => {
-    if (node.type === 'function') {
+    if (node.type === 'function' || node.type === 'constructor') {
       functions.push({
         id: node.id,
         name: node.displayName,

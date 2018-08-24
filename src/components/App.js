@@ -35,7 +35,11 @@ import {
   selectContractAddress,
 } from '../redux/reducers/contracts'
 
-import { deployDapp } from '../redux/reducers/dapps'
+import {
+  deployDapp,
+  selectDappTemplate,
+  updateWipDeployment,
+} from '../redux/reducers/dapps'
 
 import {
   grapherModes,
@@ -192,7 +196,11 @@ class App extends Component {
                   this.props.wipGraph
                   ? Boolean(this.props.wipGraph.id)
                   : false
-                } />
+                }
+                selectDappTemplate={this.props.selectDappTemplate}
+                hasSelectedDappTemplate={Boolean(this.props.selectedDappTemplate)}
+                hasWipDeployment={Boolean(this.props.wipDappDeployment)}
+                deployDapp={this.props.deployDapp} />
           </Drawer>
           <main className="App-graph-container" ref={this.graphContainerRef} >
             {
@@ -209,7 +217,8 @@ class App extends Component {
                   selectedGraph={selectedGraph}
                   selectedGraphId={this.props.selectedGraphId}
                   updateWipGraph={this.props.updateWipGraph}
-                  wipGraph={this.props.wipGraph} />
+                  wipGraph={this.props.wipGraph}
+                  selectContractFunction={this.props.selectContractFunction} />
               : (
                   <Typography
                     variant="title"
@@ -242,15 +251,16 @@ class App extends Component {
                          nested: classes.nested,
                       }}
                       contractAddress={this.props.selectedContractAddress}
-                      nodes={selectedGraph.elements.nodes}
-                      contractName={selectedGraph.name}
-                      graphType={selectedGraph.type}
+                      selectedGraph={selectedGraph}
                       deployContract={this.props.deployContract}
                       callInstance={this.props.callInstance}
                       closeContractForm={this.props.closeAppModal}
                       selectContractFunction={this.props.selectContractFunction}
                       selectedContractFunction={this.props.selectedContractFunction}
-                      heading={selectedGraph.name} />
+                      heading={selectedGraph.name}
+                      wipDappDeployment={this.props.wipDappDeployment}
+                      updateWipDappDeployment={this.props.updateWipDappDeployment}
+                      selectedDappTemplate={this.props.selectedDappTemplate} />
                   )
                 : null
               }
@@ -276,6 +286,11 @@ App.propTypes = {
   // dapps
   dapps: PropTypes.object,
   deployDapp: PropTypes.func,
+  selectDappTemplate: PropTypes.func,
+  updateWipDappDeployment: PropTypes.func,
+  selectedDeployedDapp:PropTypes.object, // TODO
+  selectedDappTemplate:PropTypes.object,
+  wipDappDeployment:PropTypes.object,
   // grapher
   accountGraph: PropTypes.object,
   createGraph: PropTypes.func,
@@ -323,6 +338,15 @@ function mapStateToProps (state) {
     selectedContractAddress: state.contracts.selectedAddress,
     // dapps
     dapps: state.dapps.templates,
+    selectedDeployedDapp:
+      state.dapps.selectedTemplateId && state.dapps.selectedDeployedId
+      ? state.dapps.templates[state.dapps.selectedTemplateId][state.dapps.selectedDeployedId]
+      : null,
+    selectedDappTemplate:
+      state.dapps.selectedTemplateId
+      ? state.dapps.templates[state.dapps.selectedTemplateId]
+      : null,
+    wipDappDeployment: state.dapps.wipDeployment,
     // grapher
     accountGraph: state.grapher.accountGraph,
     grapherMode: state.grapher.mode,
@@ -355,8 +379,12 @@ function mapDispatchToProps (dispatch) {
       dispatch(callInstance(address, functionName, params, sender)),
     selectContractAddress: address => dispatch(selectContractAddress(address)),
     // dapps
-    deployDapp: (displayName, templateId, constructorCalls) =>
-      dispatch(deployDapp((displayName, templateId, constructorCalls))),
+    deployDapp: (displayName) =>
+      dispatch(deployDapp((displayName))),
+    selectDappTemplate: dappTemplateId =>
+      dispatch(selectDappTemplate(dappTemplateId)),
+    updateWipDappDeployment: wipDeployment =>
+      dispatch(updateWipDeployment(wipDeployment)),
     // grapher
     createGraph: params => dispatch(createGraph(params)),
     deleteGraph: graphId => dispatch(deleteGraph(graphId)),

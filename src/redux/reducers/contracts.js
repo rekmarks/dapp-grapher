@@ -9,9 +9,7 @@ import {
 import { contractGraphTypes as graphTypes } from '../../graphing/graphGenerator'
 
 import {
-  dappDeploymentSuccess,
-  dappDeploymentFailure,
-  dappDeploymentEnd,
+  dappDeploymentResult,
 } from './dapps'
 
 import { deleteGraph } from './grapher'
@@ -575,18 +573,19 @@ function deployQueueThunk (dappDisplayName, dappTemplateId) {
 
         dispatch(getResetDeploymentQueueAction())
         dispatch(getEndDeploymentAction())
-        dispatch(dappDeploymentFailure(new Error(
-          'deployment ' + i + ': ' + deployment.contractName + ' failed'
-        )))
-        dispatch(dappDeploymentEnd())
+        dispatch(dappDeploymentResult(
+          false,
+          new Error(
+            'deployment ' + i + ': ' + deployment.contractName + ' failed'
+          )
+        ))
         return
       }
     }
 
     dispatch(getResetDeploymentQueueAction())
     dispatch(getEndDeploymentAction())
-    dispatch(dappDeploymentSuccess(dappData))
-    dispatch(dappDeploymentEnd())
+    dispatch(dappDeploymentResult(true, dappData))
   }
 }
 

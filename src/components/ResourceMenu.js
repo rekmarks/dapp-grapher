@@ -8,6 +8,7 @@ import ListItem from '@material-ui/core/ListItem'
 import ListItemText from '@material-ui/core/ListItemText'
 
 import AppsIcon from '@material-ui/icons/Apps'
+import CloudUploadIcon from '@material-ui/icons/CloudUpload'
 import DeleteIcon from '@material-ui/icons/Delete'
 import GetAppIcon from '@material-ui/icons/GetApp'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
@@ -56,6 +57,15 @@ export default class ResourceMenu extends Component {
 
       resources.top = (
         <List disablePadding>
+          {
+            this.props.hasSelectedDappTemplate
+            ? <ListButton
+                disabled={!this.props.hasWipDeployment}
+                onClick={this.props.deployDapp}
+                icon={(<CloudUploadIcon />)}
+                displayText="Deploy Dapp" />
+            : null
+          }
           <NestedList
             icon={(<BuildIcon />)}
             displayText="Dev Tools"
@@ -103,7 +113,8 @@ export default class ResourceMenu extends Component {
           <DappResourceList
             dapps={this.props.dapps}
             setGrapherMode={this.props.setGrapherMode}
-            selectGraph={this.props.selectGraph} />
+            selectGraph={this.props.selectGraph}
+            selectDappTemplate={this.props.selectDappTemplate} />
         </NestedList>
       )
     } else if (this.props.grapherMode === grapherModes.createDapp) {
@@ -215,6 +226,10 @@ ResourceMenu.propTypes = {
   setGrapherMode: PropTypes.func,
   saveWipGraph: PropTypes.func,
   hasWipGraph: PropTypes.bool,
+  deployDapp: PropTypes.func,
+  hasWipDeployment: PropTypes.bool,
+  selectDappTemplate: PropTypes.func,
+  hasSelectedDappTemplate: PropTypes.bool,
 }
 
 /**

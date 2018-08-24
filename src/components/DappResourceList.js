@@ -51,13 +51,18 @@ class DappResourceList extends Component {
     )
   }
 
+  handleDeployNewClick = (templateId, graphId) => {
+    this.props.selectDappTemplate(templateId)
+    this.props.selectGraph(graphId)
+  }
+
   getTemplateListItems = dapps => {
 
     const dappIds = Object.keys(dapps)
 
     if (dappIds.length < 1) return null
 
-    return dappIds.map( id => {
+    return dappIds.map(id => {
 
       const hasDeployed = Object.keys(dapps[id].deployed).length > 0
 
@@ -70,9 +75,9 @@ class DappResourceList extends Component {
         >
           <ListButton
             disabled={false}
-            displayText={"Deploy New"}
+            displayText={'Deploy New'}
             icon={(<AddCircleOutlineIcon />)}
-            onClick={ () => this.props.selectGraph(dapps[id].dappGraphId)}
+            onClick={ () => this.handleDeployNewClick(id, dapps[id].dappGraphId)}
             style={{ paddingLeft: spacingUnit * 6 }} />
           <NestedList
             icon={(<CloudQueueIcon />)}
@@ -101,6 +106,7 @@ DappResourceList.propTypes = {
   dapps: PropTypes.object.isRequired,
   setGrapherMode: PropTypes.func,
   selectGraph: PropTypes.func,
+  selectDappTemplate: PropTypes.func,
 }
 
 export default withStyles(styles)(DappResourceList)

@@ -185,7 +185,7 @@ export default class Grapher extends Component {
     const contractId = uuid()
     const insertionGraph = { ...this.props.insertionGraph }
     insertionGraph.id = contractId + ':graph'
-    
+
     if (!wipGraph.contracts[insertionGraph.name]) {
       wipGraph.contracts[insertionGraph.name] = []
     }
@@ -196,12 +196,10 @@ export default class Grapher extends Component {
 
       if (Object.values(contractGraphTypes).includes(node.type)) {
         node.id = contractId
-      }
-      else if (node.abiName) {
+      } else if (node.abiName) {
         node.id = contractId + ':' + node.abiName
         node.parent = contractId
-      } 
-      else if (node.type === 'output') {
+      } else if (node.type === 'output') {
         // constructor output nodes have no abi names
         node.id = contractId + ':instance'
         node.parent = contractId
@@ -231,9 +229,12 @@ export default class Grapher extends Component {
   * Opens form per Joint state and grapherMode.
   * Pass to Joint paper at initialization.
   */
-  openForm = () => {
+  openForm = functionId => {
 
     if (this.props.grapherMode === grapherModes.main) {
+
+      if (functionId) this.props.selectContractFunction(functionId)
+
       this.props.openContractForm()
     } else if (this.props.grapherMode === grapherModes.createDapp) {
       // do nothing for now
@@ -266,10 +267,9 @@ export default class Grapher extends Component {
           edge.target = node.id
           edge.targetAbiType = node.abiType
         }
-      }
-      else break
+      } else break
     }
-    
+
     delete edge.sourceName
     delete edge.targetName
 
@@ -296,6 +296,7 @@ Grapher.propTypes = {
   insertionGraph: PropTypes.object,
   insertionGraphId: PropTypes.string,
   openContractForm: PropTypes.func,
+  selectContractFunction: PropTypes.func,
   selectedGraph: PropTypes.object,
   selectedGraphId: PropTypes.string,
   updateWipGraph: PropTypes.func,

@@ -42,7 +42,7 @@ export default function reducer (state = initialState, action) {
       return {
         ...state,
         contractForm: {
-          selectedFunction: action.func,
+          selectedFunction: action.functionId,
         },
       }
 
@@ -67,9 +67,9 @@ function getOpenAppModalAction () {
   }
 }
 
-function getSelectContractFunctionAction (func) {
+function getSelectContractFunctionAction (functionId) {
   return {
     type: ACTIONS.SELECT_CONTRACT_FUNCTION,
-    func: func,
+    functionId: functionId,
   }
 }

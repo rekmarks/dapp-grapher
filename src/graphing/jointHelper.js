@@ -220,7 +220,7 @@ function setDappCells (jointGraph, dappGraph, meta) {
 
     const constructorElement = generateConstructorElement(
       graphNodes[constructorId].displayName,
-      contractElements 
+      contractElements
     )
 
     idMapping[constructorId] = constructorElement.id
@@ -387,12 +387,12 @@ function getDefaultLink () {
  * PAPER AND GRAPH MANIPULATORS
  */
 
-function initializePaper (jointElement, graph, eventHandlers) {
+function initializePaper (jointElement, jointGraph, eventHandlers) {
 
   const paper = new joint.dia.Paper({
     ...paperConfig,
     el: jointElement,
-    model: graph,
+    model: jointGraph,
   })
   paper._dappGrapher = {
     panning: false,
@@ -421,7 +421,7 @@ function addPaperEventHandlers (paper, handlers) {
 
     if (Object.values(contractGraphTypes).includes(nodeType)) {
 
-      handlers.openForm()
+      handlers.openForm(getCustomAttributeFromView(view, 'id'))
 
     } else if (nodeType === 'ui') {
       // do nothing
