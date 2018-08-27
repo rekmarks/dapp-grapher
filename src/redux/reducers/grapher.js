@@ -9,7 +9,7 @@ import parseContract, {
 
 import { setContractGraphId, removeAllContractGraphIds } from './contracts'
 
-import { addDappTemplate } from './dapps'
+import { addDappTemplate, clearSelectedDappTemplate } from './dapps'
 
 const ACTIONS = {
   SET_MODE: 'GRAPHER:SET_MODE',
@@ -21,7 +21,6 @@ const ACTIONS = {
   SELECT_INSERTION_GRAPH: 'GRAPHER:SELECT_INSERTION_GRAPH',
   INCREMENT_INSERTIONS: 'GRAPHER:INCREMENT_INSERTIONS',
   UPDATE_WIP_GRAPH: 'GRAPHER:UPDATE_WIP_GRAPH',
-  // ADD_GRAPH_TO_CANVAS: 'GRAPHER:ADD_GRAPH_TO_CANVAS',
   LOG_ERROR: 'GRAPHER:LOG_ERROR',
 }
 
@@ -37,7 +36,6 @@ const initialState = {
   accountGraph: null,
   wipGraph: null,
   mode: grapherModes.main,
-  // mode: grapherModes.createDapp,
   graphs: {
     /**
      * uuid: Graph,
@@ -242,10 +240,17 @@ function selectGraphThunk (graphId) {
 
   return (dispatch, getState) => {
 
-    const grapher = getState().grapher
+    const state = getState()
+    const grapher = state.grapher
+
+    const newGraph = grapher.graphs[graphId]
 
     // select graph if it exists
-    if (grapher.graphs[graphId]) {
+    if (newGraph) {
+
+      if (state.dapps.selectedTemplateId && newGraph.get('type') !== 'dapp') {
+        dispatch(clearSelectedDappTemplate())
+      }
 
       if (grapher.mode === grapherModes.main) {
 

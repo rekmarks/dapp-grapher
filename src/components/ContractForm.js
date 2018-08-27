@@ -37,6 +37,23 @@ class ContractForm extends Component {
     fieldValues: {},
   }
 
+  componentDidMount () {
+
+    if (
+      this.props.selectedGraph.type === 'dapp' &&
+      Object.keys(this.props.fieldValues).length > 0
+    ) {
+      this.setState({ fieldValues: this.props.fieldValues })
+    }
+  }
+
+  componentWillUnmount () {
+
+    if (this.props.selectedGraph.type === 'dapp') {
+      this.props.storeFieldValues(this.state.fieldValues)
+    }
+  }
+
   render () {
 
     const { classes } = this.props
@@ -113,9 +130,55 @@ class ContractForm extends Component {
 
     event.preventDefault()
 
-    this.props.updateWipDappDeployment(
-      // TODO: 8-24
-    )
+    const wipDeployment = {
+      ...(
+        this.props.wipDappDeployment
+        ? this.props.wipDappDeployment
+        : {}
+      ),
+    }
+
+    wipDeployment[metaData.id] = {
+      contractName: metaData.abiName,
+      deploymentOrder: this.props.dappTemplate.deployments[metaData.id].deploymentOrder,
+      params: {
+        ...metaData.params,
+      },
+      outputs: {
+        ...metaData.outputs,
+      },
+    }
+
+    Object.values(wipDeployment[metaData.id].params).forEach(param => {
+
+      if (param.source) { // this parameter is a target
+
+        if (param.sourceParent === 'account') {
+          param.value = this.props.account
+        } else console.log('ignoring param source', param.source)
+      } else {
+        param.value = this.state.fieldValues[param.id]
+      }
+    })
+
+    Object.values(wipDeployment[metaData.id].outputs).forEach(output => {
+
+      if (output.target) {
+
+        if (!wipDeployment[metaData.id].children) {
+          wipDeployment[metaData.id].children = []
+        }
+
+        wipDeployment[metaData.id].children.push({
+          type: 'address',
+          param: output.target,
+          paramParent: output.targetParent,
+          deploymentOrder: this.props.dappTemplate.deployments[output.targetParent].deploymentOrder,
+        })
+      }
+    })
+
+    this.props.updateWipDappDeployment(wipDeployment)
     this.props.closeContractForm()
   }
 
@@ -155,7 +218,8 @@ class ContractForm extends Component {
       case 'dapp':
 
         // in the case of a dapp, a function id is selected in Grapher,
-        // by an event handler in the Joint paper
+        // by an event handler in the Joint paper and passed to
+        // this.props.selectedContractFunction
 
         if (selectedNode.type === contractGraphTypes.functions) {
           functionCall = true
@@ -219,7 +283,6 @@ class ContractForm extends Component {
 
     const nodes = this.props.selectedGraph.elements.nodes
     const edges = this.props.selectedGraph.elements.edges
-    const graphType = this.props.selectedGraph.type
     const functionId = this.props.selectedContractFunction
     const functionNodes = []
 
@@ -231,16 +294,10 @@ class ContractForm extends Component {
 
     const metaData = {
       params: {},
+      outputs: {},
       paramOrder: [],
     }
     const fields = []
-
-    if (graphType === 'dapp' && Object.keys(edges).length > 0) {
-      // TODO: 8-24
-      // Need to figure out which field values are determined by the
-      // graph and set them accordingly. This information is stored in
-      // the edges.
-    }
 
     functionNodes.forEach(node => {
 
@@ -251,16 +308,31 @@ class ContractForm extends Component {
 
         metaData.title = node.displayName
         metaData.abiName = node.abiName
+        metaData.id = node.id
 
       } else if (node.type === 'parameter') {
 
         const fieldType = parseSolidityType(node.abiType)
 
-        metaData.params[node.id] = {
+        const paramData = {
           id: node.id,
           abiName: node.abiName,
+          abiType: node.abiType,
           paramOrder: node.paramOrder,
+          parentForm: node.parent,
         }
+
+        Object.values(edges).forEach(edge => {
+
+          if (edge.target === node.id) {
+            paramData.edge = edge.id
+            paramData.source = edge.source
+            paramData.sourceParent = edge.sourceParent
+          }
+        })
+
+        metaData.params[node.id] = paramData
+
         metaData.paramOrder.push(node.id)
 
         switch (fieldType) {
@@ -273,14 +345,36 @@ class ContractForm extends Component {
                 id={node.id}
                 label={node.displayName}
                 className={this.props.classes.textField}
-                value={this.state.fieldValues[node.id] ? this.state.fieldValues[node.id] : ''}
+                value={
+                  paramData.source
+                  ? this.getSourcedFieldValue(edges[paramData.edge])
+                  : this.state.fieldValues[node.id]
+                    ? this.state.fieldValues[node.id]
+                    : ''
+                }
+                disabled={Boolean(paramData.source)}
                 onChange={this.handleInputChange(node.id)}
                 margin="normal"
               />
             )
+
+            break
         }
-      } else if (node.type === 'output') console.log('ContractForm ignoring output node') // TODO: change?
-      else console.warn('ContractForm: ignoring unknown node type: ' + node.type)
+      } else if (node.type === 'output') {
+
+        Object.values(edges).forEach(edge => {
+
+          if (edge.source === node.id) {
+            metaData.outputs[edge.id] = {
+              edge: edge.id,
+              target: edge.target,
+              targetParent: edge.targetParent,
+            }
+          }
+        })
+      } else {
+        console.warn('ContractForm: ignoring unknown node type: ' + node.type)
+      }
     })
 
     fields.sort((a, b) => {
@@ -292,12 +386,24 @@ class ContractForm extends Component {
 
     return {metaData, fields}
   }
+
+  getSourcedFieldValue = (edge) => {
+
+    // TODO: handle remaining possible value sources
+    if (edge.sourceParent === 'account') {
+      return 'Current Account Address'
+    }
+    if (edge.sourceAbiType === 'address') {
+      return 'Deployed Contract Address'
+    } else throw new Error('unknown field value')
+  }
 }
 
 export default withStyles(styles)(ContractForm)
 
 ContractForm.propTypes = {
   classes: PropTypes.object.isRequired,
+  account: PropTypes.string,
   contractAddress: PropTypes.string,
   callInstance: PropTypes.func,
   deployContract: PropTypes.func,
@@ -308,8 +414,10 @@ ContractForm.propTypes = {
   subHeading: PropTypes.string,
   selectedGraph: PropTypes.object,
   updateWipDappDeployment: PropTypes.func,
-  selectedDappTemplate:PropTypes.object,
-  wipDappDeployment:PropTypes.object,
+  dappTemplate: PropTypes.object,
+  wipDappDeployment: PropTypes.object,
+  fieldValues: PropTypes.object,
+  storeFieldValues: PropTypes.func,
 }
 
 /**

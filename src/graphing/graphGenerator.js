@@ -147,7 +147,7 @@ function getConstructorNodes (contractName, abi) {
   if (!constructorAbi.inputs || constructorAbi.inputs.length < 1) return {}
 
   const nodes = {}
-  for (const input of constructorAbi.inputs) {
+  constructorAbi.inputs.forEach((input, i) => {
 
     const inputId = contractName + ':constructor:' + input.name
 
@@ -158,9 +158,9 @@ function getConstructorNodes (contractName, abi) {
       abiType: input.type,
       parent: contractName,
       type: 'parameter',
-      // abi: input,
+      paramOrder: i,
     }
-  }
+  })
 
   // constructor output node
   const outputId = contractName + ':constructor:instance'

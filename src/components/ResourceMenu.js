@@ -58,10 +58,10 @@ export default class ResourceMenu extends Component {
       resources.top = (
         <List disablePadding>
           {
-            this.props.hasSelectedDappTemplate
+            this.props.selectedDappTemplateId
             ? <ListButton
                 disabled={!this.props.hasWipDeployment}
-                onClick={this.props.deployDapp}
+                onClick={() => this.props.deployDapp('Crowdsale')} // TODO: hardcoded
                 icon={(<CloudUploadIcon />)}
                 displayText="Deploy Dapp" />
             : null
@@ -114,7 +114,10 @@ export default class ResourceMenu extends Component {
             dapps={this.props.dapps}
             setGrapherMode={this.props.setGrapherMode}
             selectGraph={this.props.selectGraph}
-            selectDappTemplate={this.props.selectDappTemplate} />
+            selectTemplate={this.props.selectDappTemplate}
+            selectDeployed={this.props.selectDeployedDapp}
+            selectedTemplateId={this.props.selectedDappTemplateId}
+            selectedDeployedId={this.props.selectedDeployedDappId} />
         </NestedList>
       )
     } else if (this.props.grapherMode === grapherModes.createDapp) {
@@ -229,7 +232,9 @@ ResourceMenu.propTypes = {
   deployDapp: PropTypes.func,
   hasWipDeployment: PropTypes.bool,
   selectDappTemplate: PropTypes.func,
-  hasSelectedDappTemplate: PropTypes.bool,
+  selectedDappTemplateId: PropTypes.string,
+  selectedDeployedDappId: PropTypes.string,
+  selectDeployedDapp: PropTypes.func,
 }
 
 /**

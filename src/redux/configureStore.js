@@ -6,14 +6,12 @@ import thunkMiddleware from 'redux-thunk'
 
 import dappGrapher, { initialState } from './reducers/root'
 import { contractsExcludeKeys } from './reducers/contracts'
-import { dappsExcludeKeys } from './reducers/dapps'
 import { grapherExcludeKeys } from './reducers/grapher'
 
 const loggerMiddleware = createLogger()
 
 const excludeKeys = [].concat(
   contractsExcludeKeys,
-  dappsExcludeKeys,
   grapherExcludeKeys
 )
 
@@ -28,7 +26,7 @@ const enhancer = compose(
     thunkMiddleware,
     loggerMiddleware
   ),
-  persistState(['contracts', 'dapps', 'grapher.graphs'], persistStateConfig)
+  persistState(['contracts', 'dapps.templates', 'grapher.graphs'], persistStateConfig)
 )
 
 export default function configureStore () {

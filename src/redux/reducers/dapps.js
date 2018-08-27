@@ -1,10 +1,14 @@
 
 import uuid from 'uuid/v4'
 
-import { enqueueContractDeployments, deployEnqueuedContracts } from './contracts'
+import {
+  enqueueContractDeployments,
+  deployEnqueuedContracts,
+} from './contracts'
+
+import { selectGraph } from './grapher'
 
 import { contractGraphTypes } from '../../graphing/graphGenerator'
-// import { deleteGraph } from './grapher'
 
 const ACTIONS = {
   ADD_TEMPLATE: 'DAPPS:ADD_TEMPLATE',
@@ -15,11 +19,11 @@ const ACTIONS = {
   SELECT_TEMPLATE: 'DAPPS:SELECT_TEMPLATE',
   UPDATE_WIP_DEPLOYMENT: 'DAPPS:UPDATE_WIP_DEPLOYMENT',
   CLEAR_SELECTED_TEMPLATE: 'DAPPS:CLEAR_SELECTED_TEMPLATE',
+  SELECT_DEPLOYED: 'DAPPS:SELECT_DEPLOYED',
   // TODO
   ADD_DEPLOYED: 'DAPPS:ADD_DEPLOYED',
   ADD_DEPLOYED_SUCCESS: 'DAPPS:ADD_DEPLOYED_SUCCESS',
   ADD_DEPLOYED_FAILURE: 'DAPPS:ADD_DEPLOYED_FAILURE',
-  SELECT_DEPLOYED: 'DAPPS:SELECT_DEPLOYED',
   REMOVE_DEPLOYED: 'DAPPS:REMOVE_DEPLOYED',
   DELETE_TEMPLATE: 'DAPPS:DELETE_TEMPLATE',
   DELETE_ALL_TEMPLATES: 'DAPPS:DELETE_ALL_TEMPLATES',
@@ -30,12 +34,12 @@ const initialState = {
   ready: true,
   selectedTemplateId: null,
   wipDeployment: null,
-  selectedDeployedId: null, // actions todo
+  selectedDeployedId: null, // TODO: actions
   templates: {
     /**
      * uuid: {
      *   dappGraphId: _uuid,
-     *   deploymentOrder: [],
+     *   deployments: {},
      *   parameterValues: {
      *     __uuid: {
      *       id: __uuid,
@@ -51,19 +55,15 @@ const initialState = {
   },
 }
 
-const excludeKeys = [
-  'errors',
-  'ready',
-]
-
 export {
   addTemplateThunk as addDappTemplate,
   getSelectTemplateAction as selectDappTemplate,
   getUpdateWipDeploymentAction as updateWipDeployment,
   deployThunk as deployDapp,
   deploymentResultThunk as dappDeploymentResult,
+  selectDeployedThunk as selectDeployedDapp,
+  getClearSelectedTemplateAction as clearSelectedDappTemplate,
   initialState as dappsInitialState,
-  excludeKeys as dappsExcludeKeys,
 }
 
 export default function reducer (state = initialState, action) {
@@ -83,6 +83,7 @@ export default function reducer (state = initialState, action) {
       return {
         ...state,
         selectedTemplateId: action.templateId,
+        selectedDeployedId: null,
       }
 
     case ACTIONS.UPDATE_WIP_DEPLOYMENT:
@@ -124,7 +125,8 @@ export default function reducer (state = initialState, action) {
             deployed: {
               ...state.templates[action.payload.templateId].deployed,
 
-              [action.payload.deployedId]: {
+              [action.payload.id]: {
+                id: action.payload.id,
                 displayName: action.payload.displayName,
                 account: action.payload.account,
                 networkId: action.payload.networkId,
@@ -142,6 +144,12 @@ export default function reducer (state = initialState, action) {
           state.errors
           ? state.errors.concat([action.error])
           : [action.error],
+      }
+
+    case ACTIONS.SELECT_DEPLOYED:
+      return {
+        ...state,
+        selectedDeployedId: action.deployedId,
       }
 
     default:
@@ -207,6 +215,26 @@ function getDeploymentFailureAction (error) {
   }
 }
 
+function getSelectDeployedAction (deployedId) {
+  return {
+    type: ACTIONS.SELECT_DEPLOYED,
+    deployedId: deployedId,
+  }
+}
+
+function selectDeployedThunk (deployedId) {
+
+  return (dispatch, getState) => {
+
+    const dapps = getState().dapps
+
+    dispatch(getSelectDeployedAction(deployedId))
+    dispatch(
+      selectGraph(dapps.templates[dapps.selectedTemplateId].dappGraphId)
+    )
+  }
+}
+
 /**
  * Only handles constructor contract nodes as of now.
  *
@@ -217,7 +245,7 @@ function addTemplateThunk (graphId, dappGraph, templateName = null) {
 
   return (dispatch, getState) => {
 
-    const deploymentOrder = getDappGraphDeploymentOrder(dappGraph)
+    const deployments = getDappGraphDeploymentOrder(dappGraph)
 
     const nodes = dappGraph.elements.nodes
 
@@ -243,7 +271,7 @@ function addTemplateThunk (graphId, dappGraph, templateName = null) {
     dispatch(getAddTemplateAction({
       id: uuid(),
       dappGraphId: graphId,
-      deploymentOrder: deploymentOrder,
+      deployments: deployments,
       parameterValues: parameterValues,
       name: (
         templateName || (Object.keys(getState().dapps.templates).length + 1).toString()
@@ -257,12 +285,23 @@ function deploymentResultThunk (success, data) {
 
   return (dispatch, getState) => {
 
-    dispatch(getClearSelectedTemplateAction())
+    let deployedId
+    if (success) {
 
-    if (success) dispatch(getDeploymentSuccessAction(data))
-    else dispatch(getDeploymentFailureAction(data))
+      deployedId = uuid()
+
+      dispatch(getDeploymentSuccessAction({
+        ...data,
+        id: deployedId,
+      }))
+    } else {
+
+      dispatch(getDeploymentFailureAction(data))
+    }
 
     dispatch(getEndDeploymentAction())
+
+    if (success) dispatch(selectDeployedThunk(deployedId))
   }
 }
 
@@ -385,6 +424,17 @@ function getDappGraphDeploymentOrder (dappGraph) {
 
   if (Object.keys(edges).length !== 0) throw new Error('cyclic dependencies')
 
+  const deployments = {}
+
   // return deploymentOrder, without account node
-  return deploymentOrder.filter(node => node.id !== 'account')
+  deploymentOrder.filter(node => node.id !== 'account').forEach((node, i) => {
+
+    deployments[node.id] = {
+      ...node,
+      deploymentOrder: i,
+      params: {},
+    }
+  })
+
+  return deployments
 }

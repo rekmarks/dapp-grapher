@@ -3,6 +3,8 @@ const ACTIONS = {
   CLOSE_APP_MODAL: 'UI:APP_MODAL:CLOSE',
   OPEN_APP_MODAL: 'UI:APP_MODAL:OPEN',
   SELECT_CONTRACT_FUNCTION: 'UI:CONTRACT_FORM:SELECT_CONTRACT_FUNCTION',
+  SAVE_CONTRACT_FORM_FIELD_VALUES: 'UI:CONTRACT_FORM:SAVE_FIELD_VALUES',
+  DELETE_CONTRACT_FORM_FIELD_VALUES: 'UI:CONTRACT_FORM:DELETE_FIELD_VALUES',
 }
 
 const initialState = {
@@ -11,6 +13,7 @@ const initialState = {
   },
   contractForm: {
     selectedFunction: null,
+    fieldValues: {},
   },
 }
 
@@ -18,6 +21,8 @@ export {
   getCloseAppModalAction as closeAppModal,
   getOpenAppModalAction as openAppModal,
   getSelectContractFunctionAction as selectContractFunction,
+  getSaveContractFormFieldValuesAction as saveContractFormFieldValues,
+  getDeleteContractFormFieldValuesAction as deleteContractFormFieldValues,
   initialState as uiInitialState,
 }
 
@@ -42,7 +47,29 @@ export default function reducer (state = initialState, action) {
       return {
         ...state,
         contractForm: {
+          ...state.contractForm,
           selectedFunction: action.functionId,
+        },
+      }
+
+    case ACTIONS.SAVE_CONTRACT_FORM_FIELD_VALUES:
+      return {
+        ...state,
+        contractForm: {
+          ...state.contractForm,
+          fieldValues: {
+            ...state.contractForm.fieldValues,
+            ...action.fieldValues,
+          },
+        },
+      }
+
+    case ACTIONS.DELETE_CONTRACT_FORM_FIELD_VALUES:
+      return {
+        ...state,
+        contractForm: {
+          ...state.contractForm,
+          fieldValues: {},
         },
       }
 
@@ -71,5 +98,18 @@ function getSelectContractFunctionAction (functionId) {
   return {
     type: ACTIONS.SELECT_CONTRACT_FUNCTION,
     functionId: functionId,
+  }
+}
+
+function getSaveContractFormFieldValuesAction (fieldValues) {
+  return {
+    type: ACTIONS.SAVE_CONTRACT_FORM_FIELD_VALUES,
+    fieldValues: fieldValues,
+  }
+}
+
+function getDeleteContractFormFieldValuesAction () {
+  return {
+    type: ACTIONS.DELETE_CONTRACT_FORM_FIELD_VALUES,
   }
 }
