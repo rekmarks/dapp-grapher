@@ -52,8 +52,16 @@ class DappResourceList extends Component {
   }
 
   handleDeployNewClick = (templateId, graphId) => {
-    this.props.selectDappTemplate(templateId)
+    this.props.selectTemplate(templateId)
     this.props.selectGraph(graphId)
+  }
+
+  handleDeployedClick = (templateId, deployedId) => {
+
+    if (this.props.selectedTemplateId !== templateId) {
+      this.props.selectTemplate(templateId)
+    }
+    this.props.selectDeployed(deployedId)
   }
 
   getTemplateListItems = dapps => {
@@ -87,7 +95,7 @@ class DappResourceList extends Component {
           >
             {
               hasDeployed
-              ? this.getDeployedListItems(dapps[id].deployed)
+              ? this.getDeployedListItems(id, dapps[id].deployed)
               : null
             }
           </NestedList>
@@ -96,8 +104,23 @@ class DappResourceList extends Component {
     })
   }
 
-  getDeployedListItems = deployed => {
+  getDeployedListItems = (templateId, deployed) => {
 
+    if (!deployed) return null
+
+    // TODO: sort?
+    return Object.values(deployed).map(item => {
+
+      return (
+        <ListButton
+          key={item.id}
+          disabled={item.id === this.props.selectedTemplateId}
+          displayText={item.displayName}
+          inset={true}
+          primaryTypographyProps={{ noWrap: true }}
+          onClick={() => this.handleDeployedClick(templateId, item.id)} />
+      )
+    })
   }
 }
 
@@ -106,7 +129,10 @@ DappResourceList.propTypes = {
   dapps: PropTypes.object.isRequired,
   setGrapherMode: PropTypes.func,
   selectGraph: PropTypes.func,
-  selectDappTemplate: PropTypes.func,
+  selectTemplate: PropTypes.func,
+  selectDeployed: PropTypes.func,
+  selectedDeployedId: PropTypes.string,
+  selectedTemplateId: PropTypes.string,
 }
 
 export default withStyles(styles)(DappResourceList)

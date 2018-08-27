@@ -39,6 +39,7 @@ import {
   deployDapp,
   selectDappTemplate,
   updateWipDeployment,
+  selectDeployedDapp,
 } from '../redux/reducers/dapps'
 
 import {
@@ -59,6 +60,8 @@ import {
   closeAppModal,
   openAppModal,
   selectContractFunction,
+  saveContractFormFieldValues,
+  deleteContractFormFieldValues,
 } from '../redux/reducers/ui'
 
 import { getWeb3 } from '../redux/reducers/web3'
@@ -97,6 +100,28 @@ class App extends Component {
     this.props.logRenderError(error, errorInfo)
   }
 
+  componentDidUpdate () {
+
+    let selectedGraph = null
+
+    // conversion from immutable data
+    if (this.props.selectedGraphObject) {
+      selectedGraph = this.props.selectedGraphObject.toJS()
+    }
+
+    // delete Contract Form field values from store if the selected
+    // graph's type is a dapp and there are field values to delete
+    if (
+      (!selectedGraph || selectedGraph.type !== 'dapp') &&
+      (
+        Boolean(this.props.contractFormFieldValues) &&
+        Object.keys(this.props.contractFormFieldValues).length > 0
+      )
+    ) {
+      this.props.deleteContractFormFieldValues()
+    }
+  }
+
   render () {
 
     const classes = this.props.classes
@@ -104,6 +129,7 @@ class App extends Component {
     let selectedGraph = null
     let insertionGraph = null
 
+    // conversion from immutable data
     if (this.props.selectedGraphObject) {
 
       selectedGraph = this.props.selectedGraphObject.toJS()
@@ -198,9 +224,11 @@ class App extends Component {
                   : false
                 }
                 selectDappTemplate={this.props.selectDappTemplate}
-                hasSelectedDappTemplate={Boolean(this.props.selectedDappTemplate)}
+                selectedDappTemplateId={this.props.selectedDappTemplateId}
                 hasWipDeployment={Boolean(this.props.wipDappDeployment)}
-                deployDapp={this.props.deployDapp} />
+                deployDapp={this.props.deployDapp}
+                selectDeployedDapp={this.props.selectDeployedDapp}
+                selectedDeployedDappId={this.props.selectedDeployedDappId} />
           </Drawer>
           <main className="App-graph-container" ref={this.graphContainerRef} >
             {
@@ -216,7 +244,7 @@ class App extends Component {
                   openContractForm={this.props.openAppModal}
                   selectedGraph={selectedGraph}
                   selectedGraphId={this.props.selectedGraphId}
-                  updateWipGraph={this.props.updateWipGraph}
+                  storeWipGraph={this.props.updateWipGraph}
                   wipGraph={this.props.wipGraph}
                   selectContractFunction={this.props.selectContractFunction} />
               : (
@@ -250,6 +278,7 @@ class App extends Component {
                          button: classes.button,
                          nested: classes.nested,
                       }}
+                      account={this.props.account}
                       contractAddress={this.props.selectedContractAddress}
                       selectedGraph={selectedGraph}
                       deployContract={this.props.deployContract}
@@ -260,7 +289,15 @@ class App extends Component {
                       heading={selectedGraph.name}
                       wipDappDeployment={this.props.wipDappDeployment}
                       updateWipDappDeployment={this.props.updateWipDappDeployment}
-                      selectedDappTemplate={this.props.selectedDappTemplate} />
+                      dappTemplate={
+                        this.props.selectedDappTemplateId
+                        ? this.props.dapps[this.props.selectedDappTemplateId]
+                        : null
+                      }
+                      fieldValues={this.props.contractFormFieldValues}
+                      storeFieldValues={
+                        this.props.saveContractFormFieldValues
+                      } />
                   )
                 : null
               }
@@ -288,9 +325,10 @@ App.propTypes = {
   deployDapp: PropTypes.func,
   selectDappTemplate: PropTypes.func,
   updateWipDappDeployment: PropTypes.func,
-  selectedDeployedDapp:PropTypes.object, // TODO
-  selectedDappTemplate:PropTypes.object,
-  wipDappDeployment:PropTypes.object,
+  selectDeployedDapp: PropTypes.func,
+  selectedDeployedDappId: PropTypes.string,
+  selectedDappTemplateId: PropTypes.string,
+  wipDappDeployment: PropTypes.object,
   // grapher
   accountGraph: PropTypes.object,
   createGraph: PropTypes.func,
@@ -316,6 +354,9 @@ App.propTypes = {
   openAppModal: PropTypes.func,
   selectContractFunction: PropTypes.func,
   selectedContractFunction: PropTypes.string,
+  contractFormFieldValues: PropTypes.object,
+  saveContractFormFieldValues: PropTypes.func,
+  deleteContractFormFieldValues: PropTypes.func,
   // web3
   account: PropTypes.string,
   networkId: PropTypes.string,
@@ -338,13 +379,12 @@ function mapStateToProps (state) {
     selectedContractAddress: state.contracts.selectedAddress,
     // dapps
     dapps: state.dapps.templates,
-    selectedDeployedDapp:
+    selectedDappTemplateId: state.dapps.selectedTemplateId,
+    selectedDeployedDappId:
+      // a deployed id should only ever be selected if a template is also
+      // selected, but, defensive programming
       state.dapps.selectedTemplateId && state.dapps.selectedDeployedId
-      ? state.dapps.templates[state.dapps.selectedTemplateId][state.dapps.selectedDeployedId]
-      : null,
-    selectedDappTemplate:
-      state.dapps.selectedTemplateId
-      ? state.dapps.templates[state.dapps.selectedTemplateId]
+      ? state.dapps.selectedDeployedId
       : null,
     wipDappDeployment: state.dapps.wipDeployment,
     // grapher
@@ -360,6 +400,7 @@ function mapStateToProps (state) {
     // ui
     appModal: state.ui.appModal.open,
     selectedContractFunction: state.ui.contractForm.selectedFunction,
+    contractFormFieldValues: state.ui.contractForm.fieldValues,
     // web3
     account: state.web3.account,
     networkId: state.web3.networkId,
@@ -385,6 +426,7 @@ function mapDispatchToProps (dispatch) {
       dispatch(selectDappTemplate(dappTemplateId)),
     updateWipDappDeployment: wipDeployment =>
       dispatch(updateWipDeployment(wipDeployment)),
+    selectDeployedDapp: deployedId => dispatch(selectDeployedDapp(deployedId)),
     // grapher
     createGraph: params => dispatch(createGraph(params)),
     deleteGraph: graphId => dispatch(deleteGraph(graphId)),
@@ -399,6 +441,10 @@ function mapDispatchToProps (dispatch) {
     openAppModal: () => dispatch(openAppModal()),
     selectContractFunction: func => dispatch(selectContractFunction(func)),
     setGrapherMode: contentKey => dispatch(setGrapherMode(contentKey)),
+    saveContractFormFieldValues: fieldValues =>
+      dispatch(saveContractFormFieldValues(fieldValues)),
+    deleteContractFormFieldValues: () =>
+      dispatch(deleteContractFormFieldValues()),
     // web3
     getWeb3: () => dispatch(getWeb3()),
   }

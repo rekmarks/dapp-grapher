@@ -71,6 +71,7 @@ export default class Grapher extends Component {
 
     } else if (this.props.grapherMode === grapherModes.createDapp) {
 
+      // if this condition is true,
       if (!this.state.creatingDapp) {
 
         const wipGraph = { ...this.props.accountGraph }
@@ -89,7 +90,7 @@ export default class Grapher extends Component {
 
         wipGraph.type = 'dapp'
 
-        this.props.updateWipGraph(wipGraph)
+        this.props.storeWipGraph(wipGraph)
       }
     }
   }
@@ -218,7 +219,7 @@ export default class Grapher extends Component {
       { setsLayout: false }
     )
 
-    this.props.updateWipGraph(wipGraph)
+    this.props.storeWipGraph(wipGraph)
   }
 
   /**
@@ -275,7 +276,7 @@ export default class Grapher extends Component {
 
     wipGraph.elements.edges[edge.id] = edge
 
-    this.props.updateWipGraph(wipGraph)
+    this.props.storeWipGraph(wipGraph)
   }
 
   removeWipGraphEdge = edgeId => {
@@ -284,7 +285,7 @@ export default class Grapher extends Component {
 
     delete wipGraph.elements.edges[edgeId]
 
-    this.props.updateWipGraph(wipGraph)
+    this.props.storeWipGraph(wipGraph)
   }
 }
 
@@ -299,6 +300,6 @@ Grapher.propTypes = {
   selectContractFunction: PropTypes.func,
   selectedGraph: PropTypes.object,
   selectedGraphId: PropTypes.string,
-  updateWipGraph: PropTypes.func,
+  storeWipGraph: PropTypes.func,
   wipGraph: PropTypes.object,
 }
