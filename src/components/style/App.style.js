@@ -80,6 +80,9 @@ const appStyles = theme => ({
   listItemText: {
     paddingLeft: 0,
   },
+  undocked: {
+    width: 'auto',
+  },
 })
 
 export default appStyles

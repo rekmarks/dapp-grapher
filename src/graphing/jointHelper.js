@@ -115,7 +115,7 @@ function addJointElements (jointGraph, dappGraph, meta) {
   }
 
   jointGraph.addCells(cells)
-  if (meta.setsLayout) setLayout(jointGraph)
+  if (meta.setsLayout) setLayout(jointGraph, meta.layoutOptions)
 }
 
 function generateAccountElement (accountNode, accountChildren) {
@@ -228,10 +228,10 @@ function setDappCells (jointGraph, dappGraph, meta) {
     cells.push(constructorElement)
   })
 
-  // add elements to graph
+  // add elements (nodes) to graph
   jointGraph.addCells(cells)
 
-  // get and add links to graph
+  // get and add links to Joint graph per dapp graph edges
   Object.values(graphEdges).forEach(edge => {
     connect(
       jointGraph,
@@ -267,14 +267,17 @@ function generateFunctionsElements (dappGraph) {
     const funcElement = generateAtomic(
       node.displayName,
       {
-        size: { width: 75, height: 150 },
+        size: { width: 175, height: 100 },
         _dappGrapher: {
           id: node.id,
           abiName: node.abiName,
           abiType: node.abiType,
         },
       },
-      null,
+      {
+        '.label': { 'text-anchor': 'middle', 'ref-y': 40 },
+        '.body': { 'rx': 10, 'ry': 10 },
+      },
       ioNodes.length > 0 ? ioNodes : null
     )
     contractElement.embed(funcElement)
@@ -490,11 +493,11 @@ function connect (graph, source, sourcePort, target, targetPort) {
   link.addTo(graph).reparent()
 }
 
-function setLayout (graph) {
+function setLayout (graph, options={}) {
 
   joint.layout.DirectedGraph.layout(graph, {
     setLinkVertices: false,
-    rankDir: 'LR', // left to right
+    rankDir: options.rankDir ? options.rankDir : 'LR', // left to right
     rankSep: 100,
     edgeSep: 25,
     marginX: 300, // TODO: set dynamically

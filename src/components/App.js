@@ -187,6 +187,9 @@ class App extends Component {
                 classes.drawerPaper,
                 !this.state.drawerOpen && classes.drawerPaperClose
               ),
+              docked: classNames(
+                this.state.drawerOpen && classes.undocked,
+              ),
             }}
             open={this.state.drawerOpen}
           >

@@ -65,7 +65,17 @@ class ContractForm extends Component {
           variant="title"
           id="modal-title"
         >
-          {this.props.heading ? this.props.heading : ''}
+          {
+            this.props.heading ||
+            (
+              this.props.selectedGraph.elements.nodes[this.props.selectedContractFunction].displayName
+            ) ||
+            ''
+            // ? this.props.heading
+            // : this.props.selectedContractFunction
+            //   ? this.props.selectedContractFunction
+            //   : ''
+          }
         </Typography>
         {
           this.props.subHeading

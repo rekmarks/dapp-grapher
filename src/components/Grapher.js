@@ -62,8 +62,17 @@ export default class Grapher extends Component {
 
       if (this.props.selectedGraph) {
 
+        const meta = { setsLayout: true }
+
+        if (this.props.selectedGraph.type === contractGraphTypes.functions) {
+          meta.layoutOptions = {}
+          meta.layoutOptions.rankDir = 'TB'
+        }
+
         jh.addJointElements(
-          this.state.jointGraph, this.props.selectedGraph, { setsLayout: true }
+          this.state.jointGraph,
+          this.props.selectedGraph,
+          meta
         )
       }
 
@@ -85,7 +94,7 @@ export default class Grapher extends Component {
         jh.addJointElements(
           this.state.jointGraph,
           wipGraph,
-          { setsLayout: true }
+          { setsLayout: false }
         )
 
         wipGraph.type = 'dapp'
@@ -175,6 +184,9 @@ export default class Grapher extends Component {
     )
   }
 
+  /**
+   * Inserts insertionGraph elements into wipGraph and saves wipGraph to store
+   */
   updateWipGraph = () => {
 
     if (!this.props.wipGraph) return
@@ -235,14 +247,17 @@ export default class Grapher extends Component {
     if (this.props.grapherMode === grapherModes.main) {
 
       if (functionId) this.props.selectContractFunction(functionId)
-
       this.props.openContractForm()
+
     } else if (this.props.grapherMode === grapherModes.createDapp) {
       // do nothing for now
     }
   }
 
-
+  /**
+   * Adds an edge to the current wipGraph and saves the wipGraph to store
+   * @param  {object} edge the edge to be added]
+   */
   addWipGraphEdge = edge => {
 
     const wipGraph = { ...this.props.wipGraph }
@@ -279,6 +294,10 @@ export default class Grapher extends Component {
     this.props.storeWipGraph(wipGraph)
   }
 
+  /**
+   * Removes an edge from the wipGraph and saves the wipGraph to store
+   * @param  {string} edgeId the id of the edge to be deleted
+   */
   removeWipGraphEdge = edgeId => {
 
     const wipGraph = { ...this.props.wipGraph }

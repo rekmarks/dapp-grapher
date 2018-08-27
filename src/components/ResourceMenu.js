@@ -108,7 +108,6 @@ export default class ResourceMenu extends Component {
         <NestedList
           icon={(<AppsIcon />)}
           displayText="Dapps"
-          isOpen
         >
           <DappResourceList
             dapps={this.props.dapps}
