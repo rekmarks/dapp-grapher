@@ -493,7 +493,7 @@ function connect (graph, source, sourcePort, target, targetPort) {
   link.addTo(graph).reparent()
 }
 
-function setLayout (graph, options={}) {
+function setLayout (graph, options = {}) {
 
   joint.layout.DirectedGraph.layout(graph, {
     setLinkVertices: false,
