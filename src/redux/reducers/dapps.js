@@ -1,12 +1,18 @@
 
 import uuid from 'uuid/v4'
 
+// reducer imports
+
 import {
   enqueueContractDeployments,
   deployEnqueuedContracts,
 } from './contracts'
 
 import { selectGraph } from './grapher'
+
+import { addSnackbarNotification } from './ui'
+
+// misc imports
 
 import { contractGraphTypes } from '../../graphing/graphGenerator'
 
@@ -245,7 +251,7 @@ function addTemplateThunk (graphId, dappGraph, templateName = null) {
 
   return (dispatch, getState) => {
 
-    const deployments = getDappGraphDeploymentOrder(dappGraph)
+    const contracts = getDappGraphDeploymentOrder(dappGraph)
 
     const nodes = dappGraph.elements.nodes
 
@@ -271,9 +277,9 @@ function addTemplateThunk (graphId, dappGraph, templateName = null) {
     dispatch(getAddTemplateAction({
       id: uuid(),
       dappGraphId: graphId,
-      deployments: deployments,
+      contracts: contracts,
       parameterValues: parameterValues,
-      name: (
+      displayName: (
         templateName || (Object.keys(getState().dapps.templates).length + 1).toString()
       ),
       deployed: {},
@@ -290,13 +296,25 @@ function deploymentResultThunk (success, data) {
 
       deployedId = uuid()
 
+      dispatch(
+        addSnackbarNotification(
+          data.displayName + ' — Dapp deployment successful!',
+          6000
+        )
+      )
       dispatch(getDeploymentSuccessAction({
         ...data,
         id: deployedId,
       }))
     } else {
 
-      dispatch(getDeploymentFailureAction(data))
+      dispatch(
+        addSnackbarNotification(
+          data.displayName + ' — Dapp deployment failed. See logs.',
+          12000
+        )
+      )
+      dispatch(getDeploymentFailureAction(data.error))
     }
 
     dispatch(getEndDeploymentAction())
@@ -306,7 +324,7 @@ function deploymentResultThunk (success, data) {
 }
 
 /**
- * ASYNCHRONOUS ACITON CREATORS
+ * ASYNCHRONOUS ACTION CREATORS
  */
 
 /**
@@ -438,3 +456,35 @@ function getDappGraphDeploymentOrder (dappGraph) {
 
   return deployments
 }
+
+/**
+ * Converts a template dapp graph into a deployed dapp graph for use with
+ * a deployed dapp
+ * @param  {object} templateGraph     the template's dapp graph
+ * @param  {object} deployedDapp      the deployed dapp object
+ * @param  {object} deployedContracts the deployed contract instances
+ *                                    associated with the deployed dapp
+ * @return {object}                   a graph of the deployed dapp
+
+function getDeployedDappGraph (templateGraph, deployedDapp, deployedContracts) {
+
+  const deployedGraph = { ...templateGraph }
+
+  deployedGraph.deployed = true
+
+  deployedGraph.elements.nodes.forEach(node => {
+
+    if (Object.values(contractGraphTypes).includes(node.type)) {
+
+      node.deployedAddress =
+    }
+    else if (node.type === 'parameter') {
+
+    }
+    else if (node.type === 'output') {
+
+    }
+    else console.warn('getDeployedDappGraph: unknown node type: ' + node.type)
+  })
+}
+*/

@@ -353,7 +353,7 @@ function createGraphThunk (params) {
   }
 }
 
-function saveWipGraphThunk () {
+function saveWipGraphThunk (templateName) {
 
   return (dispatch, getState) => {
 
@@ -362,7 +362,7 @@ function saveWipGraphThunk () {
     if (!wipGraph.id) throw new Error('wipGraph has no id')
 
     dispatch(getSaveGraphAction(wipGraph.id, fromJS(wipGraph)))
-    dispatch(addDappTemplate(wipGraph.id, wipGraph))
+    dispatch(addDappTemplate(wipGraph.id, wipGraph, templateName))
   }
 }
 

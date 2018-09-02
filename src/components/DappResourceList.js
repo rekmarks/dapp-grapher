@@ -78,7 +78,7 @@ class DappResourceList extends Component {
         <NestedList
           key={id}
           icon={(<ExtensionIcon />)}
-          displayText={dapps[id].name}
+          displayText={dapps[id].displayName}
           buttonPadding={spacingUnit * 4}
         >
           <ListButton
@@ -118,7 +118,8 @@ class DappResourceList extends Component {
           displayText={item.displayName}
           inset={true}
           primaryTypographyProps={{ noWrap: true }}
-          onClick={() => this.handleDeployedClick(templateId, item.id)} />
+          onClick={() => this.handleDeployedClick(templateId, item.id)}
+          toolTip={item.displayName} />
       )
     })
   }

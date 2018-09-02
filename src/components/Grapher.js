@@ -5,9 +5,16 @@ import joint from 'jointjs'
 import svgPanZoom from 'svg-pan-zoom'
 import uuid from 'uuid/v4'
 
+import { grapherModes } from '../redux/reducers/grapher'
+
 import { contractGraphTypes } from '../graphing/graphGenerator'
 import jh from '../graphing/jointHelper'
-import { grapherModes } from '../redux/reducers/grapher'
+
+/**
+ * TODO
+ * There's a significant amount of application logic in this component that
+ * should be moved to redux thunks if possible
+ */
 
 export default class Grapher extends Component {
 
@@ -247,6 +254,7 @@ export default class Grapher extends Component {
     if (this.props.grapherMode === grapherModes.main) {
 
       if (functionId) this.props.selectContractFunction(functionId)
+
       this.props.openContractForm()
 
     } else if (this.props.grapherMode === grapherModes.createDapp) {

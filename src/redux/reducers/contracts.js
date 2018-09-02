@@ -6,13 +6,21 @@ import {
   callInstance,
 } from 'chain-end'
 
-import { contractGraphTypes as graphTypes } from '../../graphing/graphGenerator'
+// reducer imports
 
 import {
   dappDeploymentResult,
 } from './dapps'
 
 import { deleteGraph } from './grapher'
+
+import { addSnackbarNotification } from './ui'
+
+// misc imports
+
+import { contractGraphTypes as graphTypes } from '../../graphing/graphGenerator'
+
+import { getDisplayAddress } from '../../utils'
 
 const ACTIONS = {
   ADD_CONTRACT_TYPE: 'CONTRACTS:ADD_CONTRACT_TYPE',
@@ -25,7 +33,6 @@ const ACTIONS = {
   DEPLOYMENT_SUCCESS: 'CONTRACTS:DEPLOYMENT_SUCCESS',
   DEPLOYMENT_FAILURE: 'CONTRACTS:DEPLOYMENT_FAILURE',
   ENQUEUE_DEPLOYMENTS: 'CONTRACTS:ENQUEUE_DEPLOYMENTS',
-  // DEQUEUE_DEPLOYMENT: 'CONTRACTS:DEQUEUE_DEPLOYMENT',
   RESET_DEPLOYMENT_QUEUE: 'CONTRACTS:RESET_DEPLOYMENT_QUEUE',
   ADD_DAPP_ID: 'CONTRACTS:ADD_DAPP_ID', // TODO
   REMOVE_DAPP_ID: 'CONTRACTS:REMOVE_DAPP_ID', // TODO
@@ -185,6 +192,7 @@ export default function reducer (state = initialState, action) {
               constructorParams: action.payload.constructorParams,
               truffleContract: action.payload.truffleContract,
               dappTemplateIds: action.payload.dappTemplateIds || [],
+              templateNodeId: action.payload.templateNodeId,
             },
           },
         },
@@ -510,17 +518,32 @@ function deployThunk (contractName, constructorParams) {
       return
     }
 
-    const success = Boolean(
-      await deployContract(
-        dispatch,
-        state.web3,
-        state.contracts.types,
-        contractName,
-        constructorParams
-      )
+    dispatch(addSnackbarNotification(
+     'Deploying contract: ' + contractName,
+     15000
+    ))
+
+    const result = await deployContract(
+      dispatch,
+      state.web3,
+      state.contracts.types,
+      contractName,
+      constructorParams
     )
 
-    if (success) { dispatch(getEndDeploymentAction()) }
+    if (result) {
+      dispatch(addSnackbarNotification(
+        contractName + ' successfully deployed at: ' +
+        getDisplayAddress(result.address),
+        6000
+      ))
+      dispatch(getEndDeploymentAction())
+    } else {
+      dispatch(addSnackbarNotification(
+        'Deployment of ' + contractName + ' failed. See logs.',
+        12000
+      ))
+    }
   }
 }
 
@@ -556,9 +579,21 @@ function deployQueueThunk (dappDisplayName, dappTemplateId) {
       contractInstances: [],
     }
 
+    const failure = {
+      index: null,
+      name: null,
+    }
+
     for (let i = 0; i < queue.length; i++) {
 
       const deployment = queue[i]
+
+      dispatch(addSnackbarNotification(
+        getQueueDeploymentMessage(
+          dappDisplayName, i, queue.length, deployment.contractName
+        ),
+        15000
+      ))
 
       const result = await deployContract(
         dispatch,
@@ -566,51 +601,67 @@ function deployQueueThunk (dappDisplayName, dappTemplateId) {
         state.contracts.types,
         deployment.contractName,
         deployment.params,
-        dappTemplateId
+        {
+          dappTemplateId,
+          nodeId: deployment.nodeId,
+        }
       )
 
       if (result) {
 
         dappData.contractInstances.push(result.address)
 
-        if (deployment.children) {
+        // if this deployment has any dependents/children
+        if (deployment.childParams) {
 
-          deployment.children.forEach(args => {
+          // iterate over them (they are set in ContractForm)
+          deployment.childParams.forEach(childParam => {
 
-            const child = queue[args.deploymentOrder]
-            if (args.type === 'address') {
-              child.params[args.param].value = result.address
+            if (failure.name) return
+
+            const childDeployment = queue[childParam.deploymentOrder]
+
+            // TODO: add support for non-addresses
+            // currently the only supported child param type is address
+            if (childParam.type === 'address') {
+
+              childDeployment.params[childParam.paramId].value = result.address
+
             } else {
 
-              dispatch(getResetDeploymentQueueAction())
-              dispatch(getEndDeploymentAction())
-              dispatch(dappDeploymentResult(
-                false,
-                new Error(
-                  'deployment ' + i + ': ' + deployment.contractName + ' failed'
-                )
-              ))
+              failure.index = i
+              failure.name = deployment.contractName
             }
           })
+          if (failure.name) break
         }
-
       } else {
 
-        dispatch(getResetDeploymentQueueAction())
-        dispatch(getEndDeploymentAction())
-        dispatch(dappDeploymentResult(
-          false,
-          new Error(
-            'deployment ' + i + ': ' + deployment.contractName + ' failed'
-          )
-        ))
-        return
+        failure.index = i
+        failure.name = deployment.contractName
+        break
       }
     }
 
-    dispatch(getResetDeploymentQueueAction())
-    dispatch(getEndDeploymentAction())
-    dispatch(dappDeploymentResult(true, dappData))
+    if (failure.name) {
+
+      dispatch(getResetDeploymentQueueAction())
+      dispatch(getEndDeploymentAction())
+      dispatch(dappDeploymentResult(
+        false,
+        {
+          displayName: dappDisplayName,
+          error: new Error(
+            'deployment ' + failure.index + ': ' + failure.name + ' failed'
+          ),
+        }
+      ))
+    } else {
+
+      dispatch(getResetDeploymentQueueAction())
+      dispatch(getEndDeploymentAction())
+      dispatch(dappDeploymentResult(true, dappData))
+    }
   }
 }
 
@@ -792,7 +843,7 @@ async function deployContract (
     contractTypes,
     contractName,
     constructorParams,
-    dappTemplateId = null
+    meta = null
   ) {
 
   if (
@@ -847,8 +898,16 @@ async function deployContract (
     contractName: contractJSON.contractName,
     constructorParams: constructorParams,
     networkId: web3.networkId,
-    dappTemplateIds: dappTemplateId ? [dappTemplateId] : null,
+    dappTemplateIds: meta.dappTemplateId ? [meta.dappTemplateId] : undefined,
+    templateNodeId: meta.nodeId ? meta.nodeId : undefined,
   }
   dispatch(getDeploymentSuccessAction(deploymentData))
   return deploymentData
+}
+
+function getQueueDeploymentMessage (dappName, i, total, contractName) {
+  return (
+    dappName + ': Deploying contract ' + (i + 1).toString() +
+    ' of ' + total.toString() + ': ' + contractName
+  )
 }

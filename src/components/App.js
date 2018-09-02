@@ -18,11 +18,14 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft'
 
 // Custom component imports
 
-import AppModal from './common/AppModal'
 import ContractForm from './ContractForm'
+import DappForm from './DappForm'
 import Grapher from './Grapher'
 import Header from './Header'
+import Modal from './common/AppModal'
 import ResourceMenu from './ResourceMenu'
+import Snackbar from './common/AppSnackbar'
+
 import withMuiRoot from '../withMuiRoot'
 
 // Reducer imports
@@ -57,11 +60,12 @@ import {
 import { logRenderError } from '../redux/reducers/renderErrors'
 
 import {
-  closeAppModal,
-  openAppModal,
+  closeModal,
+  openModal,
+  modalContentTypes,
   selectContractFunction,
-  saveContractFormFieldValues,
-  deleteContractFormFieldValues,
+  saveModalFormFieldValues,
+  deleteModalFormFieldValues,
 } from '../redux/reducers/ui'
 
 import { getWeb3 } from '../redux/reducers/web3'
@@ -114,11 +118,11 @@ class App extends Component {
     if (
       (!selectedGraph || selectedGraph.type !== 'dapp') &&
       (
-        Boolean(this.props.contractFormFieldValues) &&
-        Object.keys(this.props.contractFormFieldValues).length > 0
+        Boolean(this.props.modalFormFieldValues) &&
+        Object.keys(this.props.modalFormFieldValues).length > 0
       )
     ) {
-      this.props.deleteContractFormFieldValues()
+      this.props.deleteModalFormFieldValues()
     }
   }
 
@@ -128,11 +132,18 @@ class App extends Component {
 
     let selectedGraph = null
     let insertionGraph = null
+    let selectedFunctionName = null
 
     // conversion from immutable data
     if (this.props.selectedGraphObject) {
 
       selectedGraph = this.props.selectedGraphObject.toJS()
+
+      if (this.props.selectedContractFunction) {
+        selectedFunctionName =
+          selectedGraph.elements.nodes[this.props.selectedContractFunction]
+          .displayName
+      }
 
     } else if (this.props.insertionGraphObject) {
 
@@ -142,7 +153,7 @@ class App extends Component {
     return (
       <Fragment>
         <CssBaseline />
-        <div className={'App ' + classes.root} >
+        <div className={classes.root} >
           <AppBar
             position="absolute"
             className={classNames(
@@ -229,9 +240,12 @@ class App extends Component {
                 selectDappTemplate={this.props.selectDappTemplate}
                 selectedDappTemplateId={this.props.selectedDappTemplateId}
                 hasWipDeployment={Boolean(this.props.wipDappDeployment)}
-                deployDapp={this.props.deployDapp}
+                openDappForm={
+                  () => this.props.openModal(modalContentTypes.dappForm)
+                }
                 selectDeployedDapp={this.props.selectDeployedDapp}
-                selectedDeployedDappId={this.props.selectedDeployedDappId} />
+                selectedDeployedDappId={this.props.selectedDeployedDappId}
+                openModal={this.props.openModal} />
           </Drawer>
           <main className="App-graph-container" ref={this.graphContainerRef} >
             {
@@ -244,7 +258,9 @@ class App extends Component {
                   graphInsertions={this.props.graphInsertions}
                   insertionGraph={insertionGraph}
                   insertionGraphId={this.props.insertionGraphId}
-                  openContractForm={this.props.openAppModal}
+                  openContractForm={
+                    () => this.props.openModal(modalContentTypes.contractForm)
+                  }
                   selectedGraph={selectedGraph}
                   selectedGraphId={this.props.selectedGraphId}
                   storeWipGraph={this.props.updateWipGraph}
@@ -265,50 +281,92 @@ class App extends Component {
                 )
             }
           </main>
-          <div className="App-modal-container" >
-            <AppModal
+          <div>
+            <Modal
               classes={{ root: classes.root, paper: classes.paper }}
-              open={this.props.appModal}
-              onClose={this.props.closeAppModal}
+              open={this.props.isModalOpen}
+              onClose={this.props.closeModal}
             >
-              {
-                selectedGraph
-                ? (
-                    <ContractForm
-                      classes={{
-                         container: classes.container,
-                         textField: classes.textField,
-                         button: classes.button,
-                         nested: classes.nested,
-                      }}
-                      account={this.props.account}
-                      contractAddress={this.props.selectedContractAddress}
-                      selectedGraph={selectedGraph}
-                      deployContract={this.props.deployContract}
-                      callInstance={this.props.callInstance}
-                      closeContractForm={this.props.closeAppModal}
-                      selectContractFunction={this.props.selectContractFunction}
-                      selectedContractFunction={this.props.selectedContractFunction}
-                      heading={selectedGraph.name}
-                      wipDappDeployment={this.props.wipDappDeployment}
-                      updateWipDappDeployment={this.props.updateWipDappDeployment}
-                      dappTemplate={
-                        this.props.selectedDappTemplateId
-                        ? this.props.dapps[this.props.selectedDappTemplateId]
-                        : null
-                      }
-                      fieldValues={this.props.contractFormFieldValues}
-                      storeFieldValues={
-                        this.props.saveContractFormFieldValues
-                      } />
-                  )
-                : null
-              }
-            </AppModal>
+              {this.getModalContent(
+                classes, selectedGraph, selectedFunctionName
+              )}
+            </Modal>
+            <Snackbar
+              classes={{ close: this.props.classes.close }}
+              duration={this.props.snackbarDuration}
+              message={this.props.snackbarMessage} />
           </div>
         </div>
       </Fragment>
     )
+  }
+
+  getModalContent = (classes, selectedGraph, selectedFunctionName) => {
+
+    const formClasses = {
+       container: classes.container,
+       textField: classes.textField,
+       button: classes.button,
+       nested: classes.nested,
+    }
+
+    switch (this.props.modalContent) {
+
+      case modalContentTypes.contractForm:
+        return (
+          <ContractForm
+            classes={formClasses}
+            account={this.props.account}
+            contractAddress={this.props.selectedContractAddress}
+            selectedGraph={selectedGraph}
+            deployContract={this.props.deployContract}
+            callInstance={this.props.callInstance}
+            closeContractForm={this.props.closeModal}
+            selectContractFunction={this.props.selectContractFunction}
+            selectedContractFunction={this.props.selectedContractFunction}
+            heading={selectedFunctionName || selectedGraph.name}
+            wipDappDeployment={this.props.wipDappDeployment}
+            updateWipDappDeployment={this.props.updateWipDappDeployment}
+            dappTemplate={
+              this.props.selectedDappTemplateId
+              ? this.props.dapps[this.props.selectedDappTemplateId]
+              : null
+            }
+            fieldValues={this.props.modalFormFieldValues}
+            storeFieldValues={
+              this.props.saveModalFormFieldValues
+            } />
+        )
+
+      case modalContentTypes.dappForm:
+        return (
+          <DappForm
+            classes={formClasses}
+            heading={
+              this.props.grapherMode === grapherModes.createDapp
+              ? 'Create New Template'
+              : 'Deploy Dapp'
+            }
+            deployDapp={this.props.deployDapp}
+            closeModal={this.props.closeModal}
+            fieldValues={this.props.modalFormFieldValues}
+            grapherMode={this.props.grapherMode}
+            storeFieldValues={
+              this.props.saveModalFormFieldValues
+            }
+            saveWipGraph={this.props.saveWipGraph}
+            setGrapherMode={this.props.setGrapherMode} />
+        )
+
+      case null:
+        return null
+
+      default:
+        console.warn(
+          'unhandled modal content type: ' + this.props.modalContent
+        )
+        return null
+    }
   }
 }
 
@@ -352,14 +410,17 @@ App.propTypes = {
   // renderErrors
   logRenderError: PropTypes.func,
   // ui
-  appModal: PropTypes.bool,
-  closeAppModal: PropTypes.func,
-  openAppModal: PropTypes.func,
+  isModalOpen: PropTypes.bool,
+  closeModal: PropTypes.func,
+  openModal: PropTypes.func,
   selectContractFunction: PropTypes.func,
   selectedContractFunction: PropTypes.string,
-  contractFormFieldValues: PropTypes.object,
-  saveContractFormFieldValues: PropTypes.func,
-  deleteContractFormFieldValues: PropTypes.func,
+  modalFormFieldValues: PropTypes.object,
+  modalContent: PropTypes.string,
+  saveModalFormFieldValues: PropTypes.func,
+  deleteModalFormFieldValues: PropTypes.func,
+  snackbarMessage: PropTypes.string,
+  snackbarDuration: PropTypes.number,
   // web3
   account: PropTypes.string,
   networkId: PropTypes.string,
@@ -401,9 +462,12 @@ function mapStateToProps (state) {
     hasGraphs: Object.keys(state.grapher.graphs).length >= 1,
     wipGraph: state.grapher.wipGraph,
     // ui
-    appModal: state.ui.appModal.open,
+    isModalOpen: state.ui.modal.open,
+    modalContent: state.ui.modal.content,
     selectedContractFunction: state.ui.contractForm.selectedFunction,
-    contractFormFieldValues: state.ui.contractForm.fieldValues,
+    modalFormFieldValues: state.ui.modal.formFieldValues,
+    snackbarMessage: state.ui.snackbar.message,
+    snackbarDuration: state.ui.snackbar.duration,
     // web3
     account: state.web3.account,
     networkId: state.web3.networkId,
@@ -435,19 +499,19 @@ function mapDispatchToProps (dispatch) {
     deleteGraph: graphId => dispatch(deleteGraph(graphId)),
     deleteAllGraphs: () => dispatch(deleteAllGraphs()),
     selectGraph: graphId => dispatch(selectGraph(graphId)),
-    saveWipGraph: () => dispatch(saveWipGraph()),
+    saveWipGraph: templateName => dispatch(saveWipGraph(templateName)),
     updateWipGraph: wipGraph => dispatch(updateWipGraph(wipGraph)),
     // renderErrors
     logRenderError: (error, errorInfo) => dispatch(logRenderError(error, errorInfo)),
     // ui
-    closeAppModal: () => dispatch(closeAppModal()),
-    openAppModal: () => dispatch(openAppModal()),
+    closeModal: () => dispatch(closeModal()),
+    openModal: content => dispatch(openModal(content)),
     selectContractFunction: func => dispatch(selectContractFunction(func)),
     setGrapherMode: contentKey => dispatch(setGrapherMode(contentKey)),
-    saveContractFormFieldValues: fieldValues =>
-      dispatch(saveContractFormFieldValues(fieldValues)),
-    deleteContractFormFieldValues: () =>
-      dispatch(deleteContractFormFieldValues()),
+    saveModalFormFieldValues: fieldValues =>
+      dispatch(saveModalFormFieldValues(fieldValues)),
+    deleteModalFormFieldValues: () =>
+      dispatch(deleteModalFormFieldValues()),
     // web3
     getWeb3: () => dispatch(getWeb3()),
   }

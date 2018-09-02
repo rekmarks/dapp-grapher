@@ -111,7 +111,8 @@ class ContractResourceList extends Component {
               address
             )
           }
-          primaryTypographyProps={{ noWrap: true }} />
+          primaryTypographyProps={{ noWrap: true }}
+          toolTip={address} />
       )
     })
   }

@@ -1,6 +1,6 @@
 
 import PropTypes from 'prop-types'
-import React, { Component } from 'react'
+import React, { Component, Fragment } from 'react'
 // import { withStyles } from '@material-ui/core/styles'
 import Divider from '@material-ui/core/Divider'
 import List from '@material-ui/core/List'
@@ -22,6 +22,7 @@ import NestedList from './common/NestedList'
 import ListButton from './common/ListButton'
 
 import { grapherModes } from '../redux/reducers/grapher'
+import { modalContentTypes } from '../redux/reducers/ui'
 
 export default class ResourceMenu extends Component {
 
@@ -56,16 +57,35 @@ export default class ResourceMenu extends Component {
     if (this.props.grapherMode === grapherModes.main) {
 
       resources.top = (
-        <List disablePadding>
+        <Fragment>
           {
             this.props.selectedDappTemplateId
             ? <ListButton
                 disabled={!this.props.hasWipDeployment}
-                onClick={() => this.props.deployDapp('Crowdsale')} // TODO: hardcoded
+                onClick={() => this.props.openDappForm()}
                 icon={(<CloudUploadIcon />)}
                 displayText="Deploy Dapp" />
             : null
           }
+        </Fragment>
+      )
+
+      resources.bottom = (
+        <Fragment>
+          <NestedList
+            icon={(<AppsIcon />)}
+            displayText="Dapps"
+          >
+            <DappResourceList
+              dapps={this.props.dapps}
+              setGrapherMode={this.props.setGrapherMode}
+              selectGraph={this.props.selectGraph}
+              selectTemplate={this.props.selectDappTemplate}
+              selectDeployed={this.props.selectDeployedDapp}
+              selectedTemplateId={this.props.selectedDappTemplateId}
+              selectedDeployedId={this.props.selectedDeployedDappId} />
+          </NestedList>
+          <Divider />
           <NestedList
             icon={(<BuildIcon />)}
             displayText="Dev Tools"
@@ -101,42 +121,20 @@ export default class ResourceMenu extends Component {
               </ListItemText>
             </ListItem>
           </NestedList>
-        </List>
-      )
-
-      resources.bottom = (
-        <NestedList
-          icon={(<AppsIcon />)}
-          displayText="Dapps"
-        >
-          <DappResourceList
-            dapps={this.props.dapps}
-            setGrapherMode={this.props.setGrapherMode}
-            selectGraph={this.props.selectGraph}
-            selectTemplate={this.props.selectDappTemplate}
-            selectDeployed={this.props.selectDeployedDapp}
-            selectedTemplateId={this.props.selectedDappTemplateId}
-            selectedDeployedId={this.props.selectedDeployedDappId} />
-        </NestedList>
+        </Fragment>
       )
     } else if (this.props.grapherMode === grapherModes.createDapp) {
 
       resources.top = (
-        <List disablePadding>
+        <Fragment>
           <ListButton
             disabled={!this.props.hasWipGraph}
             onClick={() => {
-              this.props.saveWipGraph()
-              this.props.setGrapherMode(grapherModes.main)
+              this.props.openModal(modalContentTypes.dappForm)
             }}
             icon={(<SaveIcon />)}
             displayText="Save" />
-          <ListButton
-            disabled={false} // TODO: dapp graph is valid
-            onClick={() => this.props.setGrapherMode(grapherModes.main)}
-            icon={(<DeleteIcon />)}
-            displayText="Discard" />
-        </List>
+        </Fragment>
       )
 
       resources.bottom = (
@@ -146,7 +144,21 @@ export default class ResourceMenu extends Component {
 
     return (
       <div id="ResourceMenu-main" style={{overflowY: 'auto'}}>
-        {resources.top}
+        <List disablePadding>
+          {resources.top}
+          {
+            (
+              this.props.grapherMode === grapherModes.main &&
+              !this.props.selectedGraphId
+            )
+            ? null
+            : <ListButton
+              disabled={false}
+              onClick={() => this.props.setGrapherMode(grapherModes.main)}
+              icon={(<DeleteIcon />)}
+              displayText="Discard" />
+          }
+        </List>
         <Divider />
         <NestedList
           icon={(<StorageIcon />)}
@@ -228,12 +240,13 @@ ResourceMenu.propTypes = {
   setGrapherMode: PropTypes.func,
   saveWipGraph: PropTypes.func,
   hasWipGraph: PropTypes.bool,
-  deployDapp: PropTypes.func,
+  openDappForm: PropTypes.func,
   hasWipDeployment: PropTypes.bool,
   selectDappTemplate: PropTypes.func,
   selectedDappTemplateId: PropTypes.string,
   selectedDeployedDappId: PropTypes.string,
   selectDeployedDapp: PropTypes.func,
+  openModal: PropTypes.func,
 }
 
 /**

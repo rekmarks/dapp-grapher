@@ -166,7 +166,7 @@ function getConstructorNodes (contractName, abi) {
   const outputId = contractName + ':constructor:instance'
   nodes[outputId] = {
     id: outputId,
-    displayName: 'New',
+    displayName: 'Deployed Address',
     abiType: 'address',
     parent: contractName,
     type: 'output',

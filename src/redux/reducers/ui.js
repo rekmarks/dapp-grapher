@@ -1,28 +1,41 @@
 
 const ACTIONS = {
-  CLOSE_APP_MODAL: 'UI:APP_MODAL:CLOSE',
-  OPEN_APP_MODAL: 'UI:APP_MODAL:OPEN',
+  CLOSE_MODAL: 'UI:MODAL:CLOSE',
+  OPEN_MODAL: 'UI:MODAL:OPEN',
+  SAVE_MODAL_FORM_FIELD_VALUES: 'UI:MODAL:SAVE_FIELD_VALUES',
+  DELETE_MODAL_FORM_FIELD_VALUES: 'UI:MODAL:DELETE_FIELD_VALUES',
   SELECT_CONTRACT_FUNCTION: 'UI:CONTRACT_FORM:SELECT_CONTRACT_FUNCTION',
-  SAVE_CONTRACT_FORM_FIELD_VALUES: 'UI:CONTRACT_FORM:SAVE_FIELD_VALUES',
-  DELETE_CONTRACT_FORM_FIELD_VALUES: 'UI:CONTRACT_FORM:DELETE_FIELD_VALUES',
+  ADD_SNACKBAR_NOTIFICATION: 'UI:SNACKBAR:ADD_NOTIFICATION',
+}
+
+const modalContent = {
+  contractForm: 'contractForm',
+  dappForm: 'dappForm',
 }
 
 const initialState = {
-  appModal: {
+  modal: {
     open: false,
+    content: null,
+    formFieldValues: {},
   },
   contractForm: {
     selectedFunction: null,
-    fieldValues: {},
+  },
+  snackbar: {
+    message: null,
+    duration: 6000,
   },
 }
 
 export {
-  getCloseAppModalAction as closeAppModal,
-  getOpenAppModalAction as openAppModal,
+  getCloseModalAction as closeModal,
+  getOpenModalAction as openModal,
   getSelectContractFunctionAction as selectContractFunction,
-  getSaveContractFormFieldValuesAction as saveContractFormFieldValues,
-  getDeleteContractFormFieldValuesAction as deleteContractFormFieldValues,
+  getSaveModalFormFieldValuesAction as saveModalFormFieldValues,
+  getDeleteModalFormFieldValuesAction as deleteModalFormFieldValues,
+  getAddSnackbarNotificationAction as addSnackbarNotification,
+  modalContent as modalContentTypes,
   initialState as uiInitialState,
 }
 
@@ -30,16 +43,27 @@ export default function reducer (state = initialState, action) {
 
   switch (action.type) {
 
-    case ACTIONS.CLOSE_APP_MODAL:
-      return {
-        ...initialState,
-      }
-
-    case ACTIONS.OPEN_APP_MODAL:
+    case ACTIONS.CLOSE_MODAL:
       return {
         ...state,
-        appModal: {
+        modal: {
+          ...state.modal,
+          open: false,
+          content: null,
+        },
+        contractForm: {
+          ...state.contractForm,
+          selectedFunction: null,
+        },
+      }
+
+    case ACTIONS.OPEN_MODAL:
+      return {
+        ...state,
+        modal: {
+          ...state.modal,
           open: true,
+          content: action.content,
         },
       }
 
@@ -52,24 +76,34 @@ export default function reducer (state = initialState, action) {
         },
       }
 
-    case ACTIONS.SAVE_CONTRACT_FORM_FIELD_VALUES:
+    case ACTIONS.SAVE_MODAL_FORM_FIELD_VALUES:
       return {
         ...state,
-        contractForm: {
-          ...state.contractForm,
-          fieldValues: {
-            ...state.contractForm.fieldValues,
-            ...action.fieldValues,
+        modal: {
+          ...state.modal,
+          formFieldValues: {
+            ...state.modal.formFieldValues,
+            ...action.formFieldValues,
           },
         },
       }
 
-    case ACTIONS.DELETE_CONTRACT_FORM_FIELD_VALUES:
+    case ACTIONS.DELETE_MODAL_FORM_FIELD_VALUES:
       return {
         ...state,
-        contractForm: {
-          ...state.contractForm,
-          fieldValues: {},
+        modal: {
+          ...state.modal,
+          formFieldValues: {},
+        },
+      }
+
+    case ACTIONS.ADD_SNACKBAR_NOTIFICATION:
+      return {
+        ...state,
+        snackbar: {
+          ...state.snackbar,
+          message: action.message,
+          duration: action.duration,
         },
       }
 
@@ -82,15 +116,16 @@ export default function reducer (state = initialState, action) {
  * SYNCHRONOUS ACTION CREATORS
  */
 
-function getCloseAppModalAction () {
+function getCloseModalAction () {
   return {
-    type: ACTIONS.CLOSE_APP_MODAL,
+    type: ACTIONS.CLOSE_MODAL,
   }
 }
 
-function getOpenAppModalAction () {
+function getOpenModalAction (content) {
   return {
-    type: ACTIONS.OPEN_APP_MODAL,
+    type: ACTIONS.OPEN_MODAL,
+    content: content,
   }
 }
 
@@ -101,15 +136,23 @@ function getSelectContractFunctionAction (functionId) {
   }
 }
 
-function getSaveContractFormFieldValuesAction (fieldValues) {
+function getSaveModalFormFieldValuesAction (formFieldValues) {
   return {
-    type: ACTIONS.SAVE_CONTRACT_FORM_FIELD_VALUES,
-    fieldValues: fieldValues,
+    type: ACTIONS.SAVE_MODAL_FORM_FIELD_VALUES,
+    formFieldValues: formFieldValues,
   }
 }
 
-function getDeleteContractFormFieldValuesAction () {
+function getDeleteModalFormFieldValuesAction () {
   return {
-    type: ACTIONS.DELETE_CONTRACT_FORM_FIELD_VALUES,
+    type: ACTIONS.DELETE_MODAL_FORM_FIELD_VALUES,
+  }
+}
+
+function getAddSnackbarNotificationAction (message, duration) {
+  return {
+    type: ACTIONS.ADD_SNACKBAR_NOTIFICATION,
+    message: message,
+    duration: duration,
   }
 }

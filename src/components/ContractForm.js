@@ -9,7 +9,11 @@ import Typography from '@material-ui/core/Typography'
 import DropdownMenu from './common/DropdownMenu'
 import { contractGraphTypes } from '../graphing/graphGenerator'
 
-import './style/ContractForm.css'
+/**
+ * TODO
+ * There's a significant amount of application logic in this component that
+ * should be moved to redux thunks if possible
+ */
 
 const styles = theme => ({
   container: {
@@ -39,6 +43,7 @@ class ContractForm extends Component {
 
   componentDidMount () {
 
+    // dapp field values are stored in state, but not individual contracts
     if (
       this.props.selectedGraph.type === 'dapp' &&
       Object.keys(this.props.fieldValues).length > 0
@@ -49,7 +54,11 @@ class ContractForm extends Component {
 
   componentWillUnmount () {
 
-    if (this.props.selectedGraph.type === 'dapp') {
+    // dapp field values are stored in state, but not individual contracts
+    if (
+      this.props.selectedGraph.type === 'dapp' &&
+      Object.keys(this.state.fieldValues).length > 0
+    ) {
       this.props.storeFieldValues(this.state.fieldValues)
     }
   }
@@ -59,37 +68,45 @@ class ContractForm extends Component {
     const { classes } = this.props
 
     return (
-      <div className="ContractForm-formContainer">
+      <Fragment>
         <Typography
           className={classes.nested}
           variant="title"
           id="modal-title"
         >
-          {
-            this.props.heading ||
-            (
-              this.props.selectedGraph.elements.nodes[this.props.selectedContractFunction].displayName
-            ) ||
-            ''
-            // ? this.props.heading
-            // : this.props.selectedContractFunction
-            //   ? this.props.selectedContractFunction
-            //   : ''
-          }
+          {this.props.heading}
         </Typography>
-        {
-          this.props.subHeading
-          ?
-            (
-              <Typography variant="subheading" id="simple-modal-description">
-                {this.props.subHeading}
-              </Typography>
-            )
-          : ''
-        }
+        <Typography
+          className={classes.nested}
+          id="simple-modal-description"
+          variant="subheading"
+        >
+          {this.getSubheading()}
+        </Typography>
         {this.getFunctionForm()}
-      </div>
+      </Fragment>
     )
+  }
+
+  getSubheading = () => {
+
+    let type
+
+    if (this.props.selectedContractFunction) {
+      type =
+        this.props.selectedGraph.elements
+        .nodes[this.props.selectedContractFunction].type
+    } else {
+      type = this.props.selectedGraph.type
+    }
+
+    switch (type) {
+
+      case contractGraphTypes._constructor:
+        return 'Constructor'
+      default:
+        return 'Deployed'
+    }
   }
 
   handleInputChange = id => event => {
@@ -121,6 +138,7 @@ class ContractForm extends Component {
     )
 
     this.setState({ fieldValues: {} })
+    this.props.closeContractForm()
   }
 
   handleConstructorSubmit = metaData => event => {
@@ -148,9 +166,11 @@ class ContractForm extends Component {
       ),
     }
 
+    // TODO: application logic
     wipDeployment[metaData.id] = {
+      nodeId: metaData.id,
       contractName: metaData.abiName,
-      deploymentOrder: this.props.dappTemplate.deployments[metaData.id].deploymentOrder,
+      deploymentOrder: this.props.dappTemplate.contracts[metaData.id].deploymentOrder,
       params: {
         ...metaData.params,
       },
@@ -161,7 +181,7 @@ class ContractForm extends Component {
 
     Object.values(wipDeployment[metaData.id].params).forEach(param => {
 
-      if (param.source) { // this parameter is a target
+      if (param.source) { // this parameter is an edge target
 
         if (param.sourceParent === 'account') {
           param.value = this.props.account
@@ -173,17 +193,17 @@ class ContractForm extends Component {
 
     Object.values(wipDeployment[metaData.id].outputs).forEach(output => {
 
-      if (output.target) {
+      if (output.target) { // this parameter is an edge source
 
-        if (!wipDeployment[metaData.id].children) {
-          wipDeployment[metaData.id].children = []
+        if (!wipDeployment[metaData.id].childParams) {
+          wipDeployment[metaData.id].childParams = []
         }
 
-        wipDeployment[metaData.id].children.push({
+        wipDeployment[metaData.id].childParams.push({
           type: 'address',
-          param: output.target,
-          paramParent: output.targetParent,
-          deploymentOrder: this.props.dappTemplate.deployments[output.targetParent].deploymentOrder,
+          paramId: output.target,
+          contractId: output.targetParent,
+          deploymentOrder: this.props.dappTemplate.contracts[output.targetParent].deploymentOrder,
         })
       }
     })
@@ -200,13 +220,14 @@ class ContractForm extends Component {
     const selectedNodeId = this.props.selectedContractFunction
     const selectedNode = nodes[selectedNodeId]
 
-    let formData; let submitHandler; let functionCall = false
+    const formData = this.getFunctionFormData()
+
+    let submitHandler; let functionCall = false
 
     switch (graphType) {
 
       case contractGraphTypes._constructor:
 
-        formData = this.getFunctionFormFields()
         submitHandler = this.handleConstructorSubmit
 
         break
@@ -219,7 +240,7 @@ class ContractForm extends Component {
         // DropdownMenu component in form (see below)
         if (this.props.selectedContractFunction) {
 
-          formData = this.getFunctionFormFields()
+
           submitHandler = this.handleFunctionSubmit
         }
 
@@ -235,7 +256,6 @@ class ContractForm extends Component {
           functionCall = true
         }
 
-        formData = this.getFunctionFormFields()
         submitHandler = this.handleDappFunctionSubmit
 
         break
@@ -263,10 +283,16 @@ class ContractForm extends Component {
                 className={classes.container}
                 onSubmit={submitHandler(formData.metaData)}
               >
-                <div className="ContractForm-fields">
+                <div className={classes.nested}>
                   {formData.fields}
                 </div>
-                <div className="ContractForm-button">
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'flex-end',
+                  }}
+                >
                   <Button
                     className={classes.button}
                     variant="contained"
@@ -274,7 +300,7 @@ class ContractForm extends Component {
                   >
                     {
                       graphType === 'dapp'
-                      ? 'Submit'
+                      ? 'Save Inputs'
                       : functionCall
                         ? 'Call Function'
                         : 'Deploy'
@@ -289,7 +315,7 @@ class ContractForm extends Component {
     )
   }
 
-  getFunctionFormFields = () => {
+  getFunctionFormData = () => {
 
     const nodes = this.props.selectedGraph.elements.nodes
     const edges = this.props.selectedGraph.elements.edges
@@ -347,6 +373,7 @@ class ContractForm extends Component {
 
         switch (fieldType) {
 
+          // TODO: handle different parameter types
           // case 'string':
           default:
             fields.push(
@@ -421,7 +448,6 @@ ContractForm.propTypes = {
   selectContractFunction: PropTypes.func,
   selectedContractFunction: PropTypes.string,
   heading: PropTypes.string,
-  subHeading: PropTypes.string,
   selectedGraph: PropTypes.object,
   updateWipDappDeployment: PropTypes.func,
   dappTemplate: PropTypes.object,
