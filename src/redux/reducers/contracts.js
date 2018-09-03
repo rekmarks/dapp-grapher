@@ -18,8 +18,7 @@ import { addSnackbarNotification } from './ui'
 
 // misc imports
 
-import { contractGraphTypes as graphTypes } from '../../graphing/graphGenerator'
-
+import { graphTypes } from '../../graphing/graphGenerator'
 import { getDisplayAddress } from '../../utils'
 
 const ACTIONS = {
@@ -49,9 +48,9 @@ const ACTIONS = {
 const contracts = {}
 Object.entries(defaultContracts).forEach(([key, value]) => {
   contracts[key] = {
-    [graphTypes._constructor]: null,
-    [graphTypes.completeAbi]: null,
-    [graphTypes.functions]: null,
+    [graphTypes.contract._constructor]: null,
+    [graphTypes.contract.completeAbi]: null,
+    [graphTypes.contract.functions]: null,
     artifact: value,
   }
 })
@@ -100,9 +99,9 @@ export default function reducer (state = initialState, action) {
           ...state.types,
           [action.contractName]: {
             artifact: action.artifact,
-            [graphTypes._constructor]: null,
-            [graphTypes.completeAbi]: null,
-            [graphTypes.functions]: null,
+            [graphTypes.contract._constructor]: null,
+            [graphTypes.contract.completeAbi]: null,
+            [graphTypes.contract.functions]: null,
           },
         },
       }
@@ -125,9 +124,9 @@ export default function reducer (state = initialState, action) {
       Object.keys(contractTypes).forEach(contractName => {
         contractTypes[contractName] = {
           artifact: contractTypes[contractName].artifact,
-          [graphTypes._constructor]: null,
-          [graphTypes.completeAbi]: null,
-          [graphTypes.functions]: null,
+          [graphTypes.contract._constructor]: null,
+          [graphTypes.contract.completeAbi]: null,
+          [graphTypes.contract.functions]: null,
         }
       })
 
@@ -188,6 +187,7 @@ export default function reducer (state = initialState, action) {
             [action.payload.address]: {
 
               account: action.payload.account,
+              address: action.payload.address,
               type: action.payload.contractName,
               constructorParams: action.payload.constructorParams,
               truffleContract: action.payload.truffleContract,
@@ -240,6 +240,7 @@ export default function reducer (state = initialState, action) {
 
         newInstances[action.data.networkId][action.data.truffleContract.address] = {
           account: action.data.account,
+          address: action.data.truffleContract.address,
           truffleContract: action.data.truffleContract,
           type: action.data.contractName,
           constructorParams: null,
@@ -482,9 +483,9 @@ function removeContractTypeThunk (contractName) {
     const contract = getState().contracts.types[contractName]
 
     if (contract) {
-      dispatch(deleteGraph(contract[graphTypes._constructor]))
-      dispatch(deleteGraph(contract[graphTypes.completeAbi]))
-      dispatch(deleteGraph(contract[graphTypes.functions]))
+      dispatch(deleteGraph(contract[graphTypes.contract._constructor]))
+      dispatch(deleteGraph(contract[graphTypes.contract.completeAbi]))
+      dispatch(deleteGraph(contract[graphTypes.contract.functions]))
       dispatch(getRemoveContractTypeAction(contractName))
     } else {
       dispatch(getLogErrorAction(new Error('contract type not found')))
@@ -843,7 +844,7 @@ async function deployContract (
     contractTypes,
     contractName,
     constructorParams,
-    meta = null
+    meta = {}
   ) {
 
   if (

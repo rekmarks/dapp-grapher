@@ -3,11 +3,16 @@ import uuid from 'uuid/v4'
 import { fromJS } from 'immutable'
 
 import parseContract, {
-  contractGraphTypes,
+  graphTypes,
   getAccountGraph,
 } from '../../graphing/graphGenerator'
 
-import { setContractGraphId, removeAllContractGraphIds } from './contracts'
+import {
+  addInstance,
+  selectContractAddress,
+  setContractGraphId,
+  removeAllContractGraphIds,
+} from './contracts'
 
 import { addDappTemplate, clearSelectedDappTemplate } from './dapps'
 
@@ -18,6 +23,7 @@ const ACTIONS = {
   DELETE_GRAPH: 'GRAPHER:DELETE_GRAPH',
   DELETE_ALL_GRAPHS: 'GRAPHER:DELETE_ALL_GRAPHS',
   SELECT_GRAPH: 'GRAPHER:SELECT_GRAPH',
+  SELECT_FORM_GRAPH: 'GRAPHER:SELECT_FORM_GRAPH',
   SELECT_INSERTION_GRAPH: 'GRAPHER:SELECT_INSERTION_GRAPH',
   INCREMENT_INSERTIONS: 'GRAPHER:INCREMENT_INSERTIONS',
   UPDATE_WIP_GRAPH: 'GRAPHER:UPDATE_WIP_GRAPH',
@@ -30,8 +36,9 @@ const grapherModes = {
 }
 
 const initialState = {
-  selectedGraphId: null,
+  selectedGraphId: null, // TODO: rename this primary graph id or something
   insertionGraphId: null,
+  formGraphId: null,
   insertions: 0,
   accountGraph: null,
   wipGraph: null,
@@ -51,9 +58,12 @@ const excludeKeys = [
 
 export {
   setAccountGraphThunk as setAccountGraph,
-  getSetModeAction as setGrapherMode,
+  setModeThunk as setGrapherMode,
+  selectFormGraphThunk as selectFormGraph,
   selectGraphThunk as selectGraph,
+  addGraphThunk as addGraph,
   createGraphThunk as createGraph,
+  getGraphThunk as getGraph,
   getGraphCreationParameters as getCreateGraphParams,
   deleteGraphThunk as deleteGraph,
   deleteAllGraphsThunk as deleteAllGraphs,
@@ -74,6 +84,7 @@ export default function reducer (state = initialState, action) {
         mode: action.mode,
         selectedGraphId: null,
         insertionGraphId: null,
+        formGraphId: null,
         wipGraph: null,
         insertions: 0,
       }
@@ -109,6 +120,9 @@ export default function reducer (state = initialState, action) {
       if (action.graphId === state.insertionGraphId) {
         newState.insertionGraphId = null
       }
+      if (action.graphId === state.formGraphId) {
+        newState.formGraphId = null
+      }
       return newState
 
     case ACTIONS.DELETE_ALL_GRAPHS:
@@ -117,18 +131,26 @@ export default function reducer (state = initialState, action) {
         graphs: {},
         selectedGraphId: null,
         insertionGraphId: null,
+        formGraphId: null,
       }
 
     case ACTIONS.SELECT_GRAPH:
       return {
         ...state,
         selectedGraphId: action.graphId,
+        formGraphId: null,
       }
 
     case ACTIONS.SELECT_INSERTION_GRAPH:
       return {
         ...state,
         insertionGraphId: action.graphId,
+      }
+
+    case ACTIONS.SELECT_FORM_GRAPH:
+      return {
+        ...state,
+        formGraphId: action.graphId,
       }
 
     case ACTIONS.INCREMENT_INSERTIONS:
@@ -200,6 +222,13 @@ function getSelectGraphAction (graphId) {
   }
 }
 
+function getSelectFormGraphAction (graphId) {
+  return {
+    type: ACTIONS.SELECT_FORM_GRAPH,
+    graphId: graphId,
+  }
+}
+
 function getSelectInsertionGraphAction (graphId) {
   return {
     type: ACTIONS.SELECT_INSERTION_GRAPH,
@@ -236,6 +265,90 @@ function setAccountGraphThunk () {
   }
 }
 
+function setModeThunk (mode) {
+
+  return (dispatch, getState) => {
+
+    dispatch(clearSelectedDappTemplate())
+    dispatch(getSetModeAction(mode))
+  }
+}
+
+/**
+ * For use with getting graphs from the frontend. Calls other
+ * thunks as appropriate.
+ * @param  {[type]} graphId      [description]
+ * @param  {[type]} contractName [description]
+ * @param  {[type]} address      [description]
+ * @return {[type]}              [description]
+ */
+function getGraphThunk (graphId, graphType, contractName, address = null) {
+
+  return (dispatch, getState) => {
+
+    if (!contractName) {
+      dispatch(getLogErrorAction(
+        new Error('no contractName provided')
+      ))
+      return
+    }
+    if (!graphType) {
+      dispatch(getLogErrorAction(
+        new Error('no graph type provided')
+      ))
+      return
+    }
+
+    const state = getState()
+
+    if (graphType === graphTypes.contract._constructor) {
+
+      if (graphId) {
+
+        dispatch(selectGraphThunk(graphId))
+      } else {
+
+        dispatch(createGraphThunk(
+          getGraphCreationParameters(
+            graphTypes.contract._constructor,
+            { contractName }
+          )
+        ))
+      }
+    } else if (graphType === graphTypes.contract.functions) {
+
+      if (!address) {
+        dispatch(getLogErrorAction(
+          new Error('graph type is functions but no address was provided')
+        ))
+        return
+      }
+
+      if (!state.contracts.instances[state.web3.networkId][address]) {
+        dispatch(addInstance(contractName, address))
+      }
+
+      if (graphId) {
+
+        if (state.grapher.selectedGraphId !== graphId) {
+          dispatch(selectGraphThunk(graphId))
+        }
+      } else {
+
+        dispatch(createGraphThunk(
+          getGraphCreationParameters(
+            graphTypes.contract.functions,
+            { contractName }
+          )
+        ))
+      }
+
+      // TODO: unsafe? (addInstance could take too long)
+      dispatch(selectContractAddress(address))
+    }
+  }
+}
+
 function selectGraphThunk (graphId) {
 
   return (dispatch, getState) => {
@@ -248,7 +361,10 @@ function selectGraphThunk (graphId) {
     // select graph if it exists
     if (newGraph) {
 
-      if (state.dapps.selectedTemplateId && newGraph.get('type') !== 'dapp') {
+      if (
+        state.dapps.selectedTemplateId &&
+        !Object.values(graphTypes.dapp).includes(newGraph.get('type'))
+      ) {
         dispatch(clearSelectedDappTemplate())
       }
 
@@ -275,6 +391,23 @@ function selectGraphThunk (graphId) {
   }
 }
 
+function addGraphThunk (graph) {
+
+  return (dispatch, getState) => {
+
+    if (!graph) {
+      dispatch(getLogErrorAction(new Error('no graph given')))
+      return
+    }
+    if (!graph.id) {
+      dispatch(getLogErrorAction(new Error('graph is missing id')))
+      return
+    }
+
+    dispatch(getSaveGraphAction(graph.id, fromJS(graph)))
+  }
+}
+
 function createGraphThunk (params) {
 
   return (dispatch, getState) => {
@@ -288,7 +421,7 @@ function createGraphThunk (params) {
     }
 
     // create requested graph
-    if (Object.values(contractGraphTypes).includes(params.type)) {
+    if (Object.values(graphTypes.contract).includes(params.type)) {
 
       // attempt to get contract JSON
       const contractName = params.contractName
@@ -305,13 +438,13 @@ function createGraphThunk (params) {
       // select parser mode
       let parseMode, contractsPayloadKey
       switch (params.type) {
-        case contractGraphTypes._constructor:
+        case graphTypes.contract._constructor:
           parseMode = 1
-          contractsPayloadKey = contractGraphTypes._constructor
+          contractsPayloadKey = graphTypes.contract._constructor
           break
-        case contractGraphTypes.functions:
+        case graphTypes.contract.functions:
           parseMode = 2
-          contractsPayloadKey = contractGraphTypes.functions
+          contractsPayloadKey = graphTypes.contract.functions
           break
         default:
           dispatch(getLogErrorAction(new Error(
@@ -327,22 +460,21 @@ function createGraphThunk (params) {
         return
       }
 
-      const graphId = uuid()
-
-      if (!graphId) {
-        dispatch(getLogErrorAction(new Error('graph has no id')))
-        return
-      }
+      const graphId = params.graphId ? params.graphId : uuid()
 
       dispatch(getSaveGraphAction(graphId, fromJS(graph)))
       dispatch(setContractGraphId(
         contractName, {[contractsPayloadKey]: graphId}
       ))
-      dispatch(selectGraphThunk(graphId))
+
+      // run graph selection workflow unless the created graph
+      // is a form graph
+      if (!params.formGraph) dispatch(selectGraphThunk(graphId))
 
     } else if (params.type === 'dappTemplate') {
 
-      // TODO
+      // TODO: currently this is, inappropriately?, handled in Grapher.
+      // Explore moving the functionality here or elsewhere in the reducer.
 
     } else {
 
@@ -363,6 +495,44 @@ function saveWipGraphThunk (templateName) {
 
     dispatch(getSaveGraphAction(wipGraph.id, fromJS(wipGraph)))
     dispatch(addDappTemplate(wipGraph.id, wipGraph, templateName))
+  }
+}
+
+function selectFormGraphThunk (contractName, instanceAddress) {
+
+  return (dispatch, getState) => {
+
+    const state = getState()
+
+    if (!state.contracts.instances[state.web3.networkId][instanceAddress]) {
+      dispatch(addInstance(contractName, instanceAddress))
+    }
+
+    let graphId =
+      state.contracts.types[contractName][graphTypes.contract.functions]
+
+    if (!graphId) {
+
+      graphId = uuid()
+
+      dispatch(createGraphThunk(
+        getGraphCreationParameters(
+          graphTypes.contract.functions,
+          {
+            contractName,
+            graphId,
+            formGraph: true,
+          }
+        )
+      ))
+    }
+
+    if (state.contracts.selectedAddress !== instanceAddress) {
+      dispatch(selectContractAddress(instanceAddress))
+    }
+    if (state.grapher.formGraphId !== graphId) {
+      dispatch(getSelectFormGraphAction(graphId))
+    }
   }
 }
 
@@ -398,7 +568,7 @@ function getGraphCreationParameters (type, args) {
   if (!type) throw new Error('missing type')
   if (!args) throw new Error('missing args')
 
-  if (Object.values(contractGraphTypes).includes(type)) {
+  if (Object.values(graphTypes.contract).includes(type)) {
     if (
       typeof args.contractName !== 'string' ||
       args.contractName.length < 1
@@ -408,6 +578,8 @@ function getGraphCreationParameters (type, args) {
 
   } else if (type === 'dappTemplate') {
 
+    // do nothing for know, dappTemplates are made in Grapher as
+    // wipGraph
 
   } else {
     throw new Error('invalid type')

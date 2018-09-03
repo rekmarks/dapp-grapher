@@ -7,7 +7,7 @@ import uuid from 'uuid/v4'
 
 import { grapherModes } from '../redux/reducers/grapher'
 
-import { contractGraphTypes } from '../graphing/graphGenerator'
+import { graphTypes } from '../graphing/graphGenerator'
 import jh from '../graphing/jointHelper'
 
 /**
@@ -71,7 +71,7 @@ export default class Grapher extends Component {
 
         const meta = { setsLayout: true }
 
-        if (this.props.selectedGraph.type === contractGraphTypes.functions) {
+        if (this.props.selectedGraph.type === graphTypes.contract.functions) {
           meta.layoutOptions = {}
           meta.layoutOptions.rankDir = 'TB'
         }
@@ -84,7 +84,6 @@ export default class Grapher extends Component {
       }
 
       if (this.state.svgPanZoom) this.state.svgPanZoom.reset()
-
     } else if (this.props.grapherMode === grapherModes.createDapp) {
 
       // if this condition is true,
@@ -104,7 +103,7 @@ export default class Grapher extends Component {
           { setsLayout: false }
         )
 
-        wipGraph.type = 'dapp'
+        wipGraph.type = graphTypes.dapp.template
 
         this.props.storeWipGraph(wipGraph)
       }
@@ -214,7 +213,7 @@ export default class Grapher extends Component {
 
     Object.values(insertionGraph.elements.nodes).forEach(node => {
 
-      if (Object.values(contractGraphTypes).includes(node.type)) {
+      if (Object.values(graphTypes.contract).includes(node.type)) {
         node.id = contractId
       } else if (node.abiName) {
         node.id = contractId + ':' + node.abiName
@@ -246,19 +245,48 @@ export default class Grapher extends Component {
    */
 
   /**
-  * Opens form per Joint state and grapherMode.
+  * Opens modal with ContractForm per Joint state and grapherMode.
   * Pass to Joint paper at initialization.
   */
-  openForm = functionId => {
+  openForm = (functionId, contractName = null, instanceAddress = null) => {
 
     if (this.props.grapherMode === grapherModes.main) {
 
-      if (functionId) this.props.selectContractFunction(functionId)
+      if (
+        this.props.selectedGraph.type === graphTypes.dapp.deployed &&
+        instanceAddress
+      ) {
+
+        // TODO 9/3
+        // Run the get graph workflow for the graph associated with
+        // instanceAddress, then call some other thunk (selectFormGraph probably)
+        // that will ensure the modal opens with the correct content
+        this.props.selectFormGraph(contractName, instanceAddress)
+
+      } else if (
+        this.props.selectedGraph.type === graphTypes.dapp.deployed ||
+        instanceAddress
+      ) {
+        throw new Error(
+          'unhandled workflow: graph type ' + this.props.selectedGraph.type +
+          ' and instanceAddress ' + Boolean(instanceAddress)
+        )
+      }
+
+      if (
+        functionId &&
+        this.props.selectedGraph.type !== graphTypes.dapp.deployed
+      ) {
+        this.props.selectContractFunction(functionId)
+      }
 
       this.props.openContractForm()
 
     } else if (this.props.grapherMode === grapherModes.createDapp) {
       // do nothing for now
+      // TODO: do something here? Currently when creating a dapp,
+      // all you do is wire the individual nodes together and we don't
+      // want a form to open.
     }
   }
 
@@ -329,4 +357,5 @@ Grapher.propTypes = {
   selectedGraphId: PropTypes.string,
   storeWipGraph: PropTypes.func,
   wipGraph: PropTypes.object,
+  selectFormGraph: PropTypes.func,
 }

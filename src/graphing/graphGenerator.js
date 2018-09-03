@@ -1,15 +1,22 @@
 
 import { getDisplayAddress } from '../utils'
 
-const contractGraphTypes = {
-  _constructor: 'contract:constructor',
-  functions: 'contract:functions',
+const graphTypes = {
+  contract: {
+    _constructor: 'contract:constructor',
+    functions: 'contract:functions',
+  },
+  dapp: {
+    template: 'dapp:template',
+    deployed: 'dapp:deployed',
+  },
 }
 
 export default getContractGraph
 export {
-  contractGraphTypes,
+  graphTypes,
   getAccountGraph,
+  getDeployedDappGraph,
 }
 
 /**
@@ -32,10 +39,10 @@ function getContractGraph (contract, mode) {
   graph.name = contract.contractName
   switch (mode) {
     case 1:
-      graph.type = contractGraphTypes._constructor
+      graph.type = graphTypes.contract._constructor
       break
     case 2:
-      graph.type = contractGraphTypes.functions
+      graph.type = graphTypes.contract.functions
       break
     default:
       throw new Error('invalid mode: ' + mode)
@@ -80,6 +87,62 @@ function getAccountGraph (address) {
 }
 
 /**
+ * Converts a template dapp graph into a deployed dapp graph for use with
+ * a deployed dapp
+ * @param  {string}  deployedGraphId    the id to be given to the deployed
+ *                                      dapp's graph
+ * @param  {object}  templateGraph      the template's dapp graph
+ * @param  {array}   deployedContracts  the deployed contract instances
+ *                                      associated with the deployed dapp
+ * @return {object}                     the graph of the deployed dapp
+*/
+function getDeployedDappGraph (
+  deployedGraphId,
+  templateGraph,
+  deployedContracts
+) {
+
+  const deployedGraph = { ...templateGraph }
+
+  deployedGraph.type = graphTypes.dapp.deployed
+  deployedGraph.id = deployedGraphId
+
+  const nodes = Object.values(deployedGraph.elements.nodes)
+  const sourceNodes = Object.values(deployedGraph.elements.edges).map(
+    edge => edge.source
+  )
+
+  nodes.filter(
+
+    node => Object.values(graphTypes.contract).includes(node.type)
+
+  ).forEach(node => {
+
+    node.instanceAddress = Object.values(deployedContracts).find(
+      instance => instance.templateNodeId === node.id
+    ).address
+  })
+
+  nodes.forEach(node => {
+
+    if (node.type === 'output') {
+
+      if (sourceNodes.includes(node.id)) {
+
+        if (node.abiType === 'address' && node.parent !== 'account') {
+
+          node.displayName = getDisplayAddress(
+            deployedGraph.elements.nodes[node.parent].instanceAddress
+          )
+        }
+      } else delete deployedGraph.elements.nodes[node.id]
+    }
+  })
+
+  return deployedGraph
+}
+
+/**
  * GRAPH ELEMENT GETTERS
  */
 
@@ -106,13 +169,13 @@ function getContractNodes (contractName, abi, mode) {
   switch (mode) {
 
     case 1:
-      contractNode.type = contractGraphTypes._constructor
+      contractNode.type = graphTypes.contract._constructor
       contractNode.abiType = 'constructor'
       nodes = getConstructorNodes(contractName, abi)
       break
 
     case 2:
-      contractNode.type = contractGraphTypes.functions
+      contractNode.type = graphTypes.contract.functions
       nodes = getFunctionNodes(contractName, abi)
       break
 

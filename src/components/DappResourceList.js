@@ -13,7 +13,7 @@ import CloudQueueIcon from '@material-ui/icons/CloudQueue'
 import NestedList from './common/NestedList'
 import ListButton from './common/ListButton'
 
-// import { contractGraphTypes } from '../graphing/graphGenerator'
+// import { graphTypes } from '../graphing/graphGenerator'
 import { grapherModes } from '../redux/reducers/grapher'
 import { spacingUnit } from '../withMuiRoot'
 
@@ -61,7 +61,7 @@ class DappResourceList extends Component {
     if (this.props.selectedTemplateId !== templateId) {
       this.props.selectTemplate(templateId)
     }
-    this.props.selectDeployed(deployedId)
+    this.props.selectDeployed(templateId, deployedId)
   }
 
   getTemplateListItems = dapps => {

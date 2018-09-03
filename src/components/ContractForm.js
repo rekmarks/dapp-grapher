@@ -5,9 +5,12 @@ import { withStyles } from '@material-ui/core/styles'
 import TextField from '@material-ui/core/TextField'
 import Button from '@material-ui/core/Button'
 import Typography from '@material-ui/core/Typography'
+import { CopyToClipboard } from 'react-copy-to-clipboard'
 
 import DropdownMenu from './common/DropdownMenu'
-import { contractGraphTypes } from '../graphing/graphGenerator'
+
+import { graphTypes } from '../graphing/graphGenerator'
+import { getDisplayAddress } from '../utils'
 
 /**
  * TODO
@@ -39,13 +42,14 @@ class ContractForm extends Component {
 
   state = {
     fieldValues: {},
+    copied: false,
   }
 
   componentDidMount () {
 
     // dapp field values are stored in state, but not individual contracts
     if (
-      this.props.selectedGraph.type === 'dapp' &&
+      Object.values(graphTypes.dapp).includes(this.props.selectedGraph.type) &&
       Object.keys(this.props.fieldValues).length > 0
     ) {
       this.setState({ fieldValues: this.props.fieldValues })
@@ -56,7 +60,7 @@ class ContractForm extends Component {
 
     // dapp field values are stored in state, but not individual contracts
     if (
-      this.props.selectedGraph.type === 'dapp' &&
+      Object.values(graphTypes.dapp).includes(this.props.selectedGraph.type) &&
       Object.keys(this.state.fieldValues).length > 0
     ) {
       this.props.storeFieldValues(this.state.fieldValues)
@@ -76,13 +80,7 @@ class ContractForm extends Component {
         >
           {this.props.heading}
         </Typography>
-        <Typography
-          className={classes.nested}
-          id="simple-modal-description"
-          variant="subheading"
-        >
-          {this.getSubheading()}
-        </Typography>
+        {this.getSubheading()}
         {this.getFunctionForm()}
       </Fragment>
     )
@@ -100,13 +98,42 @@ class ContractForm extends Component {
       type = this.props.selectedGraph.type
     }
 
-    switch (type) {
+    const typography = (
+      <Typography
+          className={this.props.classes.nested}
+          id="simple-modal-description"
+          variant="subheading"
+        >
+        {
+          this.props.contractAddress
+          ? getDisplayAddress(this.props.contractAddress)
+          : type === graphTypes.contract._constructor
+            ? 'Constructor'
+            : 'Deployed'
+        }
+      </Typography>
+    )
 
-      case contractGraphTypes._constructor:
-        return 'Constructor'
-      default:
-        return 'Deployed'
-    }
+    return (
+      this.props.contractAddress
+      ? <CopyToClipboard
+          text={this.props.contractAddress}
+          onCopy={this.handleCopy}
+          style={{ cursor: 'pointer', flexShrink: 1 }}
+        >
+          {typography}
+        </CopyToClipboard>
+      : typography
+    )
+  }
+
+  handleCopy = () => {
+
+    this.setState({copied: true})
+    this.props.addSnackbarNotification(
+      'Contract address copied to clipboard!',
+      2000
+    )
   }
 
   handleInputChange = id => event => {
@@ -170,7 +197,8 @@ class ContractForm extends Component {
     wipDeployment[metaData.id] = {
       nodeId: metaData.id,
       contractName: metaData.abiName,
-      deploymentOrder: this.props.dappTemplate.contracts[metaData.id].deploymentOrder,
+      deploymentOrder:
+        this.props.dappTemplate.contractNodes[metaData.id].deploymentOrder,
       params: {
         ...metaData.params,
       },
@@ -203,7 +231,8 @@ class ContractForm extends Component {
           type: 'address',
           paramId: output.target,
           contractId: output.targetParent,
-          deploymentOrder: this.props.dappTemplate.contracts[output.targetParent].deploymentOrder,
+          deploymentOrder:
+            this.props.dappTemplate.contractNodes[output.targetParent].deploymentOrder,
         })
       }
     })
@@ -215,10 +244,10 @@ class ContractForm extends Component {
   getFunctionForm = () => {
 
     const { classes } = this.props
+
     const nodes = this.props.selectedGraph.elements.nodes
     const graphType = this.props.selectedGraph.type
-    const selectedNodeId = this.props.selectedContractFunction
-    const selectedNode = nodes[selectedNodeId]
+    // const selectedNode = nodes[this.props.selectedContractFunction]
 
     const formData = this.getFunctionFormData()
 
@@ -226,42 +255,32 @@ class ContractForm extends Component {
 
     switch (graphType) {
 
-      case contractGraphTypes._constructor:
+      case graphTypes.contract._constructor:
 
         submitHandler = this.handleConstructorSubmit
 
         break
 
-      case contractGraphTypes.functions:
+      case graphTypes.contract.functions:
 
         functionCall = true
 
-        // here, a function is only selected if selected by user from
-        // DropdownMenu component in form (see below)
-        if (this.props.selectedContractFunction) {
-
-
-          submitHandler = this.handleFunctionSubmit
-        }
+        submitHandler = this.handleFunctionSubmit
 
         break
 
-      case 'dapp':
+      case graphTypes.dapp.template:
 
         // in the case of a dapp, a function id is selected in Grapher,
         // by an event handler in the Joint paper and passed to
         // this.props.selectedContractFunction
-
-        if (selectedNode.type === contractGraphTypes.functions) {
-          functionCall = true
-        }
 
         submitHandler = this.handleDappFunctionSubmit
 
         break
 
       default:
-        throw new Error('unhandled graph type')
+        throw new Error('unhandled graph type: ' + graphType)
     }
 
     return (
@@ -293,19 +312,26 @@ class ContractForm extends Component {
                     justifyContent: 'flex-end',
                   }}
                 >
-                  <Button
-                    className={classes.button}
-                    variant="contained"
-                    type="submit"
-                  >
-                    {
-                      graphType === 'dapp'
-                      ? 'Save Inputs'
-                      : functionCall
-                        ? 'Call Function'
-                        : 'Deploy'
-                    }
-                  </Button>
+                  {
+                    !(
+                      functionCall &&
+                      !this.props.selectedContractFunction
+                    )
+                    ? <Button
+                        className={classes.button}
+                        variant="contained"
+                        type="submit"
+                      >
+                        {
+                          graphType === graphTypes.dapp.template
+                          ? 'Save Inputs'
+                          : functionCall
+                            ? 'Call Function'
+                            : 'Deploy'
+                        }
+                      </Button>
+                    : null
+                  }
                 </div>
               </form>
             )
@@ -338,7 +364,7 @@ class ContractForm extends Component {
     functionNodes.forEach(node => {
 
       if (
-        Object.values(contractGraphTypes).includes(node.type) ||
+        Object.values(graphTypes.contract).includes(node.type) ||
         node.type === 'function'
       ) {
 
@@ -415,7 +441,10 @@ class ContractForm extends Component {
     })
 
     fields.sort((a, b) => {
-      return metaData.params[a.props.id].paramOrder - metaData.params[b.props.id].paramOrder
+      return (
+        metaData.params[a.props.id].paramOrder -
+        metaData.params[b.props.id].paramOrder
+      )
     })
     metaData.paramOrder.sort((a, b) => {
       return metaData.params[a].paramOrder - metaData.params[b].paramOrder
@@ -454,6 +483,7 @@ ContractForm.propTypes = {
   wipDappDeployment: PropTypes.object,
   fieldValues: PropTypes.object,
   storeFieldValues: PropTypes.func,
+  addSnackbarNotification: PropTypes.func,
 }
 
 /**

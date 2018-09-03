@@ -10,7 +10,7 @@ import SubjectIcon from '@material-ui/icons/Subject'
 import NestedList from './common/NestedList'
 import ListButton from './common/ListButton'
 
-import { contractGraphTypes } from '../graphing/graphGenerator'
+import { graphTypes } from '../graphing/graphGenerator'
 import { spacingUnit } from '../withMuiRoot'
 import { getDisplayAddress } from '../utils'
 
@@ -35,7 +35,7 @@ class ContractResourceList extends Component {
     return contractTypeNames.map(contractName => {
 
       const currentGraphId =
-        this.props.contractTypes[contractName][contractGraphTypes._constructor]
+        this.props.contractTypes[contractName][graphTypes.contract._constructor]
 
       return (
         <NestedList
@@ -52,7 +52,11 @@ class ContractResourceList extends Component {
             displayText="Constructor"
             icon={(<AddCircleOutlineIcon />)}
             onClick={
-              () => this.handleConstructorClick(currentGraphId, contractName)
+              () => this.props.getGraph(
+              currentGraphId,
+              graphTypes.contract._constructor,
+              contractName
+            )
             }
             style={{ paddingLeft: spacingUnit * 6 }} />
           <NestedList
@@ -85,11 +89,9 @@ class ContractResourceList extends Component {
     return Object.keys(instances).sort().map(address => {
 
       const graphId =
-          this.props.contractTypes[contractName][contractGraphTypes.functions]
+          this.props.contractTypes[contractName][graphTypes.contract.functions]
 
       const displayAddress = getDisplayAddress(address)
-
-      const hasInstance = Boolean(instances[address])
 
       return (
         <ListButton
@@ -97,16 +99,16 @@ class ContractResourceList extends Component {
           disabled={
             this.props.selectedGraphId &&
             this.props.selectedGraphId === graphId &&
-            !!this.props.selectedContractAddress
+            Boolean(this.props.selectedContractAddress)
               ? this.props.selectedContractAddress === address
               : false
           }
           displayText={displayAddress}
           inset={true}
           onClick={
-            () => this.handleInstanceClick(
-              hasInstance,
+            () => this.props.getGraph(
               graphId,
+              graphTypes.contract.functions,
               contractName,
               address
             )
@@ -115,36 +117,6 @@ class ContractResourceList extends Component {
           toolTip={address} />
       )
     })
-  }
-
-  handleConstructorClick = (graphId, contractName) => {
-    if (graphId) {
-      this.props.selectGraph(graphId)
-    } else {
-      this.props.createGraph(this.props.getCreateGraphParams(
-        contractGraphTypes._constructor,
-        { contractName: contractName }
-      ))
-    }
-  }
-
-  handleInstanceClick = (hasInstance, graphId, contractName, address) => {
-    if (!hasInstance) {
-      this.props.addInstance(contractName, address)
-    }
-    if (graphId) {
-
-      if (this.props.selectedGraphId !== graphId) {
-        this.props.selectGraph(graphId)
-      }
-    } else {
-      this.props.createGraph(this.props.getCreateGraphParams(
-        contractGraphTypes.functions,
-        {contractName: contractName}
-      ))
-    }
-    // TODO: unsafe (addInstance could take too long)
-    this.props.selectContractAddress(address)
   }
 }
 
@@ -160,6 +132,7 @@ ContractResourceList.propTypes = {
   selectGraph: PropTypes.func,
   selectedGraphId: PropTypes.string,
   grapherMode: PropTypes.string,
+  getGraph: PropTypes.func,
 }
 
 export default withStyles(styles)(ContractResourceList)

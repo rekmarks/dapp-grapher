@@ -175,7 +175,8 @@ export default class ResourceMenu extends Component {
             getCreateGraphParams={this.props.getCreateGraphParams}
             createGraph={this.props.createGraph}
             selectGraph={this.props.selectGraph}
-            selectedGraphId={this.props.selectedGraphId} />
+            selectedGraphId={this.props.selectedGraphId}
+            getGraph={this.props.getGraph} />
         </NestedList>
         {resources.bottom}
       </div>
@@ -247,6 +248,7 @@ ResourceMenu.propTypes = {
   selectedDeployedDappId: PropTypes.string,
   selectDeployedDapp: PropTypes.func,
   openModal: PropTypes.func,
+  getGraph: PropTypes.func,
 }
 
 /**

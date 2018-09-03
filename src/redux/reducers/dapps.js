@@ -8,13 +8,13 @@ import {
   deployEnqueuedContracts,
 } from './contracts'
 
-import { selectGraph } from './grapher'
+import { selectGraph, addGraph } from './grapher'
 
 import { addSnackbarNotification } from './ui'
 
 // misc imports
 
-import { contractGraphTypes } from '../../graphing/graphGenerator'
+import { graphTypes, getDeployedDappGraph } from '../../graphing/graphGenerator'
 
 const ACTIONS = {
   ADD_TEMPLATE: 'DAPPS:ADD_TEMPLATE',
@@ -137,6 +137,8 @@ export default function reducer (state = initialState, action) {
                 account: action.payload.account,
                 networkId: action.payload.networkId,
                 contractInstances: action.payload.contractInstances,
+                templateId: action.payload.templateId,
+                graphId: action.payload.deployedGraphId,
               },
             },
           },
@@ -228,16 +230,19 @@ function getSelectDeployedAction (deployedId) {
   }
 }
 
-function selectDeployedThunk (deployedId) {
+function selectDeployedThunk (templateId, deployedId) {
 
   return (dispatch, getState) => {
 
-    const dapps = getState().dapps
+    const state = getState()
 
-    dispatch(getSelectDeployedAction(deployedId))
-    dispatch(
-      selectGraph(dapps.templates[dapps.selectedTemplateId].dappGraphId)
-    )
+    if (state.dapps.selectedDeployedId !== deployedId) {
+      dispatch(getSelectDeployedAction(deployedId))
+    }
+    const graphId = state.dapps.templates[templateId].deployed[deployedId].graphId
+    if (graphId !== state.grapher.selectedGraphId) {
+      dispatch(selectGraph(graphId))
+    }
   }
 }
 
@@ -277,7 +282,7 @@ function addTemplateThunk (graphId, dappGraph, templateName = null) {
     dispatch(getAddTemplateAction({
       id: uuid(),
       dappGraphId: graphId,
-      contracts: contracts,
+      contractNodes: contracts,
       parameterValues: parameterValues,
       displayName: (
         templateName || (Object.keys(getState().dapps.templates).length + 1).toString()
@@ -287,39 +292,54 @@ function addTemplateThunk (graphId, dappGraph, templateName = null) {
   }
 }
 
-function deploymentResultThunk (success, data) {
+function deploymentResultThunk (success, resultData) {
 
   return (dispatch, getState) => {
+
+    const state = getState()
 
     let deployedId
     if (success) {
 
       deployedId = uuid()
+      const deployedGraphId = uuid()
 
-      dispatch(
-        addSnackbarNotification(
-          data.displayName + ' — Dapp deployment successful!',
-          6000
-        )
-      )
+      dispatch(addSnackbarNotification(
+        resultData.displayName + ' — Dapp deployment successful!',
+        6000
+      ))
       dispatch(getDeploymentSuccessAction({
-        ...data,
+        ...resultData,
         id: deployedId,
+        templateId: resultData.templateId,
+        deployedGraphId: deployedGraphId,
       }))
+      dispatch(addGraph(getDeployedDappGraph(
+        deployedGraphId,
+        state.grapher.graphs[
+          state.dapps.templates[resultData.templateId].dappGraphId
+        ].toJS(),
+        Object.values(state.contracts.instances[state.web3.networkId]).filter(
+          instance => instance.dappTemplateIds.includes(resultData.templateId)
+        )
+      )))
     } else {
 
-      dispatch(
-        addSnackbarNotification(
-          data.displayName + ' — Dapp deployment failed. See logs.',
-          12000
-        )
-      )
-      dispatch(getDeploymentFailureAction(data.error))
+      dispatch(addSnackbarNotification(
+        resultData.displayName + ' — Dapp deployment failed. See logs.',
+        12000
+      ))
+      dispatch(getDeploymentFailureAction(resultData.error))
     }
 
     dispatch(getEndDeploymentAction())
 
-    if (success) dispatch(selectDeployedThunk(deployedId))
+    if (success) {
+      dispatch(selectDeployedThunk(
+        resultData.templateId,
+        deployedId
+      ))
+    }
   }
 }
 
@@ -386,7 +406,7 @@ function getDappGraphDeploymentOrder (dappGraph) {
   Object.values(dappGraph.elements.nodes).forEach(node => {
 
     if (
-      Object.values(contractGraphTypes).includes(node.type) ||
+      Object.values(graphTypes.contract).includes(node.type) ||
       node.id === 'account'
     ) {
       parentNodes[node.id] = { ...node }
@@ -456,35 +476,3 @@ function getDappGraphDeploymentOrder (dappGraph) {
 
   return deployments
 }
-
-/**
- * Converts a template dapp graph into a deployed dapp graph for use with
- * a deployed dapp
- * @param  {object} templateGraph     the template's dapp graph
- * @param  {object} deployedDapp      the deployed dapp object
- * @param  {object} deployedContracts the deployed contract instances
- *                                    associated with the deployed dapp
- * @return {object}                   a graph of the deployed dapp
-
-function getDeployedDappGraph (templateGraph, deployedDapp, deployedContracts) {
-
-  const deployedGraph = { ...templateGraph }
-
-  deployedGraph.deployed = true
-
-  deployedGraph.elements.nodes.forEach(node => {
-
-    if (Object.values(contractGraphTypes).includes(node.type)) {
-
-      node.deployedAddress =
-    }
-    else if (node.type === 'parameter') {
-
-    }
-    else if (node.type === 'output') {
-
-    }
-    else console.warn('getDeployedDappGraph: unknown node type: ' + node.type)
-  })
-}
-*/

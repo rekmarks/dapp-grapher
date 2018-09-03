@@ -2,7 +2,7 @@
 import joint from 'jointjs'
 import uuid from 'uuid/v4'
 
-import { contractGraphTypes } from './graphGenerator'
+import { graphTypes } from './graphGenerator'
 import exampleGraphs from '../temp/graphExamples.js' // TODO: temp
 
 /**
@@ -59,7 +59,7 @@ const jointHelper = {
   elements: {
     connect,
     setLayout,
-    getAttribute: getCustomAttributeFromView,
+    getAttribute: getDapppGrapherPropertyFromView,
     setAttribute: setCustomAttributeInView,
   },
   setDummyElements,
@@ -86,14 +86,20 @@ function addJointElements (jointGraph, dappGraph, meta) {
 
   const graphNodes = dappGraph.elements.nodes
 
+  if (Object.values(graphTypes.dapp).includes(dappGraph.type)) {
+
+    setDappCells(jointGraph, dappGraph, meta)
+    return
+  }
+
   let cells
   switch (dappGraph.type) {
 
-    case contractGraphTypes._constructor:
+    case graphTypes.contract._constructor:
       cells = generateConstructorElement(dappGraph.name, graphNodes)
       break
 
-    case contractGraphTypes.functions:
+    case graphTypes.contract.functions:
       cells = generateFunctionsElements(dappGraph)
       break
 
@@ -105,10 +111,6 @@ function addJointElements (jointGraph, dappGraph, meta) {
         })
       )
       break
-
-    case 'dapp':
-      setDappCells(jointGraph, dappGraph, meta)
-      return
 
     default:
       throw new Error('unknown graph type')
@@ -147,11 +149,19 @@ function generateAccountElement (accountNode, accountChildren) {
  */
 function generateConstructorElement (graphName, graphNodes) {
 
-  const ioNodes = Object.values(graphNodes)
+  const ioNodes =
+    Object.values(graphNodes)
     .filter(node => node.type === 'parameter' || node.type === 'output')
+    .sort((a, b) => {
+
+      if (a.type === 'output') return 1
+      if (b.type === 'output') return -1
+
+      return a.paramOrder - b.paramOrder
+    })
 
   const constructorNode = Object.values(graphNodes)
-    .filter(node => node.type === contractGraphTypes._constructor)[0]
+    .filter(node => node.type === graphTypes.contract._constructor)[0]
 
   const contractElement = generateAtomic(
     graphName,
@@ -161,6 +171,7 @@ function generateConstructorElement (graphName, graphNodes) {
         contractName: constructorNode.abiName,
         id: constructorNode.id,
         type: constructorNode.type,
+        instanceAddress: constructorNode.instanceAddress,
       },
     },
     {
@@ -205,7 +216,7 @@ function setDappCells (jointGraph, dappGraph, meta) {
 
   // get constructor elements
   const constructorNodeIds = Object.values(graphNodes).filter(node => {
-    return node.type === contractGraphTypes._constructor
+    return node.type === graphTypes.contract._constructor
   }).map(node => node.id)
 
   constructorNodeIds.forEach(constructorId => {
@@ -262,7 +273,13 @@ function generateFunctionsElements (dappGraph) {
 
   const functionElements = functionNodes.map(node => {
 
-    const ioNodes = allNodes.filter(n => n.parent === node.id)
+    const ioNodes = allNodes.filter(n => n.parent === node.id).sort((a, b) => {
+
+      if (a.type === 'output') return 1
+      if (b.type === 'output') return -1
+
+      return a.paramOrder - b.paramOrder
+    })
 
     const funcElement = generateAtomic(
       node.displayName,
@@ -372,8 +389,8 @@ function generatePorts (ioNodes, isInOut = false) {
         },
         ...props,
       })
-  })
-}
+    })
+  }
 
   return ports
 }
@@ -415,17 +432,20 @@ function addPaperEventHandlers (paper, handlers) {
 
     console.log(view.model)
 
-    const nodeType = getCustomAttributeFromView(view, 'type')
+    const nodeType = getDapppGrapherPropertyFromView(view, 'type')
 
     if (!nodeType) {
       console.warn('joint element missing type')
       return
     }
 
-    if (Object.values(contractGraphTypes).includes(nodeType)) {
+    if (Object.values(graphTypes.contract).includes(nodeType)) {
 
-      handlers.openForm(getCustomAttributeFromView(view, 'id'))
-
+      handlers.openForm(
+        getDapppGrapherPropertyFromView(view, 'id'),
+        getDapppGrapherPropertyFromView(view, 'contractName'),
+        getDapppGrapherPropertyFromView(view, 'instanceAddress')
+      )
     } else if (nodeType === 'ui') {
       // do nothing
     } else {
@@ -518,7 +538,7 @@ function setLayout (graph, options = {}) {
  * @return {?}              the value of the attribute, all dappGrapher
  *                          attributes (if key=null), or undefined
  */
-function getCustomAttributeFromView (view, key = null) {
+function getDapppGrapherPropertyFromView (view, key = null) {
   return key ? view.model.attributes._dappGrapher[key]
     : view.model.attributes._dappGrapher
 }
