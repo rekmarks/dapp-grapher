@@ -46,8 +46,8 @@ class ContractResourceList extends Component {
         >
           <ListButton
             disabled={
-              this.props.selectedGraphId &&
-              this.props.selectedGraphId === currentGraphId
+              this.props.displayGraphId &&
+              this.props.displayGraphId === currentGraphId
             }
             displayText="Constructor"
             icon={(<AddCircleOutlineIcon />)}
@@ -97,8 +97,8 @@ class ContractResourceList extends Component {
         <ListButton
           key={address}
           disabled={
-            this.props.selectedGraphId &&
-            this.props.selectedGraphId === graphId &&
+            this.props.displayGraphId &&
+            this.props.displayGraphId === graphId &&
             Boolean(this.props.selectedContractAddress)
               ? this.props.selectedContractAddress === address
               : false
@@ -130,7 +130,7 @@ ContractResourceList.propTypes = {
   getCreateGraphParams: PropTypes.func,
   createGraph: PropTypes.func,
   selectGraph: PropTypes.func,
-  selectedGraphId: PropTypes.string,
+  displayGraphId: PropTypes.string,
   grapherMode: PropTypes.string,
   getGraph: PropTypes.func,
 }

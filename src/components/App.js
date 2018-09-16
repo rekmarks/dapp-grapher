@@ -51,7 +51,6 @@ import {
   createGraph,
   deleteGraph,
   deleteAllGraphs,
-  getCreateGraphParams,
   selectFormGraph,
   selectGraph,
   saveWipGraph,
@@ -67,7 +66,6 @@ import {
   modalContentTypes,
   selectContractFunction,
   saveModalFormFieldValues,
-  deleteModalFormFieldValues,
 } from '../redux/reducers/ui'
 
 import { getWeb3 } from '../redux/reducers/web3'
@@ -77,75 +75,60 @@ import { getWeb3 } from '../redux/reducers/web3'
 import './style/App.css'
 import appStyles from './style/App.style'
 
-// misc imports
-
-import { graphTypes } from '../graphing/graphGenerator'
-
 class App extends Component {
 
+  /**
+   * Dispatches getWeb3 action, sets ref for the graph container element,
+   * sets necessary component-level ui state
+   */
   constructor (props) {
+
     super(props)
+
     this.props.getWeb3()
+
     this.graphContainerRef = React.createRef()
+
     this.state = {
-      drawerOpen: true,
-      graphHeight: null,
-      graphWidth: null,
-      selectedGraph: null,
-      insertionGraph: null,
+      drawerOpen: true, // left sidebar open by default
     }
   }
 
+  /**
+   * Handles opening the left sidebar
+   */
   handleDrawerOpen = () => {
     this.setState({ drawerOpen: true })
   }
 
+  /**
+   * Handles closing the left sidebar
+   */
   handleDrawerClose = () => {
     this.setState({ drawerOpen: false })
   }
 
+  /**
+   * Perfunctory React render error handling
+   * Is called automagically be React on render errors
+   */
   componentDidCatch (error, errorInfo) {
-    // Catch errors in any components below and, in the future,
+    // Catch errors in any child components and, in the future,
     // re-render with error message
     this.props.logRenderError(error, errorInfo)
-  }
-
-  componentDidUpdate () {
-
-    let selectedGraph = null
-
-    // conversion from immutable data
-    if (this.props.selectedGraphObject) {
-      selectedGraph = this.props.selectedGraphObject.toJS()
-    }
-
-    // delete Contract Form field values from store if the selected
-    // graph's type is a dapp and there are field values to delete
-    if (
-      (
-        !selectedGraph ||
-        Object.values(graphTypes.dapp).includes(selectedGraph.type)
-      ) &&
-      (
-        Boolean(this.props.modalFormFieldValues) &&
-        Object.keys(this.props.modalFormFieldValues).length > 0
-      )
-    ) {
-      this.props.deleteModalFormFieldValues()
-    }
   }
 
   render () {
 
     const classes = this.props.classes
 
-    let selectedGraph = null
+    let displayGraph = null
     let insertionGraph = null
 
     // conversion from immutable data
-    if (this.props.selectedGraphObject) {
+    if (this.props.displayGraphObject) {
 
-      selectedGraph = this.props.selectedGraphObject.toJS()
+      displayGraph = this.props.displayGraphObject.toJS()
 
     } else if (this.props.insertionGraphObject) {
 
@@ -223,11 +206,10 @@ class App extends Component {
                 contractTypes={this.props.contractTypes}
                 contractInstances={this.props.contractInstances}
                 createGraph={this.props.createGraph}
-                getCreateGraphParams={getCreateGraphParams} // helper, not dispatch
                 deleteGraph={this.props.deleteGraph}
                 deleteAllGraphs={this.props.deleteAllGraphs}
                 selectGraph={this.props.selectGraph}
-                selectedGraphId={this.props.selectedGraphId}
+                displayGraphId={this.props.displayGraphId}
                 selectContractAddress={this.props.selectContractAddress}
                 selectedContractAddress={this.props.selectedContractAddress}
                 hasGraphs={this.props.hasGraphs}
@@ -236,7 +218,7 @@ class App extends Component {
                 saveWipGraph={this.props.saveWipGraph}
                 hasWipGraph={
                   this.props.wipGraph
-                  ? Boolean(this.props.wipGraph.id)
+                  ? Boolean(this.props.wipGraph.id) // TODO: make dependent on grapherMode instead
                   : false
                 }
                 selectDappTemplate={this.props.selectDappTemplate}
@@ -252,7 +234,7 @@ class App extends Component {
           </Drawer>
           <main className="App-graph-container" ref={this.graphContainerRef} >
             {
-              selectedGraph ||
+              displayGraph ||
               this.props.grapherMode === grapherModes.createDapp
               ? <Grapher
                   accountGraph={this.props.accountGraph}
@@ -264,8 +246,8 @@ class App extends Component {
                   openContractForm={
                     () => this.props.openModal(modalContentTypes.contractForm)
                   }
-                  selectedGraph={selectedGraph}
-                  selectedGraphId={this.props.selectedGraphId}
+                  displayGraph={displayGraph}
+                  displayGraphId={this.props.displayGraphId}
                   storeWipGraph={this.props.updateWipGraph}
                   wipGraph={this.props.wipGraph}
                   selectContractFunction={this.props.selectContractFunction}
@@ -293,7 +275,7 @@ class App extends Component {
             >
               {
                 this.getModalContent(
-                  classes, selectedGraph
+                  classes, displayGraph
                 )
               }
             </Modal>
@@ -307,7 +289,15 @@ class App extends Component {
     )
   }
 
-  getModalContent = (classes, selectedGraph) => {
+  /**
+   * Returns the correct modal content, per state.ui.modal.content.
+   * This is either a form for interacting with contracts - whether deployed
+   * instances or undeployed constructors, alone or as part of dapp templates -
+   * or dapps - when adding new templates or deploying instances of templates.
+   *
+   * @returns {jsx} the components constituting the modal's content
+   */
+  getModalContent = (classes, displayGraph) => {
 
     const formClasses = {
        container: classes.container,
@@ -319,7 +309,7 @@ class App extends Component {
     const formGraph = (
       this.props.selectedFormGraphObject
       ? this.props.selectedFormGraphObject.toJS()
-      : selectedGraph
+      : displayGraph
     )
 
     const selectedFunctionName = (
@@ -338,7 +328,7 @@ class App extends Component {
             classes={formClasses}
             account={this.props.account}
             contractAddress={this.props.selectedContractAddress}
-            selectedGraph={formGraph}
+            graph={formGraph}
             deployContract={this.props.deployContract}
             callInstance={this.props.callInstance}
             closeContractForm={this.props.closeModal}
@@ -426,8 +416,8 @@ App.propTypes = {
   selectedFormGraphObject: PropTypes.object,
   selectedFormGraph: PropTypes.object,
   selectGraph: PropTypes.func,
-  selectedGraphId: PropTypes.string,
-  selectedGraphObject: PropTypes.object,
+  displayGraphId: PropTypes.string,
+  displayGraphObject: PropTypes.object,
   setGrapherMode: PropTypes.func,
   saveWipGraph: PropTypes.func,
   updateWipGraph: PropTypes.func,
@@ -443,7 +433,6 @@ App.propTypes = {
   modalFormFieldValues: PropTypes.object,
   modalContent: PropTypes.string,
   saveModalFormFieldValues: PropTypes.func,
-  deleteModalFormFieldValues: PropTypes.func,
   addSnackbarNotification: PropTypes.func,
   snackbarMessage: PropTypes.string,
   snackbarDuration: PropTypes.number,
@@ -484,8 +473,8 @@ function mapStateToProps (state) {
     insertionGraphObject: state.grapher.graphs[state.grapher.insertionGraphId],
     graphInsertions: state.grapher.insertions,
     selectedFormGraphObject: state.grapher.graphs[state.grapher.formGraphId],
-    selectedGraphId: state.grapher.selectedGraphId,
-    selectedGraphObject: state.grapher.graphs[state.grapher.selectedGraphId],
+    displayGraphId: state.grapher.displayGraphId,
+    displayGraphObject: state.grapher.graphs[state.grapher.displayGraphId],
     hasGraphs: Object.keys(state.grapher.graphs).length >= 1,
     wipGraph: state.grapher.wipGraph,
     formGraphId: state.grapher.formGraphId,
@@ -544,8 +533,6 @@ function mapDispatchToProps (dispatch) {
     setGrapherMode: contentKey => dispatch(setGrapherMode(contentKey)),
     saveModalFormFieldValues: fieldValues =>
       dispatch(saveModalFormFieldValues(fieldValues)),
-    deleteModalFormFieldValues: () =>
-      dispatch(deleteModalFormFieldValues()),
     // web3
     getWeb3: () => dispatch(getWeb3()),
   }

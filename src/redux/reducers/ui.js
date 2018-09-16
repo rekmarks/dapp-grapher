@@ -6,6 +6,7 @@ const ACTIONS = {
   DELETE_MODAL_FORM_FIELD_VALUES: 'UI:MODAL:DELETE_FIELD_VALUES',
   SELECT_CONTRACT_FUNCTION: 'UI:CONTRACT_FORM:SELECT_CONTRACT_FUNCTION',
   ADD_SNACKBAR_NOTIFICATION: 'UI:SNACKBAR:ADD_NOTIFICATION',
+  CLEAR_SNACKBAR_NOTIFICATION: 'UI:SNACKBAR:CLEAR_NOTIFICATION',
 }
 
 const modalContent = {
@@ -34,7 +35,7 @@ export {
   getSelectContractFunctionAction as selectContractFunction,
   getSaveModalFormFieldValuesAction as saveModalFormFieldValues,
   getDeleteModalFormFieldValuesAction as deleteModalFormFieldValues,
-  getAddSnackbarNotificationAction as addSnackbarNotification,
+  addSnackbarNotificationThunk as addSnackbarNotification,
   modalContent as modalContentTypes,
   initialState as uiInitialState,
 }
@@ -107,6 +108,16 @@ export default function reducer (state = initialState, action) {
         },
       }
 
+    case ACTIONS.CLEAR_SNACKBAR_NOTIFICATION:
+      return {
+        ...state,
+        snackbar: {
+          ...state.snackbar,
+          message: null,
+          duration: 6000,
+        },
+      }
+
     default:
       return state
   }
@@ -154,5 +165,20 @@ function getAddSnackbarNotificationAction (message, duration) {
     type: ACTIONS.ADD_SNACKBAR_NOTIFICATION,
     message: message,
     duration: duration,
+  }
+}
+
+function getClearSnackbarNotificationAction () {
+  return {
+    type: ACTIONS.CLEAR_SNACKBAR_NOTIFICATION,
+  }
+}
+
+function addSnackbarNotificationThunk (message, duration) {
+
+  return (dispatch, getState) => {
+
+    dispatch(getClearSnackbarNotificationAction())
+    dispatch(getAddSnackbarNotificationAction(message, duration))
   }
 }

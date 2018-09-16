@@ -40,6 +40,13 @@
     "window": false
   },
 
+  "settings": {
+    "react": {
+      "pragma": "React",
+      "version": "16.4.2",
+    },
+  },
+
   "rules": {
     "no-restricted-globals": ["error", "event"],
     "accessor-pairs": 2,

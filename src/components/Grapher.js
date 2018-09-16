@@ -42,7 +42,7 @@ export default class Grapher extends Component {
       width = container.current.clientWidth
 
     } else {
-      // arbitrary non-zero values
+      // arbitrary non-zero values to prevent CSS/rendering weirdness
       height = 1
       width = 1
     }
@@ -67,18 +67,18 @@ export default class Grapher extends Component {
 
       this.state.jointGraph.clear()
 
-      if (this.props.selectedGraph) {
+      if (this.props.displayGraph) {
 
         const meta = { setsLayout: true }
 
-        if (this.props.selectedGraph.type === graphTypes.contract.functions) {
+        if (this.props.displayGraph.type === graphTypes.contract.functions) {
           meta.layoutOptions = {}
           meta.layoutOptions.rankDir = 'TB'
         }
 
         jh.addJointElements(
           this.state.jointGraph,
-          this.props.selectedGraph,
+          this.props.displayGraph,
           meta
         )
       }
@@ -94,6 +94,7 @@ export default class Grapher extends Component {
         delete wipGraph.id
         // absence of id used to indicate that user cannot save the wipGraph
         // see ResourceMenu prop, hasWipGraph
+        // TODO: make this dependent on grapherMode instead
 
         this.state.jointGraph.clear()
 
@@ -157,7 +158,7 @@ export default class Grapher extends Component {
     }
 
     // if selected graph has changed, run set workflow
-    if (prevProps.selectedGraph !== this.props.selectedGraph) {
+    if (prevProps.displayGraph !== this.props.displayGraph) {
       this.setJointGraph()
     }
 
@@ -199,18 +200,20 @@ export default class Grapher extends Component {
 
     const wipGraph = { ...this.props.wipGraph }
 
+    // set wipGraph id if missing
     if (!wipGraph.id) wipGraph.id = uuid()
 
+    // each contract added to wipGraph must be uniquely identified
     const contractId = uuid()
     const insertionGraph = { ...this.props.insertionGraph }
     insertionGraph.id = contractId + ':graph'
 
-    if (!wipGraph.contracts[insertionGraph.name]) {
-      wipGraph.contracts[insertionGraph.name] = []
-    }
+    // contracts of wipGraph are stored in array by contract type/name
+    wipGraph.contracts[insertionGraph.name]
+    ? wipGraph.contracts[insertionGraph.name].push(contractId)
+    : wipGraph.contracts[insertionGraph.name] = [contractId]
 
-    wipGraph.contracts[insertionGraph.name].push(contractId)
-
+    // add nodes of insertionGraph to wipGraph
     Object.values(insertionGraph.elements.nodes).forEach(node => {
 
       if (Object.values(graphTypes.contract).includes(node.type)) {
@@ -226,11 +229,13 @@ export default class Grapher extends Component {
       wipGraph.elements.nodes[node.id] = node
     })
 
+    // add edges of insertionGraph to wipGraph
     Object.values(insertionGraph.elements.edges).forEach(edge => {
       edge.id = contractId + ':' + edge.id
       wipGraph.elements.edges[edge.id] = edge
     })
 
+    // add insertionGraph elements to joint
     jh.addJointElements(
       this.state.jointGraph,
       insertionGraph,
@@ -253,7 +258,7 @@ export default class Grapher extends Component {
     if (this.props.grapherMode === grapherModes.main) {
 
       if (
-        this.props.selectedGraph.type === graphTypes.dapp.deployed &&
+        this.props.displayGraph.type === graphTypes.dapp.deployed &&
         instanceAddress
       ) {
 
@@ -264,18 +269,18 @@ export default class Grapher extends Component {
         this.props.selectFormGraph(contractName, instanceAddress)
 
       } else if (
-        this.props.selectedGraph.type === graphTypes.dapp.deployed ||
+        this.props.displayGraph.type === graphTypes.dapp.deployed ||
         instanceAddress
       ) {
         throw new Error(
-          'unhandled workflow: graph type ' + this.props.selectedGraph.type +
+          'unhandled workflow: graph type ' + this.props.displayGraph.type +
           ' and instanceAddress ' + Boolean(instanceAddress)
         )
       }
 
       if (
         functionId &&
-        this.props.selectedGraph.type !== graphTypes.dapp.deployed
+        this.props.displayGraph.type !== graphTypes.dapp.deployed
       ) {
         this.props.selectContractFunction(functionId)
       }
@@ -292,7 +297,7 @@ export default class Grapher extends Component {
 
   /**
    * Adds an edge to the current wipGraph and saves the wipGraph to store
-   * @param  {object} edge the edge to be added]
+   * @param  {object}  edge  the edge to be added
    */
   addWipGraphEdge = edge => {
 
@@ -322,6 +327,7 @@ export default class Grapher extends Component {
       } else break
     }
 
+    // TODO: why are these deleted?
     delete edge.sourceName
     delete edge.targetName
 
@@ -353,8 +359,8 @@ Grapher.propTypes = {
   insertionGraphId: PropTypes.string,
   openContractForm: PropTypes.func,
   selectContractFunction: PropTypes.func,
-  selectedGraph: PropTypes.object,
-  selectedGraphId: PropTypes.string,
+  displayGraph: PropTypes.object,
+  displayGraphId: PropTypes.string,
   storeWipGraph: PropTypes.func,
   wipGraph: PropTypes.object,
   selectFormGraph: PropTypes.func,

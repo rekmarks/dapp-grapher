@@ -108,9 +108,9 @@ function getDeployedDappGraph (
   deployedGraph.id = deployedGraphId
 
   const nodes = Object.values(deployedGraph.elements.nodes)
-  const sourceNodes = Object.values(deployedGraph.elements.edges).map(
-    edge => edge.source
-  )
+  // const sourceNodes = Object.values(deployedGraph.elements.edges).map(
+  //   edge => edge.source
+  // )
 
   nodes.filter(
 
@@ -127,15 +127,15 @@ function getDeployedDappGraph (
 
     if (node.type === 'output') {
 
-      if (sourceNodes.includes(node.id)) {
+      // if (sourceNodes.includes(node.id)) {
 
-        if (node.abiType === 'address' && node.parent !== 'account') {
+      if (node.abiType === 'address' && node.parent !== 'account') {
 
-          node.displayName = getDisplayAddress(
-            deployedGraph.elements.nodes[node.parent].instanceAddress
-          )
-        }
-      } else delete deployedGraph.elements.nodes[node.id]
+        node.displayName = getDisplayAddress(
+          deployedGraph.elements.nodes[node.parent].instanceAddress
+        )
+      }
+      // } else delete deployedGraph.elements.nodes[node.id]
     }
   })
 

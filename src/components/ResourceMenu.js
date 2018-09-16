@@ -21,7 +21,7 @@ import DappResourceList from './DappResourceList'
 import NestedList from './common/NestedList'
 import ListButton from './common/ListButton'
 
-import { grapherModes } from '../redux/reducers/grapher'
+import { grapherModes, getCreateGraphParams } from '../redux/reducers/grapher'
 import { modalContentTypes } from '../redux/reducers/ui'
 
 export default class ResourceMenu extends Component {
@@ -70,21 +70,24 @@ export default class ResourceMenu extends Component {
         </Fragment>
       )
 
+      resources.mid = (
+        <NestedList
+          icon={(<AppsIcon />)}
+          displayText="Dapps"
+        >
+          <DappResourceList
+            dapps={this.props.dapps}
+            setGrapherMode={this.props.setGrapherMode}
+            selectGraph={this.props.selectGraph}
+            selectTemplate={this.props.selectDappTemplate}
+            selectDeployed={this.props.selectDeployedDapp}
+            selectedTemplateId={this.props.selectedDappTemplateId}
+            selectedDeployedId={this.props.selectedDeployedDappId} />
+        </NestedList>
+      )
+
       resources.bottom = (
         <Fragment>
-          <NestedList
-            icon={(<AppsIcon />)}
-            displayText="Dapps"
-          >
-            <DappResourceList
-              dapps={this.props.dapps}
-              setGrapherMode={this.props.setGrapherMode}
-              selectGraph={this.props.selectGraph}
-              selectTemplate={this.props.selectDappTemplate}
-              selectDeployed={this.props.selectDeployedDapp}
-              selectedTemplateId={this.props.selectedDappTemplateId}
-              selectedDeployedId={this.props.selectedDeployedDappId} />
-          </NestedList>
           <Divider />
           <NestedList
             icon={(<BuildIcon />)}
@@ -96,9 +99,9 @@ export default class ResourceMenu extends Component {
               icon={(<DeleteIcon />)}
               displayText="Delete All Graphs" />
             <ListButton
-              disabled={!this.props.selectedGraphId}
+              disabled={!this.props.displayGraphId}
               onClick={
-                () => this.props.deleteGraph(this.props.selectedGraphId)
+                () => this.props.deleteGraph(this.props.displayGraphId)
               }
               icon={(<DeleteIcon />)}
               displayText="Delete Selected Graph" />
@@ -137,9 +140,9 @@ export default class ResourceMenu extends Component {
         </Fragment>
       )
 
-      resources.bottom = (
-        ''
-      )
+      resources.mid = ''
+
+      resources.bottom = ''
     }
 
     return (
@@ -149,7 +152,7 @@ export default class ResourceMenu extends Component {
           {
             (
               this.props.grapherMode === grapherModes.main &&
-              !this.props.selectedGraphId
+              !this.props.displayGraphId
             )
             ? null
             : <ListButton
@@ -160,6 +163,7 @@ export default class ResourceMenu extends Component {
           }
         </List>
         <Divider />
+        {resources.mid}
         <NestedList
           icon={(<StorageIcon />)}
           displayText="Contracts"
@@ -172,10 +176,10 @@ export default class ResourceMenu extends Component {
             selectContractAddress={this.props.selectContractAddress}
             selectedContractAddress={this.props.selectedContractAddress}
             addInstance={this.props.addInstance}
-            getCreateGraphParams={this.props.getCreateGraphParams}
+            getCreateGraphParams={getCreateGraphParams}
             createGraph={this.props.createGraph}
             selectGraph={this.props.selectGraph}
-            selectedGraphId={this.props.selectedGraphId}
+            displayGraphId={this.props.displayGraphId}
             getGraph={this.props.getGraph} />
         </NestedList>
         {resources.bottom}
@@ -231,7 +235,7 @@ ResourceMenu.propTypes = {
   deleteAllGraphs: PropTypes.func,
   getCreateGraphParams: PropTypes.func,
   selectGraph: PropTypes.func,
-  selectedGraphId: PropTypes.string,
+  displayGraphId: PropTypes.string,
   selectContractAddress: PropTypes.func,
   selectedContractAddress: PropTypes.string,
   hasGraphs: PropTypes.bool,

@@ -521,7 +521,7 @@ function deployThunk (contractName, constructorParams) {
 
     dispatch(addSnackbarNotification(
      'Deploying contract: ' + contractName,
-     15000
+     60000
     ))
 
     const result = await deployContract(

@@ -240,7 +240,7 @@ function selectDeployedThunk (templateId, deployedId) {
       dispatch(getSelectDeployedAction(deployedId))
     }
     const graphId = state.dapps.templates[templateId].deployed[deployedId].graphId
-    if (graphId !== state.grapher.selectedGraphId) {
+    if (graphId !== state.grapher.displayGraphId) {
       dispatch(selectGraph(graphId))
     }
   }

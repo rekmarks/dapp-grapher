@@ -42,14 +42,13 @@ class ContractForm extends Component {
 
   state = {
     fieldValues: {},
-    copied: false,
   }
 
   componentDidMount () {
 
     // dapp field values are stored in state, but not individual contracts
     if (
-      Object.values(graphTypes.dapp).includes(this.props.selectedGraph.type) &&
+      Object.values(graphTypes.dapp).includes(this.props.graph.type) &&
       Object.keys(this.props.fieldValues).length > 0
     ) {
       this.setState({ fieldValues: this.props.fieldValues })
@@ -60,7 +59,7 @@ class ContractForm extends Component {
 
     // dapp field values are stored in state, but not individual contracts
     if (
-      Object.values(graphTypes.dapp).includes(this.props.selectedGraph.type) &&
+      Object.values(graphTypes.dapp).includes(this.props.graph.type) &&
       Object.keys(this.state.fieldValues).length > 0
     ) {
       this.props.storeFieldValues(this.state.fieldValues)
@@ -92,10 +91,10 @@ class ContractForm extends Component {
 
     if (this.props.selectedContractFunction) {
       type =
-        this.props.selectedGraph.elements
+        this.props.graph.elements
         .nodes[this.props.selectedContractFunction].type
     } else {
-      type = this.props.selectedGraph.type
+      type = this.props.graph.type
     }
 
     const typography = (
@@ -128,8 +127,6 @@ class ContractForm extends Component {
   }
 
   handleCopy = () => {
-
-    this.setState({copied: true})
     this.props.addSnackbarNotification(
       'Contract address copied to clipboard!',
       2000
@@ -173,7 +170,7 @@ class ContractForm extends Component {
     event.preventDefault()
 
     this.props.deployContract(
-      this.props.selectedGraph.name,
+      this.props.graph.name,
       metaData.paramOrder.map(id => {
         return this.state.fieldValues[id]
       })
@@ -245,8 +242,8 @@ class ContractForm extends Component {
 
     const { classes } = this.props
 
-    const nodes = this.props.selectedGraph.elements.nodes
-    const graphType = this.props.selectedGraph.type
+    const nodes = this.props.graph.elements.nodes
+    const graphType = this.props.graph.type
     // const selectedNode = nodes[this.props.selectedContractFunction]
 
     const formData = this.getFunctionFormData()
@@ -343,8 +340,8 @@ class ContractForm extends Component {
 
   getFunctionFormData = () => {
 
-    const nodes = this.props.selectedGraph.elements.nodes
-    const edges = this.props.selectedGraph.elements.edges
+    const nodes = this.props.graph.elements.nodes
+    const edges = this.props.graph.elements.edges
     const functionId = this.props.selectedContractFunction
     const functionNodes = []
 
@@ -477,7 +474,7 @@ ContractForm.propTypes = {
   selectContractFunction: PropTypes.func,
   selectedContractFunction: PropTypes.string,
   heading: PropTypes.string,
-  selectedGraph: PropTypes.object,
+  graph: PropTypes.object,
   updateWipDappDeployment: PropTypes.func,
   dappTemplate: PropTypes.object,
   wipDappDeployment: PropTypes.object,

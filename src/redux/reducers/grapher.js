@@ -16,6 +16,8 @@ import {
 
 import { addDappTemplate, clearSelectedDappTemplate } from './dapps'
 
+import { deleteModalFormFieldValues } from './ui'
+
 const ACTIONS = {
   SET_MODE: 'GRAPHER:SET_MODE',
   SAVE_GRAPH: 'GRAPHER:SAVE_GRAPH',
@@ -35,8 +37,13 @@ const grapherModes = {
   createDapp: 'createDapp',
 }
 
+/**
+ * State Legend
+ *
+ * displayGraphId
+ */
 const initialState = {
-  selectedGraphId: null, // TODO: rename this primary graph id or something
+  displayGraphId: null,
   insertionGraphId: null,
   formGraphId: null,
   insertions: 0,
@@ -82,7 +89,7 @@ export default function reducer (state = initialState, action) {
       return {
         ...state,
         mode: action.mode,
-        selectedGraphId: null,
+        displayGraphId: null,
         insertionGraphId: null,
         formGraphId: null,
         wipGraph: null,
@@ -114,8 +121,8 @@ export default function reducer (state = initialState, action) {
 
       const newState = {...state}
       delete newState.graphs[action.graphId]
-      if (action.graphId === state.selectedGraphId) {
-        newState.selectedGraphId = null
+      if (action.graphId === state.displayGraphId) {
+        newState.displayGraphId = null
       }
       if (action.graphId === state.insertionGraphId) {
         newState.insertionGraphId = null
@@ -129,7 +136,7 @@ export default function reducer (state = initialState, action) {
       return {
         ...state,
         graphs: {},
-        selectedGraphId: null,
+        displayGraphId: null,
         insertionGraphId: null,
         formGraphId: null,
       }
@@ -137,7 +144,7 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.SELECT_GRAPH:
       return {
         ...state,
-        selectedGraphId: action.graphId,
+        displayGraphId: action.graphId,
         formGraphId: null,
       }
 
@@ -269,6 +276,7 @@ function setModeThunk (mode) {
 
   return (dispatch, getState) => {
 
+    dispatch(deleteModalFormFieldValues())
     dispatch(clearSelectedDappTemplate())
     dispatch(getSetModeAction(mode))
   }
@@ -330,7 +338,7 @@ function getGraphThunk (graphId, graphType, contractName, address = null) {
 
       if (graphId) {
 
-        if (state.grapher.selectedGraphId !== graphId) {
+        if (state.grapher.displayGraphId !== graphId) {
           dispatch(selectGraphThunk(graphId))
         }
       } else {
