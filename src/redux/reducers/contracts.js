@@ -675,8 +675,7 @@ function deployQueueThunk (dappDisplayName, dappTemplateId) {
             // currently the only supported child param type is address
             if (childParam.type === 'address') {
               childDeployment.params[childParam.paramId].value = result.address
-            }
-            else {
+            } else {
 
               failure.index = i
               failure.name = deployment.contractName
@@ -684,8 +683,7 @@ function deployQueueThunk (dappDisplayName, dappTemplateId) {
           })
           if (failure.name) break
         }
-      }
-      else {
+      } else {
 
         failure.index = i
         failure.name = deployment.contractName
@@ -706,8 +704,7 @@ function deployQueueThunk (dappDisplayName, dappTemplateId) {
           ),
         }
       ))
-    }
-    else { // success
+    } else { // success
 
       dispatch(getResetDeploymentQueueAction())
       dispatch(getEndDeploymentAction())
@@ -924,8 +921,7 @@ async function deployContract (
     finalParams = Object.keys(constructorParams).sort((a, b) => {
       return constructorParams[a].paramOrder - constructorParams[b].paramOrder
     }).map(key => constructorParams[key].value)
-  }
-  else {
+  } else {
     finalParams = constructorParams
   }
 
@@ -939,8 +935,7 @@ async function deployContract (
       web3.provider,
       web3.account
     )
-  }
-  catch (error) {
+  } catch (error) {
     dispatch(getDeploymentFailureAction(error))
     return null
   }

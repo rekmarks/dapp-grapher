@@ -179,8 +179,7 @@ function getWeb3Thunk () {
     ) {
       dispatch(getWeb3SuccessAction(web3))
       dispatch(getWeb3AccountThunk(web3))
-    }
-    else {
+    } else {
       dispatch(getWeb3FailureAction(new Error('invalid web3', web3)))
     }
   }

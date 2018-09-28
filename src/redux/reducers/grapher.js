@@ -336,8 +336,7 @@ function getGraphThunk (
 
       if (graphId) {
         dispatch(selectDisplayGraphThunk(graphId))
-      }
-      else {
+      } else {
         dispatch(createGraphThunk(
           getGraphCreationParameters(
             graphTypes.contract._constructor,
@@ -345,8 +344,7 @@ function getGraphThunk (
           )
         ))
       }
-    }
-    else if (graphType === graphTypes.contract.functions) {
+    } else if (graphType === graphTypes.contract.functions) {
 
       if (!address) {
         dispatch(getLogErrorAction(
@@ -364,8 +362,7 @@ function getGraphThunk (
         if (state.grapher.displayGraphId !== graphId) {
           dispatch(selectDisplayGraphThunk(graphId))
         }
-      }
-      else {
+      } else {
         dispatch(createGraphThunk(
           getGraphCreationParameters(
             graphTypes.contract.functions,
@@ -410,20 +407,17 @@ function selectDisplayGraphThunk (graphId) {
       if (grapher.mode === grapherModes.main) {
 
         dispatch(getSelectDisplayGraphAction(graphId))
-      }
-      else if (grapher.mode === grapherModes.createDapp) {
+      } else if (grapher.mode === grapherModes.createDapp) {
 
         if (grapher.insertionGraphId !== graphId) {
           dispatch(getSelectInsertionGraphAction(graphId))
         }
         dispatch(getIncrementInsertionsAction())
-      }
-      else {
+      } else {
         dispatch(getLogErrorAction(new Error('invalid grapher mode: ' +
           grapher.mode)))
       }
-    }
-    else {
+    } else {
       dispatch(getLogErrorAction(new Error('graph not found with id ' +
         graphId)))
     }

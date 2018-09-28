@@ -307,8 +307,7 @@ function addTemplateThunk (templateName = null) {
         // TODO: this assumes addresses are always contracts, but they could
         // be functions that output addresses
         source = nodes[edge.sourceParent].id
-      }
-      else {
+      } else {
         source = nodes[edge.sourceNode].id
       }
 
@@ -372,8 +371,7 @@ function deploymentResultThunk (success, resultData) {
           instance => instance.dappTemplateIds.includes(resultData.templateId)
         )
       )))
-    }
-    else {
+    } else {
       // log failure
       dispatch(addSnackbarNotification(
         resultData.displayName + ' — Dapp deployment failed. See logs.',
