@@ -8,7 +8,7 @@ import {
   deployEnqueuedContracts,
 } from './contracts'
 
-import { selectGraph, addGraph } from './grapher'
+import { selectDisplayGraph, saveGraph } from './grapher'
 
 import { addSnackbarNotification } from './ui'
 
@@ -36,24 +36,39 @@ const ACTIONS = {
 }
 
 const initialState = {
+
+  // error log
   errors: null,
+
+  // false if a web3-related thunk has yet to complete, preventing further web3
+  // calls
   ready: true,
+
+  // the id of the selected dapp template
   selectedTemplateId: null,
+
+  // an object of contract deployments constructed by interacting with the
+  // graph of a dapp template
   wipDeployment: null,
-  selectedDeployedId: null, // TODO: actions
+
+  // the selected dapp instance
+  selectedDeployedId: null,
+
+  // existing dapp templates per below schema
   templates: {
     /**
      * uuid: {
-     *   dappGraphId: _uuid,
-     *   deployments: {},
-     *   parameterValues: {
+     *   id: uuid,
+     *   dappGraphId: _uuid, // id of the graph describing the template
+     *   contractNodes: {}, // the contracts constituting the template
+     *   parameterValues: { // graph-defined parameter values
      *     __uuid: {
      *       id: __uuid,
      *       abiType: string,
      *       source: string,
      *     },
      *   },
-     *   deployed: {
+     *   deployed: { // deployed dapp instances (not the contracts themselves)
      *     uuid: Deployed,
      *   }
      * }
@@ -230,6 +245,12 @@ function getSelectDeployedAction (deployedId) {
   }
 }
 
+/**
+ * Selects the specified deployed dapp instance for display in <Grapher />
+ *
+ * @param {string} templateId the id of the deployed dapp's template
+ * @param {string} deployedId the id of the deployed dapp instance
+ */
 function selectDeployedThunk (templateId, deployedId) {
 
   return (dispatch, getState) => {
@@ -239,36 +260,55 @@ function selectDeployedThunk (templateId, deployedId) {
     if (state.dapps.selectedDeployedId !== deployedId) {
       dispatch(getSelectDeployedAction(deployedId))
     }
+
     const graphId = state.dapps.templates[templateId].deployed[deployedId].graphId
     if (graphId !== state.grapher.displayGraphId) {
-      dispatch(selectGraph(graphId))
+      dispatch(selectDisplayGraph(graphId))
     }
   }
 }
 
 /**
- * Only handles constructor contract nodes as of now.
+ * Adds a new template based on the current wipGraph. Fails if there are cyclic
+ * dependencies in the wipGraph. Only handles constructor contract nodes for
+ * the time being.
  *
- * @param {[type]} graphId   [description]
- * @param {[type]} dappGraph [description]
+ * @param {string} templateName the name of the template; generated if null
  */
-function addTemplateThunk (graphId, dappGraph, templateName = null) {
+function addTemplateThunk (templateName = null) {
 
   return (dispatch, getState) => {
 
-    const contracts = getDappGraphDeploymentOrder(dappGraph)
+    const state = getState()
 
-    const nodes = dappGraph.elements.nodes
+    const wipGraph = state.grapher.wipGraph
 
+    // TODO: throw or log error?
+    if (!wipGraph.id) throw new Error('addTemplateThunk: wipGraph has no id')
+
+    dispatch(saveGraph(wipGraph))
+
+    // store contracts in their graph-defined deployment order
+    const contracts = getDappGraphDeploymentOrder(wipGraph)
+
+    const nodes = wipGraph.elements.nodes
+
+    // parse graph-defined parameter values
+    // when an instance of the dapp is deployed, the values for these
+    // parameters are generated automatically
     const parameterValues = {}
-    Object.values(dappGraph.elements.edges).forEach(edge => {
+    Object.values(wipGraph.elements.edges).forEach(edge => {
 
       const abiType = nodes[edge.target].abiType
 
       let source
       if (abiType === 'address') {
+
+        // TODO: this assumes addresses are always contracts, but they could
+        // be functions that output addresses
         source = nodes[edge.sourceParent].id
-      } else {
+      }
+      else {
         source = nodes[edge.sourceNode].id
       }
 
@@ -281,17 +321,26 @@ function addTemplateThunk (graphId, dappGraph, templateName = null) {
 
     dispatch(getAddTemplateAction({
       id: uuid(),
-      dappGraphId: graphId,
+      dappGraphId: wipGraph.id,
       contractNodes: contracts,
       parameterValues: parameterValues,
-      displayName: (
-        templateName || (Object.keys(getState().dapps.templates).length + 1).toString()
+      displayName: ( // TODO: better name generation if templateName is null?
+        templateName ||
+        (Object.keys(state.dapps.templates).length + 1).toString()
       ),
       deployed: {},
     }))
   }
 }
 
+/**
+ * Handles the result of a dapp deployment. On success, saves the deployed
+ * instance, generates its graph, and notifies the user. On failure, logs the
+ * error and notifies the user.
+ *
+ * @param {boolean} success true if deployment successful; false otherwise
+ * @param {object} resultData deployment result data, from contracts reducer
+ */
 function deploymentResultThunk (success, resultData) {
 
   return (dispatch, getState) => {
@@ -301,6 +350,7 @@ function deploymentResultThunk (success, resultData) {
     let deployedId
     if (success) {
 
+      // generate ids for deployed dapp and its corresponding graph
       deployedId = uuid()
       const deployedGraphId = uuid()
 
@@ -311,10 +361,9 @@ function deploymentResultThunk (success, resultData) {
       dispatch(getDeploymentSuccessAction({
         ...resultData,
         id: deployedId,
-        templateId: resultData.templateId,
         deployedGraphId: deployedGraphId,
       }))
-      dispatch(addGraph(getDeployedDappGraph(
+      dispatch(saveGraph(getDeployedDappGraph(
         deployedGraphId,
         state.grapher.graphs[
           state.dapps.templates[resultData.templateId].dappGraphId
@@ -323,8 +372,9 @@ function deploymentResultThunk (success, resultData) {
           instance => instance.dappTemplateIds.includes(resultData.templateId)
         )
       )))
-    } else {
-
+    }
+    else {
+      // log failure
       dispatch(addSnackbarNotification(
         resultData.displayName + ' — Dapp deployment failed. See logs.',
         12000
@@ -332,8 +382,10 @@ function deploymentResultThunk (success, resultData) {
       dispatch(getDeploymentFailureAction(resultData.error))
     }
 
+    // indicate that the deployment is over
     dispatch(getEndDeploymentAction())
 
+    // select deployed dapp instance on success
     if (success) {
       dispatch(selectDeployedThunk(
         resultData.templateId,
@@ -348,15 +400,13 @@ function deploymentResultThunk (success, resultData) {
  */
 
 /**
- * Attempts to deploy the contracts of a dapp in the order of constructorCalls.
+ * Attempts to deploy the contracts of a dapp per wipDeployment.
  * Validates pre-deployment state but not input. May fail in deployment
  * attempt. See contracts reducer.
  *
  * TODO: Validate input?
  *
- * @param  {string} displayName      the user-facing identifier for the dapp
- * @param  {string} templateId       the id of the template used
- * @param  {array}  constructorCalls [description]
+ * @param {string} displayName the user-facing identifier for the dapp
  */
 function deployThunk (displayName) {
 
@@ -390,13 +440,16 @@ function deployThunk (displayName) {
  */
 
 /**
- * Finds contract deployment order from dappgraph by running topological
+ * Finds contract deployment order from dappgraph by running a hacky topological
  * sort. Throws if graph is cyclic.
  *
  * Implements: https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm
  *
- * @param  {object} dappGraph the graph whose deployment order must be found
- * @return {array}            an array of contract nodes in order of deployment
+ * TODO: This is a band-aid until the graphlib refactor. Understanding this is
+ * likely not worth your time.
+ *
+ * @param {object} dappGraph the graph whose deployment order must be found
+ * @return {array} an array of contract nodes in order of deployment
  */
 function getDappGraphDeploymentOrder (dappGraph) {
 

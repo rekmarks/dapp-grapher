@@ -14,7 +14,7 @@ import {
   removeAllContractGraphIds,
 } from './contracts'
 
-import { addDappTemplate, clearSelectedDappTemplate } from './dapps'
+import { clearSelectedDappTemplate } from './dapps'
 
 import { deleteModalFormFieldValues } from './ui'
 
@@ -24,7 +24,7 @@ const ACTIONS = {
   SET_ACCOUNT_GRAPH: 'GRAPHER:SET_ACCOUNT_GRAPH',
   DELETE_GRAPH: 'GRAPHER:DELETE_GRAPH',
   DELETE_ALL_GRAPHS: 'GRAPHER:DELETE_ALL_GRAPHS',
-  SELECT_GRAPH: 'GRAPHER:SELECT_GRAPH',
+  SELECT_DISPLAY_GRAPH: 'GRAPHER:SELECT_DISPLAY_GRAPH',
   SELECT_FORM_GRAPH: 'GRAPHER:SELECT_FORM_GRAPH',
   SELECT_INSERTION_GRAPH: 'GRAPHER:SELECT_INSERTION_GRAPH',
   INCREMENT_INSERTIONS: 'GRAPHER:INCREMENT_INSERTIONS',
@@ -37,38 +37,46 @@ const grapherModes = {
   createDapp: 'createDapp',
 }
 
-/**
- * State Legend
- *
- * displayGraphId
- */
 const initialState = {
+
+  // in main mode, the graph displayed in <Grapher />
   displayGraphId: null,
+
+  // in createDapp mode, the graph being added to canvas
   insertionGraphId: null,
+
+  // used to generate the content of <ContractForm /> when the displayGraph
+  // cannot be used for that purpose (i.e. for graphTypes.dapp)
   formGraphId: null,
+
+  // hacky counter used to indicate whether the selected insertionGraph should
+  // be inserted in <Grapher />
   insertions: 0,
+
+  // the graph object representing the current web3 account and associated data
   accountGraph: null,
+
+  // the graph object being constructed in createDapp mode
+  // if saved, essentially becomes a new dapp template
   wipGraph: null,
-  mode: grapherModes.main,
-  graphs: {
+
+  mode: grapherModes.main, // the current mode
+
+  graphs: { // the graph objects
     /**
      * uuid: Graph,
      */
   },
-  errors: null,
-}
 
-// keys to exclude from locally stored state (in state.graphs)
-const excludeKeys = [
-  'container',
-]
+  errors: null, // error storage
+}
 
 export {
   setAccountGraphThunk as setAccountGraph,
   setModeThunk as setGrapherMode,
   selectFormGraphThunk as selectFormGraph,
-  selectGraphThunk as selectGraph,
-  addGraphThunk as addGraph,
+  selectDisplayGraphThunk as selectDisplayGraph,
+  saveGraphThunk as saveGraph,
   createGraphThunk as createGraph,
   getGraphThunk as getGraph,
   getGraphCreationParameters as getCreateGraphParams,
@@ -76,8 +84,6 @@ export {
   deleteAllGraphsThunk as deleteAllGraphs,
   grapherModes,
   getUpdateWipGraphAction as updateWipGraph,
-  saveWipGraphThunk as saveWipGraph,
-  excludeKeys as grapherExcludeKeys,
   initialState as grapherInitialState,
 }
 
@@ -113,14 +119,9 @@ export default function reducer (state = initialState, action) {
 
     case ACTIONS.DELETE_GRAPH:
 
-      if (!action.graphId) return state
-      if (!state.graphs[action.graphId]) {
-        console.warn('no graph with id "' + action.graphId + '" found')
-        return state
-      }
-
       const newState = {...state}
       delete newState.graphs[action.graphId]
+      // if the deleted graph is any of the selected graphs
       if (action.graphId === state.displayGraphId) {
         newState.displayGraphId = null
       }
@@ -141,7 +142,7 @@ export default function reducer (state = initialState, action) {
         formGraphId: null,
       }
 
-    case ACTIONS.SELECT_GRAPH:
+    case ACTIONS.SELECT_DISPLAY_GRAPH:
       return {
         ...state,
         displayGraphId: action.graphId,
@@ -222,9 +223,9 @@ function getDeleteAllGraphsAction () {
   }
 }
 
-function getSelectGraphAction (graphId) {
+function getSelectDisplayGraphAction (graphId) {
   return {
-    type: ACTIONS.SELECT_GRAPH,
+    type: ACTIONS.SELECT_DISPLAY_GRAPH,
     graphId: graphId,
   }
 }
@@ -263,6 +264,10 @@ function getLogErrorAction (error) {
   }
 }
 
+/**
+ * Sets the account graph corresponding to the current account. A thunk so that
+ * it doesn't have to take any parameters, the account is after all in state.
+ */
 function setAccountGraphThunk () {
 
   return (dispatch, getState) => {
@@ -272,10 +277,15 @@ function setAccountGraphThunk () {
   }
 }
 
+/**
+ * Sets the grapher mode. Deletes modal form field values and clears the
+ * selected dapp template beforehand.
+ *
+ * @param {string} mode value from grapherModes
+ */
 function setModeThunk (mode) {
 
   return (dispatch, getState) => {
-
     dispatch(deleteModalFormFieldValues())
     dispatch(clearSelectedDappTemplate())
     dispatch(getSetModeAction(mode))
@@ -283,39 +293,51 @@ function setModeThunk (mode) {
 }
 
 /**
- * For use with getting graphs from the frontend. Calls other
- * thunks as appropriate.
- * @param  {[type]} graphId      [description]
- * @param  {[type]} contractName [description]
- * @param  {[type]} address      [description]
- * @return {[type]}              [description]
+ * Selects the graph corresponding to graphId, generating the graph object if it
+ * doesn't already exist. If no graphId is provided, calls createGraphThunk to
+ * generate the graph object corresponding to the graphType and contractName,
+ * and gives it an id.
+ *
+ * If the graph is of a deployed contract instance, must be provided the address
+ * of the deployed instance.
+ *
+ * TODO: will require refactor when contract types are stored by uuid's instead
+ * of contract names.
+ *
+ * @param {string} graphId the id of the graph to be retrieved
+ * @param {string} graphType the type of the graph to be retrieved
+ * @param {string} contractName the name of the contract type associated with
+ * the graph
+ * @param {string} address the address of the graph's corresponding contract
+ * instance, if appropriate
  */
-function getGraphThunk (graphId, graphType, contractName, address = null) {
+function getGraphThunk (
+  graphId = null,
+  graphType = null,
+  contractName = null,
+  address = null
+) {
 
   return (dispatch, getState) => {
 
-    if (!contractName) {
+    if (!graphId && (!graphType || !contractName)) {
       dispatch(getLogErrorAction(
-        new Error('no contractName provided')
-      ))
-      return
-    }
-    if (!graphType) {
-      dispatch(getLogErrorAction(
-        new Error('no graph type provided')
+        new Error('graphType and contractName required if no graphId provided')
       ))
       return
     }
 
     const state = getState()
 
+    if (!graphType) graphType = state.grapher.graphs[graphId].type
+    if (!contractName) contractName = state.grapher.graphs[graphId].name
+
     if (graphType === graphTypes.contract._constructor) {
 
       if (graphId) {
-
-        dispatch(selectGraphThunk(graphId))
-      } else {
-
+        dispatch(selectDisplayGraphThunk(graphId))
+      }
+      else {
         dispatch(createGraphThunk(
           getGraphCreationParameters(
             graphTypes.contract._constructor,
@@ -323,7 +345,8 @@ function getGraphThunk (graphId, graphType, contractName, address = null) {
           )
         ))
       }
-    } else if (graphType === graphTypes.contract.functions) {
+    }
+    else if (graphType === graphTypes.contract.functions) {
 
       if (!address) {
         dispatch(getLogErrorAction(
@@ -337,12 +360,12 @@ function getGraphThunk (graphId, graphType, contractName, address = null) {
       }
 
       if (graphId) {
-
+        // select graph if it's not already selected
         if (state.grapher.displayGraphId !== graphId) {
-          dispatch(selectGraphThunk(graphId))
+          dispatch(selectDisplayGraphThunk(graphId))
         }
-      } else {
-
+      }
+      else {
         dispatch(createGraphThunk(
           getGraphCreationParameters(
             graphTypes.contract.functions,
@@ -357,7 +380,13 @@ function getGraphThunk (graphId, graphType, contractName, address = null) {
   }
 }
 
-function selectGraphThunk (graphId) {
+/**
+ * Selects the graph with id graphId as displayGraph or insertionGraph per
+ * current grapherMode. Fails if graphId does not exist in state.
+ *
+ * @param {string} graphId the id of the graph to be selected
+ */
+function selectDisplayGraphThunk (graphId) {
 
   return (dispatch, getState) => {
 
@@ -369,6 +398,8 @@ function selectGraphThunk (graphId) {
     // select graph if it exists
     if (newGraph) {
 
+      // clear selected dapp template if the selected graph is not a dapp type
+      // (dapp graphs are only selected at the same time that templates are)
       if (
         state.dapps.selectedTemplateId &&
         !Object.values(graphTypes.dapp).includes(newGraph.get('type'))
@@ -378,28 +409,34 @@ function selectGraphThunk (graphId) {
 
       if (grapher.mode === grapherModes.main) {
 
-        dispatch(getSelectGraphAction(graphId))
-
-      } else if (grapher.mode === grapherModes.createDapp) {
+        dispatch(getSelectDisplayGraphAction(graphId))
+      }
+      else if (grapher.mode === grapherModes.createDapp) {
 
         if (grapher.insertionGraphId !== graphId) {
           dispatch(getSelectInsertionGraphAction(graphId))
         }
         dispatch(getIncrementInsertionsAction())
-
-      } else {
+      }
+      else {
         dispatch(getLogErrorAction(new Error('invalid grapher mode: ' +
           grapher.mode)))
       }
-
-    } else {
+    }
+    else {
       dispatch(getLogErrorAction(new Error('graph not found with id ' +
         graphId)))
     }
   }
 }
 
-function addGraphThunk (graph) {
+/**
+ * Saves a generated graph object. Converts it into an Immutable object before
+ * adding to state.
+ *
+ * @param {object} graph the graph object to be saved
+ */
+function saveGraphThunk (graph) {
 
   return (dispatch, getState) => {
 
@@ -416,6 +453,17 @@ function addGraphThunk (graph) {
   }
 }
 
+/**
+ * Generates a graph according to params. If the user is attempting to select a
+ * displayGraph, also calls selectDisplayGraphThunk.
+ *
+ * Handles displayGraph and formGraph, but not dappGraph, which is handled in
+ * <Grapher />.
+ *
+ * Generated graph stored as Immutable object.
+ *
+ * @param {object} params from getCreateGraphParams
+ */
 function createGraphThunk (params) {
 
   return (dispatch, getState) => {
@@ -424,7 +472,9 @@ function createGraphThunk (params) {
 
     // if no parameters, error
     if (!params) {
-      dispatch(getLogErrorAction(new Error('no graph parameters given')))
+      dispatch(getLogErrorAction(
+        new Error('createGraphThunk: no graph creation parameters given')
+      ))
       return
     }
 
@@ -437,7 +487,7 @@ function createGraphThunk (params) {
 
       if (!contractJSON) {
         dispatch(getLogErrorAction(new Error(
-          'no contract found with name: ' +
+          'createGraphThunk: no contract found with name: ' +
           contractName
         )))
         return
@@ -456,7 +506,7 @@ function createGraphThunk (params) {
           break
         default:
           dispatch(getLogErrorAction(new Error(
-          'invalid graph type: ' + params.type)))
+          'createGraphThunk: invalid graph type: ' + params.type)))
           return
       }
 
@@ -464,54 +514,55 @@ function createGraphThunk (params) {
       try {
         graph = parseContract(contractJSON, parseMode)
       } catch (error) {
-        dispatch(getLogErrorAction(error))
+        dispatch(getLogErrorAction('createGraphThunk: ' + error.message))
         return
       }
 
+      // generate graphId if not provided
       const graphId = params.graphId ? params.graphId : uuid()
 
+      // save generated graph and link the contract type to graphId in
+      // state.contracts
       dispatch(getSaveGraphAction(graphId, fromJS(graph)))
       dispatch(setContractGraphId(
         contractName, {[contractsPayloadKey]: graphId}
       ))
 
-      // run graph selection workflow unless the created graph
-      // is a form graph
-      if (!params.formGraph) dispatch(selectGraphThunk(graphId))
+      // run displayGraph selection workflow if the created graph is not a
+      // formGraph, which is handled by selectFormGraphThunk
+      if (!params.formGraph) dispatch(selectDisplayGraphThunk(graphId))
 
     } else if (params.type === 'dappTemplate') {
 
-      // TODO: currently this is, inappropriately?, handled in Grapher.
+      // TODO: currently this is, inappropriately?, handled in <Grapher />.
       // Explore moving the functionality here or elsewhere in the reducer.
 
     } else {
 
       dispatch(getLogErrorAction(new Error(
-        'invalid graph type: ' + params.type)))
+        'createGraphThunk: invalid graph type "' + params.type + '"')))
       return
     }
   }
 }
 
-function saveWipGraphThunk (templateName) {
-
-  return (dispatch, getState) => {
-
-    const wipGraph = getState().grapher.wipGraph
-
-    if (!wipGraph.id) throw new Error('wipGraph has no id')
-
-    dispatch(getSaveGraphAction(wipGraph.id, fromJS(wipGraph)))
-    dispatch(addDappTemplate(wipGraph.id, wipGraph, templateName))
-  }
-}
-
+/**
+ * Sets the formGraph to the functions graph associated with contractName and
+ * the deployed instance thereof at instanceAddress.
+ *
+ * Generates the graph if it doesn't exist in state.
+ *
+ * @param {string} contractName the name of the contract whose functions graph
+ * will be used as the formGraph
+ * @param {string} instanceAddress the address of the instance of the contract
+ */
 function selectFormGraphThunk (contractName, instanceAddress) {
 
   return (dispatch, getState) => {
 
     const state = getState()
 
+    // get web3 instance of contract if not already added
     if (!state.contracts.instances[state.web3.networkId][instanceAddress]) {
       dispatch(addInstance(contractName, instanceAddress))
     }
@@ -519,6 +570,7 @@ function selectFormGraphThunk (contractName, instanceAddress) {
     let graphId =
       state.contracts.types[contractName][graphTypes.contract.functions]
 
+    // generate graphId and create graph if no id was found
     if (!graphId) {
 
       graphId = uuid()
@@ -535,35 +587,54 @@ function selectFormGraphThunk (contractName, instanceAddress) {
       ))
     }
 
+    // selected contract address if not already selected
     if (state.contracts.selectedAddress !== instanceAddress) {
       dispatch(selectContractAddress(instanceAddress))
     }
+    // select graph as formGraph if not already added
     if (state.grapher.formGraphId !== graphId) {
       dispatch(getSelectFormGraphAction(graphId))
     }
   }
 }
 
+/**
+ * Deletes the graph with id graphId from state so that it can be regenerated.
+ * Useful for dev/testing purposes.
+ *
+ * @param {string} graphId the id of the graph to be deleted
+ */
 function deleteGraphThunk (graphId) {
 
   return (dispatch, getState) => {
 
-    const graph = getState().grapher.graphs[graphId]
+    const graphs = getState().grapher.graphs
 
-    // this order of operations probably matters
+    if (!graphs[graphId]) {
+      dispatch(getLogErrorAction(
+        new Error('no graph with id "' + graphId + '" found')
+      ))
+      return
+    }
+
+    // remove graphId from contract before deleting it
     dispatch(setContractGraphId(
-      graph.get('name'),
-      {[graph.get('type')]: null}
+      graphs[graphId].get('name'),
+      {[graphs[graphId].get('type')]: null}
     ))
-    dispatch(getDeleteGraphAction(graphId))
+    dispatch(getDeleteGraphAction(graphId)) // then delete the graph
   }
 }
 
-function deleteAllGraphsThunk (graphId) {
+/**
+ * Delete all graphs from state to allow them to be regenerated.
+ * Useful for dev/testing purposes.
+ */
+function deleteAllGraphsThunk () {
 
   return (dispatch, getState) => {
-    dispatch(removeAllContractGraphIds())
-    dispatch(getDeleteAllGraphsAction())
+    dispatch(removeAllContractGraphIds()) // first remove all contract graph ids
+    dispatch(getDeleteAllGraphsAction()) // then delete all graphs
   }
 }
 
@@ -571,6 +642,15 @@ function deleteAllGraphsThunk (graphId) {
  * HELPERS
  */
 
+/**
+ * Returns params object for createGraphThunk. Used in components.
+ *
+ * "args" argument still poorly documented, although its use should become
+ * apparent by reviewing calls of this function.
+ *
+ * @param {string} type the type of the graph to be created, from graphTypes
+ * @param {object} args graph properties
+ */
 function getGraphCreationParameters (type, args) {
 
   if (!type) throw new Error('missing type')
@@ -586,7 +666,7 @@ function getGraphCreationParameters (type, args) {
 
   } else if (type === 'dappTemplate') {
 
-    // do nothing for know, dappTemplates are made in Grapher as
+    // do nothing for know, dappTemplates are made in <Grapher /> as
     // wipGraph
 
   } else {

@@ -38,6 +38,7 @@ import {
 } from '../redux/reducers/contracts'
 
 import {
+  addDappTemplate,
   deployDapp,
   selectDappTemplate,
   updateWipDeployment,
@@ -52,8 +53,7 @@ import {
   deleteGraph,
   deleteAllGraphs,
   selectFormGraph,
-  selectGraph,
-  saveWipGraph,
+  selectDisplayGraph,
   updateWipGraph,
 } from '../redux/reducers/grapher'
 
@@ -171,7 +171,7 @@ class App extends Component {
               </Typography>
               <Header
                 classes={classes}
-                web3Injected={!!this.props.web3}
+                web3Injected={Boolean(this.props.account)}
               />
             </Toolbar>
           </AppBar>
@@ -208,14 +208,13 @@ class App extends Component {
                 createGraph={this.props.createGraph}
                 deleteGraph={this.props.deleteGraph}
                 deleteAllGraphs={this.props.deleteAllGraphs}
-                selectGraph={this.props.selectGraph}
+                selectDisplayGraph={this.props.selectDisplayGraph}
                 displayGraphId={this.props.displayGraphId}
                 selectContractAddress={this.props.selectContractAddress}
                 selectedContractAddress={this.props.selectedContractAddress}
                 hasGraphs={this.props.hasGraphs}
                 dapps={this.props.dapps}
                 insertionGraphId={this.props.insertionGraphId}
-                saveWipGraph={this.props.saveWipGraph}
                 hasWipGraph={
                   this.props.wipGraph
                   ? Boolean(this.props.wipGraph.id) // TODO: make dependent on grapherMode instead
@@ -365,7 +364,7 @@ class App extends Component {
             storeFieldValues={
               this.props.saveModalFormFieldValues
             }
-            saveWipGraph={this.props.saveWipGraph}
+            addDappTemplate={this.props.addDappTemplate}
             setGrapherMode={this.props.setGrapherMode} />
         )
 
@@ -415,11 +414,11 @@ App.propTypes = {
   selectFormGraph: PropTypes.func,
   selectedFormGraphObject: PropTypes.object,
   selectedFormGraph: PropTypes.object,
-  selectGraph: PropTypes.func,
+  selectDisplayGraph: PropTypes.func,
   displayGraphId: PropTypes.string,
   displayGraphObject: PropTypes.object,
   setGrapherMode: PropTypes.func,
-  saveWipGraph: PropTypes.func,
+  addDappTemplate: PropTypes.func,
   updateWipGraph: PropTypes.func,
   wipGraph: PropTypes.object,
   // renderErrors
@@ -440,14 +439,6 @@ App.propTypes = {
   account: PropTypes.string,
   networkId: PropTypes.string,
   getWeb3: PropTypes.func,
-  web3: (props, propName, componentName) => {
-    if (props[propName] !== null && typeof props[propName] !== 'object') {
-      return new Error(
-        'Invalid ' + propName +
-        ': Neither null nor an object for component ' + componentName
-      )
-    }
-  },
 }
 
 function mapStateToProps (state) {
@@ -488,7 +479,6 @@ function mapStateToProps (state) {
     // web3
     account: state.web3.account,
     networkId: state.web3.networkId,
-    web3: state.web3.injected,
   }
 }
 
@@ -519,8 +509,8 @@ function mapDispatchToProps (dispatch) {
       dispatch(getGraph(graphId, graphType, contractName, address)),
     selectFormGraph: (contractName, instanceAddress) =>
       dispatch(selectFormGraph(contractName, instanceAddress)),
-    selectGraph: graphId => dispatch(selectGraph(graphId)),
-    saveWipGraph: templateName => dispatch(saveWipGraph(templateName)),
+    selectDisplayGraph: graphId => dispatch(selectDisplayGraph(graphId)),
+    addDappTemplate: templateName => dispatch(addDappTemplate(templateName)),
     updateWipGraph: wipGraph => dispatch(updateWipGraph(wipGraph)),
     // renderErrors
     logRenderError: (error, errorInfo) => dispatch(logRenderError(error, errorInfo)),

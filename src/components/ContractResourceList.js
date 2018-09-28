@@ -129,7 +129,7 @@ ContractResourceList.propTypes = {
   addInstance: PropTypes.func,
   getCreateGraphParams: PropTypes.func,
   createGraph: PropTypes.func,
-  selectGraph: PropTypes.func,
+  selectDisplayGraph: PropTypes.func,
   displayGraphId: PropTypes.string,
   grapherMode: PropTypes.string,
   getGraph: PropTypes.func,

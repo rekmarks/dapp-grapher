@@ -14,17 +14,16 @@ const ACTIONS = {
 }
 
 const initialState = {
-  account: null,
-  injected: null,
-  networkId: null,
-  provider: null,
-  ready: false,
-  web3Errors: [],
+  account: null, // current selected account from injected web3 object
+  networkId: null, // current selected network id from injected web3 object
+  provider: null, // current provider from injected web3 object
+  ready: false, // false on start or if any thunks have yet to return, true o.w.
+  errors: null, // storage for web3 errors
 }
 
 export {
   getWeb3Thunk as getWeb3,
-  getClearErrorsAction as clearweb3Errors,
+  getClearErrorsAction as clearWeb3Errors, // TODO: this is not used, figure out what to do with these errors
   initialState as web3InitialState,
 }
 
@@ -36,9 +35,8 @@ export default function reducer (state = initialState, action) {
       return {
         ...state,
         ready: false,
-        injected: null,
         networkId: null,
-        web3Errors: [],
+        errors: null,
         account: null,
       }
 
@@ -46,14 +44,15 @@ export default function reducer (state = initialState, action) {
       return {
         ...state,
         ready: true,
-        injected: action.injectedWeb3,
         provider: action.injectedWeb3.currentProvider,
       }
 
     case ACTIONS.GET_WEB3_FAILURE:
       return {
         ...state,
-        web3Errors: state.web3Errors.concat([action.error]),
+        errors: state.errors
+        ? [action.error]
+        : state.errors.concat([action.error]),
       }
 
     case ACTIONS.GET_ACCOUNT:
@@ -74,13 +73,16 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.GET_ACCOUNT_FAILURE:
       return {
         ...state,
-        web3Errors: state.web3Errors.concat([action.error]),
+        errors: state.errors
+        ? [action.error]
+        : state.errors.concat([action.error]),
+        ready: true,
       }
 
     case ACTIONS.CLEAR_ERRORS:
       return {
         ...state,
-        web3Errors: [],
+        errors: null,
       }
 
     default:
@@ -140,18 +142,19 @@ function getClearErrorsAction () {
 /* Asynchronous action creators */
 
 /**
- * [getWeb3Thunk description]
- * @return {[type]} [description]
+ * Gets the injected web3 object. The first thunk (or action) called on app
+ * load.
  */
 function getWeb3Thunk () {
 
   return async (dispatch, getState) => {
 
+    // set state.web3.ready === false
     dispatch(getWeb3Action())
 
     let web3
 
-    // checking if Web3 has been injected by the browser
+    // attempt to get browser-injected web3
     if (typeof window.web3 !== 'undefined') {
       // use MetaMask's provider
       try {
@@ -161,29 +164,32 @@ function getWeb3Thunk () {
         return
       }
     } else {
-      console.log('Please install MetaMask.')
+      console.warn('Please install MetaMask.')
       dispatch(getWeb3FailureAction(new Error('No MetaMask found')))
       return
-      // TODO: what's the fallback?
+      // TODO: add actual fallback
       // fallback - local node / hosted node + in-dapp id mgmt / fail
       // web3 = await new Web3(new Web3.providers.HttpProvider('http://localhost:8545'))
     }
 
-    if (web3 &&
-      web3.currentProvider.constructor.name === 'MetamaskInpageProvider') {
-
+    // validate web3 and call next initialization thunk on success
+    if (
+      web3 &&
+      web3.currentProvider.constructor.name === 'MetamaskInpageProvider'
+    ) {
       dispatch(getWeb3SuccessAction(web3))
       dispatch(getWeb3AccountThunk(web3))
-    } else {
+    }
+    else {
       dispatch(getWeb3FailureAction(new Error('invalid web3', web3)))
     }
   }
 }
 
 /**
- * [getWeb3AccountThunk description]
- * @param  {[type]} web3 [description]
- * @return {[type]}      [description]
+ * Gets the account from the injected web3 object.
+ *
+ * @param {object} web3 The injected web3 oject
  */
 function getWeb3AccountThunk (web3) {
 
@@ -191,13 +197,15 @@ function getWeb3AccountThunk (web3) {
 
     const state = getState()
 
-    dispatch(getAccountAction())
-
     if (!state.web3.ready) {
       dispatch(getAccountFailureAction(new Error('web3 not ready')))
       return
     }
 
+    // set state.web3.ready === false
+    dispatch(getAccountAction())
+
+    // attempt to get account
     let accounts, networkId
     try {
       accounts = await web3.eth.getAccounts()
@@ -208,13 +216,17 @@ function getWeb3AccountThunk (web3) {
       return
     }
 
+    // fail if account invalid
     if (!accounts || accounts.length < 1) {
       dispatch(getAccountFailureAction(new Error(
         'missing or invalid accounts array', accounts)))
       return
     }
 
-    if (accounts.length !== 1) console.log('WARNING: More than one account found.', accounts)
+    // since assuming MetaMask, exactly one account should be returned
+    if (accounts.length !== 1) console.warn('More than one account found.', accounts)
+
+    // succeed and call next initialization thunk
     dispatch(getAccountSuccessAction(accounts[0], networkId))
     dispatch(setAccountGraph())
   }

@@ -101,7 +101,7 @@ class DappForm extends Component {
     if (this.props.grapherMode === grapherModes.main) {
       this.props.deployDapp(this.state.fieldValues[nameFieldId])
     } else if (this.props.grapherMode === grapherModes.createDapp) {
-      this.props.saveWipGraph(this.state.fieldValues[nameFieldId])
+      this.props.addDappTemplate(this.state.fieldValues[nameFieldId])
       this.props.setGrapherMode(grapherModes.main)
     } else throw new Error('unknown grapher mode: ' + this.props.grapherMode)
 
@@ -173,6 +173,6 @@ DappForm.propTypes = {
   deployDapp: PropTypes.func,
   grapherMode: PropTypes.string.isRequired,
   closeModal: PropTypes.func.isRequired,
-  saveWipGraph: PropTypes.func,
+  addDappTemplate: PropTypes.func,
   setGrapherMode: PropTypes.func,
 }

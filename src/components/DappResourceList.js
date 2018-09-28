@@ -53,7 +53,7 @@ class DappResourceList extends Component {
 
   handleDeployNewClick = (templateId, graphId) => {
     this.props.selectTemplate(templateId)
-    this.props.selectGraph(graphId)
+    this.props.selectDisplayGraph(graphId)
   }
 
   handleDeployedClick = (templateId, deployedId) => {
@@ -129,7 +129,7 @@ DappResourceList.propTypes = {
   // classes: PropTypes.object.isRequired,
   dapps: PropTypes.object.isRequired,
   setGrapherMode: PropTypes.func,
-  selectGraph: PropTypes.func,
+  selectDisplayGraph: PropTypes.func,
   selectTemplate: PropTypes.func,
   selectDeployed: PropTypes.func,
   selectedDeployedId: PropTypes.string,

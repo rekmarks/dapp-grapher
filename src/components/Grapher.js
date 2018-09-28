@@ -8,7 +8,11 @@ import uuid from 'uuid/v4'
 import { grapherModes } from '../redux/reducers/grapher'
 
 import { graphTypes } from '../graphing/graphGenerator'
-import jh from '../graphing/jointHelper'
+
+import {
+  initializeJointPaper,
+  setJointElements,
+} from '../graphing/jointHelper'
 
 /**
  * TODO
@@ -76,7 +80,7 @@ export default class Grapher extends Component {
           meta.layoutOptions.rankDir = 'TB'
         }
 
-        jh.addJointElements(
+        setJointElements(
           this.state.jointGraph,
           this.props.displayGraph,
           meta
@@ -98,7 +102,7 @@ export default class Grapher extends Component {
 
         this.state.jointGraph.clear()
 
-        jh.addJointElements(
+        setJointElements(
           this.state.jointGraph,
           wipGraph,
           { setsLayout: false }
@@ -114,7 +118,7 @@ export default class Grapher extends Component {
   // initialize jointGraph on mount
   componentDidMount () {
 
-    const paper = jh.paper.initialize(
+    const paper = initializeJointPaper(
       this.jointElement,
       this.state.jointGraph,
       {
@@ -144,7 +148,7 @@ export default class Grapher extends Component {
       this.setState({
         svgPanZoom: svgPanZoom(this.jointElement.childNodes[2], {
           beforePan: (oldPan, newPan) => {
-            if (this.state.jointPaper._dappGrapher.panning) return true
+            if (this.state.jointPaper.dappGrapher.panning) return true
             return false
           },
           dblClickZoomEnabled: false,
@@ -236,7 +240,7 @@ export default class Grapher extends Component {
     })
 
     // add insertionGraph elements to joint
-    jh.addJointElements(
+    setJointElements(
       this.state.jointGraph,
       insertionGraph,
       { setsLayout: false }

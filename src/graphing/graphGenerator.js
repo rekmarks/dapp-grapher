@@ -1,4 +1,11 @@
 
+
+/**
+ * TODO
+ * NOTE: This entire file will be refactored to use graphlib. Don't bother
+ * trying to making sense of it.
+ */
+
 import { getDisplayAddress } from '../utils'
 
 const graphTypes = {
@@ -89,12 +96,17 @@ function getAccountGraph (address) {
 /**
  * Converts a template dapp graph into a deployed dapp graph for use with
  * a deployed dapp
- * @param  {string}  deployedGraphId    the id to be given to the deployed
- *                                      dapp's graph
- * @param  {object}  templateGraph      the template's dapp graph
- * @param  {array}   deployedContracts  the deployed contract instances
- *                                      associated with the deployed dapp
- * @return {object}                     the graph of the deployed dapp
+ *
+ * TODO: this conversion is at best perfunctory. It merely replaces contract
+ * address output port labels with the addresses of those contracts. Make this
+ * far more distinct from template graphs.
+ *
+ * @param {string} deployedGraphId the id to be given to the deployed dapp's
+ * graph
+ * @param {object} templateGraph the template's dapp graph
+ * @param {array} deployedContracts the deployed contract instances associated
+ * with the deployed dapp
+ * @return {object} the graph of the deployed dapp
 */
 function getDeployedDappGraph (
   deployedGraphId,
@@ -112,6 +124,7 @@ function getDeployedDappGraph (
   //   edge => edge.source
   // )
 
+  // filter out contract nodes and add the instanceAddress property
   nodes.filter(
 
     node => Object.values(graphTypes.contract).includes(node.type)
@@ -123,11 +136,10 @@ function getDeployedDappGraph (
     ).address
   })
 
+  // relabel address outputs of contract nodes
   nodes.forEach(node => {
 
     if (node.type === 'output') {
-
-      // if (sourceNodes.includes(node.id)) {
 
       if (node.abiType === 'address' && node.parent !== 'account') {
 
@@ -135,7 +147,6 @@ function getDeployedDappGraph (
           deployedGraph.elements.nodes[node.parent].instanceAddress
         )
       }
-      // } else delete deployedGraph.elements.nodes[node.id]
     }
   })
 

@@ -78,7 +78,7 @@ export default class ResourceMenu extends Component {
           <DappResourceList
             dapps={this.props.dapps}
             setGrapherMode={this.props.setGrapherMode}
-            selectGraph={this.props.selectGraph}
+            selectDisplayGraph={this.props.selectDisplayGraph}
             selectTemplate={this.props.selectDappTemplate}
             selectDeployed={this.props.selectDeployedDapp}
             selectedTemplateId={this.props.selectedDappTemplateId}
@@ -178,7 +178,7 @@ export default class ResourceMenu extends Component {
             addInstance={this.props.addInstance}
             getCreateGraphParams={getCreateGraphParams}
             createGraph={this.props.createGraph}
-            selectGraph={this.props.selectGraph}
+            selectDisplayGraph={this.props.selectDisplayGraph}
             displayGraphId={this.props.displayGraphId}
             getGraph={this.props.getGraph} />
         </NestedList>
@@ -234,7 +234,7 @@ ResourceMenu.propTypes = {
   deleteGraph: PropTypes.func,
   deleteAllGraphs: PropTypes.func,
   getCreateGraphParams: PropTypes.func,
-  selectGraph: PropTypes.func,
+  selectDisplayGraph: PropTypes.func,
   displayGraphId: PropTypes.string,
   selectContractAddress: PropTypes.func,
   selectedContractAddress: PropTypes.string,
@@ -243,7 +243,6 @@ ResourceMenu.propTypes = {
   dapps: PropTypes.object,
   grapherMode: PropTypes.string,
   setGrapherMode: PropTypes.func,
-  saveWipGraph: PropTypes.func,
   hasWipGraph: PropTypes.bool,
   openDappForm: PropTypes.func,
   hasWipDeployment: PropTypes.bool,

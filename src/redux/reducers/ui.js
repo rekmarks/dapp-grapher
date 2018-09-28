@@ -10,22 +10,22 @@ const ACTIONS = {
 }
 
 const modalContent = {
-  contractForm: 'contractForm',
-  dappForm: 'dappForm',
+  contractForm: 'contractForm', // display ContractForm in modal
+  dappForm: 'dappForm', // display DappForm in modal
 }
 
 const initialState = {
-  modal: {
+  modal: { // the app's modal is a single component that receives content
     open: false,
-    content: null,
-    formFieldValues: {},
+    content: null, // values from modalContent, used to determine content
+    formFieldValues: {}, // used to store field values of forms
   },
-  contractForm: {
-    selectedFunction: null,
+  contractForm: { // corresponds to ContractForm component
+    selectedFunction: null, // tracks which function is selected, if any
   },
-  snackbar: {
-    message: null,
-    duration: 6000,
+  snackbar: { // snackbar notifications use a single component that receives content
+    message: null, // the message string
+    duration: 6000, // the visibility duration
   },
 }
 
@@ -174,6 +174,12 @@ function getClearSnackbarNotificationAction () {
   }
 }
 
+/**
+ * Clears existing snackbar notification and adds a new one
+ *
+ * @param {string} message the message string
+ * @param {number} duration the notification visibility duration
+ */
 function addSnackbarNotificationThunk (message, duration) {
 
   return (dispatch, getState) => {
