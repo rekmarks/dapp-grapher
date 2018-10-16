@@ -71,10 +71,10 @@ const initialState = {
   types: contractTypes,
 
   // error storage
-  errors: null,
+  errors: [],
 
   // contract instance call storage
-  callHistory: null,
+  callHistory: [],
 
   // address of currently selected contract, if any
   selectedAddress: null,
@@ -214,9 +214,7 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.DEPLOYMENT_FAILURE:
       return {
         ...state,
-        errors: state.errors
-        ? [action.error]
-        : state.errors.concat([action.error]),
+        errors: state.errors.concat(action.error),
         ready: true,
       }
 
@@ -268,9 +266,7 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.ADD_INSTANCE_FAILURE:
       return {
         ...state,
-        errors: state.errors
-        ? [action.error]
-        : state.errors.concat([action.error]),
+        errors: state.errors.concat(action.error),
         ready: true,
       }
 
@@ -283,18 +279,14 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.CALL_INSTANCE_SUCCESS:
       return {
         ...state,
-        callHistory: state.callHistory
-        ? [action.data]
-        : state.callHistory.concat([action.data]),
+        callHistory: state.callHistory.concat(action.data),
         ready: true,
       }
 
     case ACTIONS.CALL_INSTANCE_FAILURE:
       return {
         ...state,
-        errors: state.errors
-        ? [action.error]
-        : state.errors.concat([action.error]),
+        errors: state.errors.concat(action.error),
         ready: true,
       }
 
@@ -307,7 +299,7 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.LOG_ERROR:
       return {
         ...state,
-        errors: state.errors.concat([action.error]),
+        errors: state.errors.concat(action.error),
       }
 
     default:

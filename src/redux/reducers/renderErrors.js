@@ -21,7 +21,7 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.LOG_ERROR:
       return {
         ...state,
-        errors: state.errors.concat([action.error]),
+        errors: state.errors.concat(action.error),
       }
 
     case ACTIONS.CLEAR_ERRORS:

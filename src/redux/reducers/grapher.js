@@ -68,7 +68,7 @@ const initialState = {
      */
   },
 
-  errors: null, // error storage
+  errors: [], // error storage
 }
 
 export {
@@ -176,9 +176,7 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.LOG_ERROR:
       return {
         ...state,
-        errors: state.errors
-          ? state.errors.concat([action.error])
-          : [action.error],
+        errors: state.errors.concat(action.error),
       }
 
     default:

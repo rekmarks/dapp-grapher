@@ -18,7 +18,7 @@ const initialState = {
   networkId: null, // current selected network id from injected web3 object
   provider: null, // current provider from injected web3 object
   ready: false, // false on start or if any thunks have yet to return, true o.w.
-  errors: null, // storage for web3 errors
+  errors: [], // storage for web3 errors
 }
 
 export {
@@ -36,7 +36,7 @@ export default function reducer (state = initialState, action) {
         ...state,
         ready: false,
         networkId: null,
-        errors: null,
+        errors: [],
         account: null,
       }
 
@@ -50,9 +50,7 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.GET_WEB3_FAILURE:
       return {
         ...state,
-        errors: state.errors
-        ? [action.error]
-        : state.errors.concat([action.error]),
+        errors: state.errors.concat(action.error),
       }
 
     case ACTIONS.GET_ACCOUNT:
@@ -73,16 +71,14 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.GET_ACCOUNT_FAILURE:
       return {
         ...state,
-        errors: state.errors
-        ? [action.error]
-        : state.errors.concat([action.error]),
+        errors: state.errors.concat(action.error),
         ready: true,
       }
 
     case ACTIONS.CLEAR_ERRORS:
       return {
         ...state,
-        errors: null,
+        errors: [],
       }
 
     default:

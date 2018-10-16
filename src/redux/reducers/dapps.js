@@ -38,7 +38,7 @@ const ACTIONS = {
 const initialState = {
 
   // error log
-  errors: null,
+  errors: [],
 
   // false if a web3-related thunk has yet to complete, preventing further web3
   // calls
@@ -163,10 +163,7 @@ export default function reducer (state = initialState, action) {
     case ACTIONS.DEPLOYMENT_FAILURE:
       return {
         ...state,
-        errors:
-          state.errors
-          ? state.errors.concat([action.error])
-          : [action.error],
+        errors: state.errors.concat(action.error),
       }
 
     case ACTIONS.SELECT_DEPLOYED:
