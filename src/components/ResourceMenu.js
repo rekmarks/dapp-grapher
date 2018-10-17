@@ -16,7 +16,6 @@ import StorageIcon from '@material-ui/icons/Storage'
 import BuildIcon from '@material-ui/icons/Build'
 import SaveIcon from '@material-ui/icons/Save'
 import CloseIcon from '@material-ui/icons/Close'
-import PublishIcon from '@material-ui/icons/Publish'
 
 import ContractResourceList from './ContractResourceList'
 import DappResourceList from './DappResourceList'
@@ -45,18 +44,6 @@ export default class ResourceMenu extends Component {
 
   handleParentListClick = id => {
     this.setState(state => ({ [id]: !state[id] }))
-  }
-
-  handleContractUpload = async event => {
-
-    event.preventDefault()
-
-    const reader = new FileReader()
-    reader.onload = event => {
-      console.log(event.target.result)
-    }
-
-    reader.readAsText(event.target.files[0])
   }
 
   render () {
@@ -150,7 +137,7 @@ export default class ResourceMenu extends Component {
               this.props.openModal(modalContentTypes.dappForm)
             }}
             icon={(<SaveIcon />)}
-            displayText="Save" />
+            displayText="Save Template" />
         </Fragment>
       )
 
@@ -162,23 +149,6 @@ export default class ResourceMenu extends Component {
     return (
       <div id="ResourceMenu-main" style={{overflowY: 'auto'}}>
         <List disablePadding>
-          <div key="contract-upload-div" >
-            <ListButton
-              disabled={
-                this.props.grapherMode === grapherModes.createDapp ||
-                this.props.hasWipDeployment
-              }
-              displayText="Upload Contract"
-              icon={<PublishIcon />}
-              onClick={() => document.querySelector('#contract-upload').click()}
-            />
-            <input
-              id="contract-upload"
-              type="file"
-              onChange={this.handleContractUpload}
-              style={{display: 'none'}}
-            />
-          </div>
           <ListButton
             disabled={
               !this.props.displayGraphId &&
@@ -202,6 +172,7 @@ export default class ResourceMenu extends Component {
         >
           <ContractResourceList
             classes={graphResourceClasses}
+            addContractType={this.props.addContractType}
             grapherMode={this.props.grapherMode}
             contractTypes={this.props.contractTypes}
             instanceTypes={this.getInstanceTypes()}
@@ -212,7 +183,8 @@ export default class ResourceMenu extends Component {
             createGraph={this.props.createGraph}
             selectDisplayGraph={this.props.selectDisplayGraph}
             displayGraphId={this.props.displayGraphId}
-            getGraph={this.props.getGraph} />
+            getGraph={this.props.getGraph}
+            hasWipDeployment={this.props.hasWipDeployment} />
         </NestedList>
         {resources.bottom}
       </div>
@@ -260,6 +232,7 @@ export default class ResourceMenu extends Component {
 ResourceMenu.propTypes = {
   classes: PropTypes.object,
   account: PropTypes.string,
+  addContractType: PropTypes.func,
   addInstance: PropTypes.func,
   networkId: PropTypes.string,
   contractInstances: PropTypes.object,

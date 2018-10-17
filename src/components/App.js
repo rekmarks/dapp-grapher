@@ -31,6 +31,7 @@ import withMuiRoot from '../withMuiRoot'
 // Reducer imports
 
 import {
+  addContractType,
   addInstance,
   callInstance,
   deployContract,
@@ -201,6 +202,7 @@ class App extends Component {
                 setGrapherMode={this.props.setGrapherMode}
                 drawerOpen={this.state.drawerOpen}
                 account={this.props.account}
+                addContractType={this.props.addContractType}
                 addInstance={this.props.addInstance}
                 networkId={this.props.networkId}
                 contractTypes={this.props.contractTypes}
@@ -383,6 +385,7 @@ class App extends Component {
 App.propTypes = {
   classes: PropTypes.object,
   // contracts
+  addContractType: PropTypes.func,
   deployContract: PropTypes.func,
   addInstance: PropTypes.func,
   callInstance: PropTypes.func,
@@ -485,6 +488,7 @@ function mapStateToProps (state) {
 function mapDispatchToProps (dispatch) {
   return {
     // contracts
+    addContractType: (contractJson) => dispatch(addContractType(contractJson)),
     deployContract: (contractName, constructorParams) =>
       dispatch(deployContract(contractName, constructorParams)),
     addInstance: (contractName, address) =>

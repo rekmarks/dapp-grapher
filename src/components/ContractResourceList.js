@@ -1,5 +1,5 @@
 
-import React, { Component } from 'react'
+import React, { Component, Fragment } from 'react'
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
 
@@ -10,6 +10,7 @@ import SubjectIcon from '@material-ui/icons/Subject'
 import NestedList from './common/NestedList'
 import ListButton from './common/ListButton'
 
+import { grapherModes} from '../redux/reducers/grapher'
 import { graphTypes } from '../graphing/graphGenerator'
 import { spacingUnit } from '../withMuiRoot'
 import { getDisplayAddress } from '../utils'
@@ -27,12 +28,48 @@ const styles = theme => ({
 
 class ContractResourceList extends Component {
 
+  handleContractUpload = async event => {
+
+    event.preventDefault()
+
+    const reader = new FileReader()
+    reader.onload = event => {
+      this.props.addContractType(JSON.parse(event.target.result))
+    }
+
+    reader.readAsText(event.target.files[0])
+  }
+
   render () {
 
     const contractTypeNames = Object.keys(this.props.contractTypes)
     contractTypeNames.sort()
 
-    return contractTypeNames.map(contractName => {
+    const addContractTypeButton = (
+      <div key="contract-upload-div" >
+        {
+          this.props.grapherMode !== grapherModes.createDapp
+          ? <Fragment>
+              <ListButton
+                disabled={this.props.hasWipDeployment}
+                displayText="Add Contract Type"
+                icon={<AddCircleOutlineIcon />}
+                onClick={() => document.querySelector('#contract-upload').click()}
+                style={{ paddingLeft: spacingUnit * 4 }}
+              />
+              <input
+                id="contract-upload"
+                type="file"
+                onChange={this.handleContractUpload}
+                style={{display: 'none'}}
+              />
+            </Fragment>
+          : null
+        }
+      </div>
+    )
+
+    const contractLists = contractTypeNames.map(contractName => {
 
       const currentGraphId =
         this.props.contractTypes[contractName][graphTypes.contract._constructor]
@@ -80,6 +117,8 @@ class ContractResourceList extends Component {
         </NestedList>
       )
     })
+
+    return [addContractTypeButton, contractLists]
   }
 
   /**
@@ -130,6 +169,7 @@ class ContractResourceList extends Component {
 
 ContractResourceList.propTypes = {
   classes: PropTypes.object.isRequired,
+  addContractType: PropTypes.func,
   contractTypes: PropTypes.object,
   instanceTypes: PropTypes.object,
   selectContractAddress: PropTypes.func,
@@ -141,6 +181,7 @@ ContractResourceList.propTypes = {
   displayGraphId: PropTypes.string,
   grapherMode: PropTypes.string,
   getGraph: PropTypes.func,
+  hasWipDeployment: PropTypes.bool,
 }
 
 export default withStyles(styles)(ContractResourceList)

@@ -448,37 +448,37 @@ function getSelectAddressAction (address) {
  * Adds a contract type to the app, allowing the user to deploy instances of it
  * and use it in dapps.
  *
- * @param {object} contractJSON the compiled contract to be added
+ * @param {object} contractJson the compiled contract to be added
  */
-function addContractTypeThunk (contractJSON) {
+function addContractTypeThunk (contractJson) {
 
   return (dispatch, getState) => {
 
     const state = getState()
-    const contractName = contractJSON.contractName
+    const contractName = contractJson.contractName
 
     // TODO: when contract types are stored by ID, this check will have to
     // change
-    if (state.contracts.type[contractName]) {
+    if (state.contracts.types[contractName]) {
       dispatch(getLogErrorAction(new Error(
         'cannot add duplicate contract type')))
       return
     }
 
-    // validate contractJSON
+    // basic validation of contract json
     if (!contractName) {
       dispatch(getLogErrorAction(new Error(
         'add contract failure: missing contract name')))
       return
     }
-    if (!contractJSON.abi || !contractJSON.bytecode) {
+    if (!contractJson.abi || !contractJson.bytecode) {
       dispatch(getLogErrorAction(new Error(
         'add contract failure: contract JSON missing bytecode or abi')))
       return
     }
 
     // add contract type
-    dispatch(getAddContractTypeAction(contractName, contractJSON))
+    dispatch(getAddContractTypeAction(contractName, contractJson))
   }
 }
 
@@ -917,12 +917,12 @@ async function deployContract (
     finalParams = constructorParams
   }
 
-  const contractJSON = contractTypes[contractName].artifact
+  const contractJson = contractTypes[contractName].artifact
 
   let instance
   try {
     instance = await _deploy( // actual web3 call happens in here
-      contractJSON,
+      contractJson,
       finalParams,
       web3.provider,
       web3.account
@@ -944,7 +944,7 @@ async function deployContract (
     truffleContract: instance,
     address: instance.address,
     account: web3.account,
-    contractName: contractJSON.contractName,
+    contractName: contractJson.contractName,
     constructorParams: constructorParams,
     networkId: web3.networkId,
     dappTemplateIds: meta.dappTemplateId ? [meta.dappTemplateId] : undefined,
