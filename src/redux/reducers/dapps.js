@@ -304,8 +304,7 @@ function addTemplateThunk (templateName = null) {
         // TODO: this assumes addresses are always contracts, but they could
         // be functions that output addresses
         source = nodes[edge.sourceParent].id
-      }
-      else { // TODO: add support for more abi types
+      } else { // TODO: add support for more abi types
         throw new Error('addTemplateThunk: unsupported abiType')
       }
 
