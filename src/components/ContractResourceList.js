@@ -82,6 +82,14 @@ class ContractResourceList extends Component {
     })
   }
 
+  /**
+   * Gets the <ListButton /> elements corresponding to a contract type
+   * contractName and its corresponding instances
+   *
+   * @param {string} contractName the contract type of the instances
+   * @param {object} instances the instances of type contractName
+   * @returns {object} a <ListButton /> for every instance
+   */
   getInstanceListItems = (contractName, instances) => {
 
     if (!instances) return null

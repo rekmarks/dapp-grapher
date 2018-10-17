@@ -15,6 +15,8 @@ import ListItemIcon from '@material-ui/core/ListItemIcon'
 import StorageIcon from '@material-ui/icons/Storage'
 import BuildIcon from '@material-ui/icons/Build'
 import SaveIcon from '@material-ui/icons/Save'
+import CloseIcon from '@material-ui/icons/Close'
+import PublishIcon from '@material-ui/icons/Publish'
 
 import ContractResourceList from './ContractResourceList'
 import DappResourceList from './DappResourceList'
@@ -43,6 +45,18 @@ export default class ResourceMenu extends Component {
 
   handleParentListClick = id => {
     this.setState(state => ({ [id]: !state[id] }))
+  }
+
+  handleContractUpload = async event => {
+
+    event.preventDefault()
+
+    const reader = new FileReader()
+    reader.onload = event => {
+      console.log(event.target.result)
+    }
+
+    reader.readAsText(event.target.files[0])
   }
 
   render () {
@@ -148,19 +162,37 @@ export default class ResourceMenu extends Component {
     return (
       <div id="ResourceMenu-main" style={{overflowY: 'auto'}}>
         <List disablePadding>
+          <div key="contract-upload-div" >
+            <ListButton
+              disabled={
+                this.props.grapherMode === grapherModes.createDapp ||
+                this.props.hasWipDeployment
+              }
+              displayText="Upload Contract"
+              icon={<PublishIcon />}
+              onClick={() => document.querySelector('#contract-upload').click()}
+            />
+            <input
+              id="contract-upload"
+              type="file"
+              onChange={this.handleContractUpload}
+              style={{display: 'none'}}
+            />
+          </div>
+          <ListButton
+            disabled={
+              !this.props.displayGraphId &&
+              this.props.grapherMode === grapherModes.main
+            }
+            onClick={() => this.props.setGrapherMode(grapherModes.main)}
+            icon={<CloseIcon />}
+            displayText={
+              this.props.grapherMode === grapherModes.createDapp
+              ? 'Discard Graph'
+              : 'Deselect Graph'
+            }
+          />
           {resources.top}
-          {
-            (
-              this.props.grapherMode === grapherModes.main &&
-              !this.props.displayGraphId
-            )
-            ? null
-            : <ListButton
-              disabled={false}
-              onClick={() => this.props.setGrapherMode(grapherModes.main)}
-              icon={(<DeleteIcon />)}
-              displayText="Discard" />
-          }
         </List>
         <Divider />
         {resources.mid}
@@ -197,6 +229,7 @@ export default class ResourceMenu extends Component {
 
     // get all instances for current account and networkId by type
     const instanceTypes = {}
+
     Object.keys(
       this.props.contractInstances[this.props.networkId]
     ).forEach(address => {
@@ -205,13 +238,14 @@ export default class ResourceMenu extends Component {
         this.props.contractInstances[this.props.networkId][address]
 
       if (instance.account === this.props.account) {
-        if (instanceTypes[instance.type]) {
-          instanceTypes[instance.type][address] = !!instance.truffleContract
-        } else {
-          instanceTypes[instance.type] = {
-            [address]: !!instance.truffleContract,
-          }
+
+        if (!instanceTypes[instance.type]) {
+          instanceTypes[instance.type] = {}
         }
+
+        instanceTypes[instance.type][address] = Boolean(
+          instance.truffleContract
+        )
       }
     })
 
