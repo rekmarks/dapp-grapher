@@ -9,6 +9,7 @@ const drawerWidth = 260
 const appStyles = theme => ({
   root: {
     display: 'flex',
+    flexGrow: 1,
   },
   // toolbar: {
   //   paddingRight: 24, // keep right padding when drawer closed
