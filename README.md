@@ -56,18 +56,18 @@ Before more features are added, DappGrapher's foundations need work.
 1. Refactor graph backend to use [`graphlib`](https://www.npmjs.com/package/graphlib) instead of the hacky bespoke schema currently in use
 	- **Note:** This is a **blocker** since the graph schema is fundamental to much of DappGrapher's functionality
 	- See the [graphlib-refactor](https://github.com/rekmarks/dapp-grapher/tree/graphlib-refactor) branch
-- Refactor Redux middleware from `redux-thunk` to [`redux-saga`](https://www.npmjs.com/package/redux-saga)
+2. Refactor Redux middleware from `redux-thunk` to [`redux-saga`](https://www.npmjs.com/package/redux-saga)
 	- `redux-saga` was designed precisely to deal with the kind of failure-prone, asynchronous work that DappGrapher is rife with
 	- **Note:** This is also a **blocker** since anything `web3`-related is asynchronous and currently bound up in thunks
-- Refactor existing, hacky state-persistence functionality to use [`redux-persist`](https://www.npmjs.com/package/redux-persist), and enable state importing in the process
-- Fix testing and error handling
+3. Refactor existing, hacky state-persistence functionality to use [`redux-persist`](https://www.npmjs.com/package/redux-persist), and enable state importing in the process
+4. Fix testing and error handling
 	- Determine testing framework
 	- Write Tests
 		- Reducer unit tests
 		- State persistence tests
 		- Component tests
 	- Add [`redux-devtools`](https://github.com/reduxjs/redux-devtools) support.
-- "Robustifying," a.k.a. undoing shortcuts taken during early development and quality-of-life improvements
+5. "Robustifying," a.k.a. undoing shortcuts taken during early development and quality-of-life improvements
 	- [`@material-ui`](https://www.npmjs.com/package/@material-ui/core) usage
 		- Consistent style management should be enforced, and dead/useless class passing should be minimized
 	- Move application logic contained in components into reducers
