@@ -76,6 +76,11 @@ import { getWeb3 } from '../redux/reducers/web3'
 import './style/App.css'
 import appStyles from './style/App.style'
 
+/**
+ * App
+ *
+ * @extends {Component}
+ */
 class App extends Component {
 
   /**
@@ -374,7 +379,7 @@ class App extends Component {
         return null
 
       default:
-        console.warn(
+        console.error(
           'unhandled modal content type: ' + this.props.modalContent
         )
         return null

@@ -67,7 +67,7 @@ const initialState = {
   // used when deploying dapps
   deploymentQueue: null,
 
-  // TODO: store these by a unique id, not name
+  // TODO: store these by uuids, not names
   types: contractTypes,
 
   // error storage

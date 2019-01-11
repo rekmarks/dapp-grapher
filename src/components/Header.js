@@ -3,6 +3,12 @@ import React, { Component, Fragment } from 'react'
 import PropTypes from 'prop-types'
 import Typography from '@material-ui/core/Typography'
 
+/**
+ * App header. Mostly cosmetic. Tells user whether they are logged in with
+ * MetaMask.
+ *
+ * @extends {Component}
+ */
 export default class Header extends Component {
 
   render () {

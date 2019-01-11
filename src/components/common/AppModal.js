@@ -26,6 +26,11 @@ const styles = theme => ({
   },
 })
 
+/**
+ * Default modal for app. State controlled by props.
+ *
+ * @extends {Component}
+ */
 class AppModal extends Component {
 
   render () {

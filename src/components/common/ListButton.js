@@ -7,6 +7,11 @@ import Tooltip from '@material-ui/core/Tooltip'
 
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 
+/**
+ * Visual component for buttons in lists in app resource menu.
+ *
+ * @extends {Component}
+ */
 export default class ListButton extends Component {
 
   render () {

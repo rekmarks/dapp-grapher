@@ -444,7 +444,7 @@ function deployThunk (displayName) {
  * likely not worth your time.
  *
  * @param {object} dappGraph the graph whose deployment order must be found
- * @return {array} an array of contract nodes in order of deployment
+ * @return {object} nodes by id with a deployment order property
  */
 function getDappGraphDeploymentOrder (dappGraph) {
 

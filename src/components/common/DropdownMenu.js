@@ -1,9 +1,4 @@
 
-/**
- * Courtesy:
- * https://github.com/mui-org/material-ui/tree/master/docs/src/pages/demos/menus/SimpleMenu.js
- */
-
 import PropTypes from 'prop-types'
 import React, { Component } from 'react'
 import { withStyles } from '@material-ui/core/styles'
@@ -20,6 +15,12 @@ const styles = theme => ({
   },
 })
 
+/**
+ * Simple dropdown menu, courtesy:
+ * https://github.com/mui-org/material-ui/tree/master/docs/src/pages/demos/menus/SimpleMenu.js
+ *
+ * @extends {Component}
+ */
 class DropdownMenu extends Component {
 
   button = null
@@ -51,7 +52,9 @@ class DropdownMenu extends Component {
       return (
         <MenuItem
           onClick={event => this.handleSelect(event, index)}
-          data-itemid={item.id} // HTML data attribute because MenuItem doesn't accept non-DOM element props
+          // data-itemid is a HTML data attribute because MenuItem doesn't
+          // accept non-DOM element props
+          data-itemid={item.id}
           key={item.id}
           selected={index === this.state.selectedIndex}
         >

@@ -9,6 +9,11 @@ import ExpandLessIcon from '@material-ui/icons/ExpandLess'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import ListItemIcon from '@material-ui/core/ListItemIcon'
 
+/**
+ * Visual component for nested lists in app resource menu.
+ *
+ * @extends {Component}
+ */
 export default class NestedList extends Component {
 
   state = { open: false }

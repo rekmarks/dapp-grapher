@@ -175,9 +175,9 @@ function getClearSnackbarNotificationAction () {
 }
 
 /**
- * Clears existing snackbar notification and adds a new one
+ * Sets the next snackbar notification.
  *
- * @param {string} message the message string
+ * @param {string} message the notification message string
  * @param {number} duration the notification visibility duration
  */
 function addSnackbarNotificationThunk (message, duration) {

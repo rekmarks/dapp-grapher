@@ -25,10 +25,17 @@ import ListButton from './common/ListButton'
 import { grapherModes, getCreateGraphParams } from '../redux/reducers/grapher'
 import { modalContentTypes } from '../redux/reducers/ui'
 
+/**
+ * Parent component for primary app menu/toolbar. Visually contained within
+ * drawer on screen left.
+ *
+ * @extends {Component}
+ */
 export default class ResourceMenu extends Component {
 
   constructor (props) {
 
+    // for local browser storage functionality
     super(props)
     this.state = {
       storageHref: getStorageHref(),
@@ -40,10 +47,6 @@ export default class ResourceMenu extends Component {
     if (prevProps.contractInstances !== this.props.contractInstances) {
       this.setState({ storageHref: getStorageHref()})
     }
-  }
-
-  handleParentListClick = id => {
-    this.setState(state => ({ [id]: !state[id] }))
   }
 
   render () {
@@ -175,7 +178,7 @@ export default class ResourceMenu extends Component {
             addContractType={this.props.addContractType}
             grapherMode={this.props.grapherMode}
             contractTypes={this.props.contractTypes}
-            instanceTypes={this.getInstanceTypes()}
+            instanceTypes={this.getContractInstanceTypes()}
             selectContractAddress={this.props.selectContractAddress}
             selectedContractAddress={this.props.selectedContractAddress}
             addInstance={this.props.addInstance}
@@ -191,7 +194,12 @@ export default class ResourceMenu extends Component {
     )
   }
 
-  getInstanceTypes = () => {
+  /**
+   * Gets contract instance Truffle artifacts by address and contract type.
+   *
+   * @returns {object} contract type : address : truffleContract
+   */
+  getContractInstanceTypes = () => {
 
     if (
       !this.props.networkId ||
@@ -201,7 +209,6 @@ export default class ResourceMenu extends Component {
 
     // get all instances for current account and networkId by type
     const instanceTypes = {}
-
     Object.keys(
       this.props.contractInstances[this.props.networkId]
     ).forEach(address => {
@@ -221,6 +228,9 @@ export default class ResourceMenu extends Component {
       }
     })
 
+    // TODO: Handle this with a workflow and UI notifications.
+    // Currently, this throws e.g. when instances in local storage are
+    // orphaned by restarting Ganache.
     if (Object.keys(instanceTypes).length === 0) {
       throw new Error('no contract instances found')
     }
@@ -266,7 +276,8 @@ ResourceMenu.propTypes = {
  */
 
 /**
- * encodes persisted storage as an href for downloading
+ * Encodes persisted storage as an href for downloading
+ *
  * @return {string} href attribute for an HTML anchor
  */
 function getStorageHref () {

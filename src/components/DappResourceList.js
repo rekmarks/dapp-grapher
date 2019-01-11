@@ -28,11 +28,13 @@ const styles = theme => ({
   },
 })
 
+/**
+ * Displays and provides functionality for dapp-related resources.
+ * Contained within ResourceMenu.
+ *
+ * @extends {Component}
+ */
 class DappResourceList extends Component {
-
-  handleParentListClick = id => {
-    this.setState(state => ({ [id]: !state[id] }))
-  }
 
   render () {
     return (
@@ -51,11 +53,25 @@ class DappResourceList extends Component {
     )
   }
 
+  /**
+   * Selects a template and its corresponding graph in order to deploy a new
+   * instance.
+   *
+   * @param {string} templateId the template id
+   * @param {string} graphId the id of the template's graph
+   */
   handleDeployNewClick = (templateId, graphId) => {
     this.props.selectTemplate(templateId)
     this.props.selectDisplayGraph(graphId)
   }
 
+  /**
+   * Selects a template and a deployed instance of said template, which will
+   * also display the instance's graph.
+   *
+   * @param {string} templateId the template id
+   * @param {string} deployedId the id of the deployed template instance
+   */
   handleDeployedClick = (templateId, deployedId) => {
 
     if (this.props.selectedTemplateId !== templateId) {
@@ -64,6 +80,13 @@ class DappResourceList extends Component {
     this.props.selectDeployed(templateId, deployedId)
   }
 
+  /**
+   * Generates JSX for the list of dapp templates, enabling users to deploy new
+   * and access existing dapp instances.
+   *
+   * @param {object} dapps dapp template ids : dapp template objects
+   * @returns {jsx} the dapp template list
+   */
   getTemplateListItems = dapps => {
 
     const dappIds = Object.keys(dapps)
@@ -104,6 +127,14 @@ class DappResourceList extends Component {
     })
   }
 
+  /**
+   * Helper function for getTemplateListItems to generate list of deployed
+   * dapp instances.
+   *
+   * @param {string} templateId dapp template id
+   * @param {object} deployed object containing dapp instance objects
+   * @returns {array} <ListButton /> components
+   */
   getDeployedListItems = (templateId, deployed) => {
 
     if (!deployed) return null

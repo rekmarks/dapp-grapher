@@ -20,6 +20,13 @@ import {
  * should be moved to redux thunks if possible
  */
 
+/**
+ * Functional component containing the JointJS 'canvas' where graphs are
+ * displayed and interacted with. Occupies the most visual real estate of any
+ * component.
+ *
+ * @extends {Component}
+ */
 export default class Grapher extends Component {
 
   constructor (props) {
@@ -200,6 +207,8 @@ export default class Grapher extends Component {
    */
   updateWipGraph = () => {
 
+    // TODO: move application logic to thunk?
+
     if (!this.props.wipGraph) return
 
     const wipGraph = { ...this.props.wipGraph }
@@ -266,7 +275,7 @@ export default class Grapher extends Component {
         instanceAddress
       ) {
 
-        // TODO 9/3
+        // TODO
         // Run the get graph workflow for the graph associated with
         // instanceAddress, then call some other thunk (selectFormGraph probably)
         // that will ensure the modal opens with the correct content

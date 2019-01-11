@@ -26,25 +26,21 @@ const styles = theme => ({
   },
 })
 
+/**
+ * Displays and provides functionality for contract-related resources.
+ * Contained within ResourceMenu.
+ *
+ * @extends {Component}
+ */
 class ContractResourceList extends Component {
-
-  handleContractUpload = async event => {
-
-    event.preventDefault()
-
-    const reader = new FileReader()
-    reader.onload = event => {
-      this.props.addContractType(JSON.parse(event.target.result))
-    }
-
-    reader.readAsText(event.target.files[0])
-  }
 
   render () {
 
     const contractTypeNames = Object.keys(this.props.contractTypes)
     contractTypeNames.sort()
 
+    // contains upload functionality, handled in a one-off way that breaks
+    // React patterns somewhat
     const addContractTypeButton = (
       <div key="contract-upload-div" >
         {
@@ -119,6 +115,22 @@ class ContractResourceList extends Component {
     })
 
     return [addContractTypeButton, contractLists]
+  }
+
+  /**
+   * Handles contract upload. Expects a JSON-parsable text file contained in
+   * event.target.
+   */
+  handleContractUpload = async event => {
+
+    event.preventDefault()
+
+    const reader = new FileReader()
+    reader.onload = event => {
+      this.props.addContractType(JSON.parse(event.target.result))
+    }
+
+    reader.readAsText(event.target.files[0])
   }
 
   /**

@@ -15,8 +15,11 @@ const styles = theme => ({
 })
 
 /**
- * Courtesy:
+ * Snackbar notification components. Only one is needed. Notifications are
+ * received via props and queued in component state. Implementation courtesy:
  * https://github.com/mui-org/material-ui/blob/master/docs/src/pages/demos/snackbars/ConsecutiveSnackbars.js
+ *
+ * @extends {Component}
  */
 class AppSnackbar extends Component {
 

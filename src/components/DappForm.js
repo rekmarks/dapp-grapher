@@ -30,6 +30,12 @@ const styles = theme => ({
 
 const nameFieldId = 'DappForm-name'
 
+/**
+ * Form for interacting with dapps, i.e. when adding new dapp templates or
+ * deploying a new dapp instance.
+ *
+ * @extends {Component}
+ */
 class DappForm extends Component {
 
   state = {
@@ -69,17 +75,18 @@ class DappForm extends Component {
           id="simple-modal-description"
           variant="subheading"
         >
-          {this.getSubheading()}
         </Typography>
         {this.getForm()}
       </Fragment>
     )
   }
 
-  getSubheading = () => {
-
-  }
-
+  /**
+   * Stores input in component state.
+   * TODO: Does not handle checkboxes or radio buttons.
+   *
+   * @param {string} id input field id
+   */
   handleInputChange = id => event => {
 
     const target = event.target
@@ -94,6 +101,11 @@ class DappForm extends Component {
     })
   }
 
+  /**
+   * Form submit handler.
+   * Depending on this.props.grapherMode, deploys dapp instance or adds dapp
+   * template. Then clears form and closes containing modal.
+   */
   handleSubmit = event => {
 
     event.preventDefault()
@@ -110,6 +122,9 @@ class DappForm extends Component {
   }
 
 
+  /**
+   * Render function workhorse. Returns appropriate form JSX per props.
+   */
   getForm = () => {
 
     const classes = this.props.classes
@@ -160,7 +175,6 @@ class DappForm extends Component {
       </form>
     )
   }
-
 }
 
 export default withStyles(styles)(DappForm)

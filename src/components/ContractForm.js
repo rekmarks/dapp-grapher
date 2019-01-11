@@ -38,6 +38,12 @@ const styles = theme => ({
   },
 })
 
+/**
+ * Form for interacting with contracts, either individually or as part of dapp
+ * templates when deploying.
+ *
+ * @extends {Component}
+ */
 class ContractForm extends Component {
 
   state = {
@@ -46,7 +52,7 @@ class ContractForm extends Component {
 
   componentDidMount () {
 
-    // dapp field values are stored in state, but not individual contracts
+    // dapp field values are stored in Redux state
     if (
       Object.values(graphTypes.dapp).includes(this.props.graph.type) &&
       Object.keys(this.props.fieldValues).length > 0
@@ -57,7 +63,7 @@ class ContractForm extends Component {
 
   componentWillUnmount () {
 
-    // dapp field values are stored in state, but not individual contracts
+    // dapp field values are stored in Redux state
     if (
       Object.values(graphTypes.dapp).includes(this.props.graph.type) &&
       Object.keys(this.state.fieldValues).length > 0
@@ -85,6 +91,13 @@ class ContractForm extends Component {
     )
   }
 
+  /**
+   * Determines and returns ContractForm subheading. If there is a
+   * contractAddress prop, wraps Typography component in CopyToClipboard
+   * component.
+   *
+   * @returns {jsx} the ContractForm's subheading
+   */
   getSubheading = () => {
 
     let type
@@ -126,6 +139,9 @@ class ContractForm extends Component {
     )
   }
 
+  /**
+   * Creates notification when contract address is copied to clipboard.
+   */
   handleCopy = () => {
     this.props.addSnackbarNotification(
       'Contract address copied to clipboard!',
@@ -133,6 +149,12 @@ class ContractForm extends Component {
     )
   }
 
+  /**
+   * Stores input in component state.
+   * TODO: Does not handle checkboxes or radio buttons.
+   *
+   * @param {string} id input field id
+   */
   handleInputChange = id => event => {
 
     const target = event.target
@@ -147,15 +169,22 @@ class ContractForm extends Component {
     })
   }
 
-  handleFunctionSubmit = metaData => event => {
+  /**
+   * Form submit handler.
+   * Initiates web3 call to deployed contract when a contract function form is
+   * submitted. Clears form fields and closes containing modal.
+   *
+   * @param {object} web3Data web3 data from form
+   */
+  handleFunctionSubmit = web3Data => event => {
 
     event.preventDefault()
 
     this.props.callInstance(
       this.props.contractAddress,
-      metaData.abiName,
-      metaData.paramOrder.length > 0
-      ? metaData.paramOrder.map(id => {
+      web3Data.abiName,
+      web3Data.paramOrder.length > 0 // if there are any function params
+      ? web3Data.paramOrder.map(id => {
           return this.state.fieldValues[id]
         })
       : null
@@ -165,20 +194,33 @@ class ContractForm extends Component {
     this.props.closeContractForm()
   }
 
-  handleConstructorSubmit = metaData => event => {
+  /**
+   * Form submit handler.
+   * Initiates web3 call to deploy a contract when a contract constructor form
+   * is submitted. Closes the containing modal without clearing form.
+   *
+   * @param {object} web3Data web3 data from form
+   */
+  handleConstructorSubmit = web3Data => event => {
 
     event.preventDefault()
 
     this.props.deployContract(
       this.props.graph.name,
-      metaData.paramOrder.map(id => {
+      web3Data.paramOrder.map(id => {
         return this.state.fieldValues[id]
       })
     )
     this.props.closeContractForm()
   }
 
-  handleDappFunctionSubmit = metaData => event => {
+  /**
+   * Uses form data to update the wipDappDeployment state object, which
+   * defines the web3 calls made when a dapp is deployed.
+   *
+   * @param {object} web3Data web3 data from form
+   */
+  handleDappFunctionSubmit = web3Data => event => {
 
     event.preventDefault()
 
@@ -190,23 +232,24 @@ class ContractForm extends Component {
       ),
     }
 
-    // TODO: application logic
-    wipDeployment[metaData.id] = {
-      nodeId: metaData.id,
-      contractName: metaData.abiName,
+    // TODO: application logic, move to thunk
+    wipDeployment[web3Data.id] = {
+      nodeId: web3Data.id,
+      contractName: web3Data.abiName,
       deploymentOrder:
-        this.props.dappTemplate.contractNodes[metaData.id].deploymentOrder,
+        this.props.dappTemplate.contractNodes[web3Data.id].deploymentOrder,
       params: {
-        ...metaData.params,
+        ...web3Data.params,
       },
       outputs: {
-        ...metaData.outputs,
+        ...web3Data.outputs,
       },
     }
 
-    Object.values(wipDeployment[metaData.id].params).forEach(param => {
+    // store field values in component state
+    Object.values(wipDeployment[web3Data.id].params).forEach(param => {
 
-      if (param.source) { // this parameter is an edge target
+      if (param.source) { // if this parameter is an edge target
 
         if (param.sourceParent === 'account') {
           param.value = this.props.account
@@ -216,15 +259,19 @@ class ContractForm extends Component {
       }
     })
 
-    Object.values(wipDeployment[metaData.id].outputs).forEach(output => {
+    // store outputs of form's corresponding contract deployment in
+    // wipDeployment
+    Object.values(wipDeployment[web3Data.id].outputs).forEach(output => {
 
-      if (output.target) { // this parameter is an edge source
+      // TODO? if other output types are added, this must handle them
 
-        if (!wipDeployment[metaData.id].childParams) {
-          wipDeployment[metaData.id].childParams = []
+      if (output.target) { // if this parameter is an edge source
+
+        if (!wipDeployment[web3Data.id].childParams) {
+          wipDeployment[web3Data.id].childParams = []
         }
 
-        wipDeployment[metaData.id].childParams.push({
+        wipDeployment[web3Data.id].childParams.push({
           type: 'address',
           paramId: output.target,
           contractId: output.targetParent,
@@ -238,6 +285,10 @@ class ContractForm extends Component {
     this.props.closeContractForm()
   }
 
+  /**
+   * Primary render workhorse. Gets form components and sets up handlers per
+   * Redux state.
+   */
   getFunctionForm = () => {
 
     const { classes } = this.props
@@ -268,8 +319,8 @@ class ContractForm extends Component {
 
       case graphTypes.dapp.template:
 
-        // in the case of a dapp, a function id is selected in Grapher,
-        // by an event handler in the Joint paper and passed to
+        // in the case of a dapp, a function id is selected in Grapher by an
+        // event handler in the Joint paper and passed to
         // this.props.selectedContractFunction
 
         submitHandler = this.handleDappFunctionSubmit
@@ -297,7 +348,7 @@ class ContractForm extends Component {
             (
               <form
                 className={classes.container}
-                onSubmit={submitHandler(formData.metaData)}
+                onSubmit={submitHandler(formData.web3Data)}
               >
                 <div className={classes.nested}>
                   {formData.fields}
@@ -338,6 +389,11 @@ class ContractForm extends Component {
     )
   }
 
+  /**
+   * Gets form fields and generates web3 data object for completing web3 calls.
+   *
+   * @returns {object} form metadata and corresponding web3 (contract) data
+   */
   getFunctionFormData = () => {
 
     const nodes = this.props.graph.elements.nodes
@@ -351,7 +407,7 @@ class ContractForm extends Component {
       }
     })
 
-    const metaData = {
+    const web3Data = {
       params: {},
       outputs: {},
       paramOrder: [],
@@ -365,9 +421,9 @@ class ContractForm extends Component {
         node.type === 'function'
       ) {
 
-        metaData.title = node.displayName
-        metaData.abiName = node.abiName
-        metaData.id = node.id
+        web3Data.title = node.displayName
+        web3Data.abiName = node.abiName
+        web3Data.id = node.id
 
       } else if (node.type === 'parameter') {
 
@@ -390,9 +446,9 @@ class ContractForm extends Component {
           }
         })
 
-        metaData.params[node.id] = paramData
+        web3Data.params[node.id] = paramData
 
-        metaData.paramOrder.push(node.id)
+        web3Data.paramOrder.push(node.id)
 
         switch (fieldType) {
 
@@ -425,7 +481,7 @@ class ContractForm extends Component {
         Object.values(edges).forEach(edge => {
 
           if (edge.source === node.id) {
-            metaData.outputs[edge.id] = {
+            web3Data.outputs[edge.id] = {
               edge: edge.id,
               target: edge.target,
               targetParent: edge.targetParent,
@@ -439,18 +495,24 @@ class ContractForm extends Component {
 
     fields.sort((a, b) => {
       return (
-        metaData.params[a.props.id].paramOrder -
-        metaData.params[b.props.id].paramOrder
+        web3Data.params[a.props.id].paramOrder -
+        web3Data.params[b.props.id].paramOrder
       )
     })
-    metaData.paramOrder.sort((a, b) => {
-      return metaData.params[a].paramOrder - metaData.params[b].paramOrder
+    web3Data.paramOrder.sort((a, b) => {
+      return web3Data.params[a].paramOrder - web3Data.params[b].paramOrder
     })
 
-    return {metaData, fields}
+    return {web3Data, fields}
   }
 
-  getSourcedFieldValue = (edge) => {
+  /**
+   * Gets value for field defined by edge in dapp graph.
+   *
+   * @param {object} edge edge defining value of field
+   * @returns {string} field value
+   */
+  getSourcedFieldValue = edge => {
 
     // TODO: handle remaining possible value sources
     if (edge.sourceParent === 'account') {
@@ -487,6 +549,12 @@ ContractForm.propTypes = {
  * HELPERS
  */
 
+/**
+ * Takes the nodes of a contract and returns objects identifying its functions.
+ *
+ * @param {object} nodes contract graph nodes
+ * @returns {array} a sorted array of objects identifying contract functions
+ */
 function getFunctionAndConstructorIds (nodes) {
 
   const functions = []
