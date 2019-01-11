@@ -89,4 +89,7 @@ Reasons to download this repo.
 MIT
 
 ## Screenshot
+
 ![image](https://i.postimg.cc/524SRXbs/Dapp-Grapher-0-0-1.png)
+
+A deployed crowdsale dapp.
