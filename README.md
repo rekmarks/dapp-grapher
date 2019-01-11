@@ -1,6 +1,6 @@
 # DappGrapher
 A universal, client-side GUI for composing, deploying, and interacting with
-dapps on Ethereum.
+dapps on Ethereum. Still in the prototype stage.
 
 Use the default contracts or add your own. Any valid contract will work.
 All you need is the JSON output from the Solidity compiler. We recommend using [Truffle](https://www.npmjs.com/package/truffle).
@@ -13,7 +13,7 @@ DappGrapher is an open source project supported by [MetaMask](https://github.com
 We are welcoming contributors who want to help democratize smart contracts.
 See [Contributions and Roadmap](#contributions-and-roadmap) for details.
 
-## Installation & Usage
+# Installation & Usage
 - Download the repo at `master`
 - `npm install`
 - Install and log in to MetaMask
@@ -22,12 +22,16 @@ See [Contributions and Roadmap](#contributions-and-roadmap) for details.
   - For easier testing/development, do `npm run ganache` and select
   **Localhost 8545** from the MetaMask network dropdown
 - `npm run start`
-- For an example workflow, see [this video](https://www.youtube.com/watch?v=I9MR9Cba9is)
 
-### Usage Notes
-- Many bugs can be resolved by clearing your Chromium browser's local storage
+DappGrapher is a client-side React app with a Redux backend. Its primary feature is a graphical interface for composing and interacting with dapps. 
 
-### Disclaimer
+To deploy a dapp, first create a dapp template, which defines the contracts your dapp will contain and how they relate to each other. You add contracts to your template by selecting them from the menu on the left, which will add a node representing their constructor to the canvas. You can connect the outputs of constructors, i.e. the address of the contract once deployed, to address inputs of other construcotrs.
+
+When you have saved your template, select it to deploy a new instance. Double-click the contract constructors to enter your desired parameters. When you select deploy, the contracts will be published to your current Ethereum network in the order defined by the template.
+
+For an example workflow, see [this video](https://www.youtube.com/watch?v=I9MR9Cba9is).
+
+## Disclaimer
 DappGrapher is still a prototype. In using it, you will find bugs, missing
 features, inefficiencies and bad UX. As a developer, you will find ugly hacks
 in its code.
@@ -35,9 +39,7 @@ in its code.
 No security or performance guarantees are made about the default contracts
 types, or any contract or dapp you deploy or interact with using DappGrapher.
 
-**Tl;dr:** use at your own risk.
-
-## Contributions and Roadmap
+# Contributions and Roadmap
 
 DappGrapher is one small part of the wider effort in the Ethereum community to
 scale the platform and promote blockchain adoption worldwide. If you are
@@ -47,7 +49,7 @@ interested in the reasoning behind it, see [this Medium article](https://medium.
 contributing, please read on to understand the [Immediate Goals](#immediate-goals) of the project,
 and pick something below. If you have any questions or wish to contribute something not listed, please open an [Issue](https://github.com/rekmarks/dapp-grapher/issues).
 
-### Immediate Goals
+## Immediate Goals
 
 Before more features are added, DappGrapher's foundations need work. 
 
@@ -65,30 +67,34 @@ Before more features are added, DappGrapher's foundations need work.
 		- State persistence tests
 		- Component tests
 	- Add [`redux-devtools`](https://github.com/reduxjs/redux-devtools) support.
-- "Robustifying," a.k.a. undoing/making up for shortcuts taken during early development
+- "Robustifying," a.k.a. undoing shortcuts taken during early development and quality-of-life improvements
 	- [`@material-ui`](https://www.npmjs.com/package/@material-ui/core) usage
 		- Consistent style management should be enforced, and dead/useless class passing should be minimized
 	- Move application logic contained in components into reducers
 	- Normalize entire Redux store per [`normalizr`](https://github.com/paularmstrong/normalizr )
 	- To find more: `grep -RF 'TODO' dapp-grapher/src`
 
-### Longer-Term Goals
+## Longer-Term Goals
 
-Reasons to download this repo.
+Reasons to get excited.
 
-- Add [`drizzle`](https://github.com/trufflesuite/drizzle) support
+- Allow the usage of already published contracts in dapp templates
+	- Currently, all contracts in a dapp template are deployed at the same time
+- Add post-deployment setup workflows to dapp templates
+	- Allow the user to designate function calls to be performed after all contracts have been deployed
+	- For instance, an allowance must be set to enable a crowdsale to spend tokens on the user's behalf after deployment, but this can only be done manually at the moment
+- Create bespoke UIs for common contracts, such as ERC20 tokens
+- Add [Etherscan](https://etherscan.io/) integration
+	- For instance, enable minimal-click Etherscan ABI validation
+- Add [`drizzle`](https://github.com/trufflesuite/drizzle) integration
 	- `drizzle` has a ton of awesome features for interacting with `web3` entities
 	- This will give the user a live view of the states of their dapps
-- Add post-deployment setup workflows to dapp templates
-	- For instance, an allowance must be set to enable a crowdsale to spend tokens on the user's behalf after deployment, but this can only be done manually at the moment.
-- Allow the usage of already published contracts in dapp templates
-- Create bespoke UIs for common contracts, such as ERC20 tokens
 
-## License
+# License
 
 MIT
 
-## Screenshot
+# Screenshot
 
 ![image](https://i.postimg.cc/524SRXbs/Dapp-Grapher-0-0-1.png)
 
