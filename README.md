@@ -43,19 +43,18 @@ interested in the reasoning behind it, see [this Medium article](https://medium.
 
 **We are actively looking for contributors.** If you are interested in
 contributing, please read on to understand the immediate goals of the project,
-and pick an issue below or from the [Issues](https://github.com/rekmarks/dapp-grapher/issues) page.
-
+and pick something below. If you have any questions or wish to contribute something not listed, please open an [Issue](https://github.com/rekmarks/dapp-grapher/issues).
 
 ### Immediate Goals
 
 Before more features are added, DappGrapher's foundations need work. 
 
 1. Refactor graph backend to use [`graphlib`](https://www.npmjs.com/package/graphlib) instead of the hacky bespoke schema currently in use
-	- **Note:** This is a blocker since the graph schema is fundamental to much of DappGrapher's functionality
+	- **Note:** This is a **blocker** since the graph schema is fundamental to much of DappGrapher's functionality
 	- See the [graphlib-refactor](https://github.com/rekmarks/dapp-grapher/tree/graphlib-refactor) branch
 - Refactor Redux middleware from `redux-thunk` to [`redux-saga`](https://www.npmjs.com/package/redux-saga)
 	- `redux-saga` was designed precisely to deal with the kind of failure-prone, asynchronous work that DappGrapher is rife with
-	- **Note:** This is also something of blocker since anything `web3`-related is asynchronous and currently bound up in thunks
+	- **Note:** This is also a **blocker** since anything `web3`-related is asynchronous and currently bound up in thunks
 - Refactor existing, hacky state-persistence functionality to use [`redux-persist`](https://www.npmjs.com/package/redux-persist), and enable state importing in the process
 - Fix testing and error handling
 	- Determine testing framework
@@ -83,6 +82,6 @@ Reasons to download this repo.
 - Allow the usage of already published contracts in dapp templates
 - Create bespoke UIs for common contracts, such as ERC20 tokens
 
-# License
+## License
 
 MIT
