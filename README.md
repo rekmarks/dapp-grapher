@@ -5,6 +5,8 @@ dapps on Ethereum.
 Use the default contracts or add your own. Any valid contract will work.
 All you need is the JSON output from the Solidity compiler. We recommend using [Truffle](https://www.npmjs.com/package/truffle).
 
+What does it look like? See the [screenshot](#screenshot) below.
+
 ## Call for Contributors
 
 DappGrapher is an open source project supported by [MetaMask](https://github.com/MetaMask).
@@ -42,7 +44,7 @@ scale the platform and promote blockchain adoption worldwide. If you are
 interested in the reasoning behind it, see [this Medium article](https://medium.com/pennblockchain/the-case-for-graphical-smart-contract-editors-8e721cdcde93).
 
 **We are actively looking for contributors.** If you are interested in
-contributing, please read on to understand the immediate goals of the project,
+contributing, please read on to understand the [Immediate Goals](#immediate-goals) of the project,
 and pick something below. If you have any questions or wish to contribute something not listed, please open an [Issue](https://github.com/rekmarks/dapp-grapher/issues).
 
 ### Immediate Goals
@@ -85,3 +87,6 @@ Reasons to download this repo.
 ## License
 
 MIT
+
+## Screenshot
+![image](https://i.postimg.cc/524SRXbs/Dapp-Grapher-0-0-1.png)
