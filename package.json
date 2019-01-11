@@ -1,11 +1,12 @@
 {
   "name": "dapp-grapher",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Takes one or several smart contracts as inputs and represents their relationships as a graph",
   "private": true,
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "deploy": "gh-pages -d build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
     "ganache": "ganache-cli -i 9001 -d 'humans are in fact omnivores and carnivorism causes cancer' -a 100"
@@ -30,7 +31,7 @@
   "bugs": {
     "url": "https://github.com/rekmarks/dapp-grapher/issues"
   },
-  "homepage": "https://github.com/rekmarks/dapp-grapher#readme",
+  "homepage": "https://rekmarks.github.io/dapp-grapher",
   "dependencies": {
     "@material-ui/core": "^1.5.0",
     "@material-ui/icons": "^2.0.2",
@@ -61,6 +62,7 @@
     "eslint-plugin-json": "^1.2.0",
     "eslint-plugin-mocha": "^5.1.0",
     "eslint-plugin-react": "^7.10.0",
+    "gh-pages": "^2.0.1",
     "prop-types": "^15.6.2",
     "react-dev-utils": "^6.0.5"
   },
