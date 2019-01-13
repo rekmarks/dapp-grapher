@@ -53,7 +53,7 @@ export default class Web3Gatekeeper extends Component {
 
     // if there's a selected address available, the user has already enabled
     // web3
-    if (window.ethereum.selectedAddress) {
+    if (window.ethereum && window.ethereum.selectedAddress) {
       this.setState({ web3Enabled: true })
     }
   }
