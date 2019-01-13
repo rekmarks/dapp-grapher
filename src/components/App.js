@@ -21,7 +21,6 @@ import ChevronLeftIcon from '@material-ui/icons/ChevronLeft'
 import ContractForm from './ContractForm'
 import DappForm from './DappForm'
 import Grapher from './Grapher'
-import Header from './Header'
 import Modal from './common/AppModal'
 import ResourceMenu from './ResourceMenu'
 import Snackbar from './common/AppSnackbar'
@@ -175,10 +174,6 @@ class App extends Component {
               >
                 Dapp Grapher
               </Typography>
-              <Header
-                classes={classes}
-                web3Injected={Boolean(this.props.account)}
-              />
             </Toolbar>
           </AppBar>
           <Drawer
