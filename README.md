@@ -8,7 +8,7 @@ Use the default contracts or add your own. Any valid contract will work.
 All you need is the JSON output from the Solidity compiler. We recommend using [Truffle](https://www.npmjs.com/package/truffle).
 
 # Usage
-[Click here](https://rekmarks.github.io/dapp-grapher/) to try out DappGrapher now. It requires [MetaMask](https://metamask.io).
+[Click here](https://rekmarks.github.io/dapp-grapher/) to try out DappGrapher **now**. It requires [MetaMask](https://metamask.io).
 
 To start working with the canvas, select an option from the main menu on the left of the screen. To deploy a dapp, first create a dapp template, which defines the contracts your dapp will contain and how they relate to each other. You add contracts to your template by selecting them from the menu, which will add a node representing their constructor to the canvas. You can connect the outputs of constructors, i.e. the address of the contract once deployed, to address inputs of other constructors.
 
