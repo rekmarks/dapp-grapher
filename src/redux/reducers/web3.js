@@ -90,9 +90,10 @@ function getClearErrorsAction () {
 /* Asynchronous action creators */
 
 /**
- * Gets the injected web3 object. The first thunk (or action) called on app
+ * Gets the injected web3 object. The first thunk called on app
  * load.
- * EIP1102-compliant. Does not support legacy browsers. Only supports MetaMask.
+ * Assumes window.ethereum.enable() already called.Does not support legacy
+ * dapp browsers.
  * TODO: Add support for other EIP1102-compliant dapp browsers.
  */
 function getWeb3Thunk () {
@@ -102,7 +103,7 @@ function getWeb3Thunk () {
     // set state.web3.ready === false
     dispatch(getWeb3Action())
 
-    let provider, accounts, networkId
+    let provider, account, networkId
 
     // attempt to get ethereum object injected by MetaMask
     // TODO: let other dapp browsers through, but add a warning in the UI
@@ -110,31 +111,28 @@ function getWeb3Thunk () {
 
       try {
         // Request account access if needed
-        accounts = await window.ethereum.enable()
         provider = window.ethereum
+        account = window.ethereum.selectedAddress
         networkId = window.ethereum.networkVersion
       } catch (error) {
         // User denied account access...
         dispatch(getWeb3FailureAction(error))
         return
       }
-    }
-    else {
+    } else {
       console.warn('Please install MetaMask.')
       dispatch(getWeb3FailureAction(new Error('window.ethereum not found')))
       return
     }
 
     // fail if account invalid
-    if (!accounts || accounts.length < 1) {
+    if (!account || account.length < 1) {
       dispatch(getWeb3FailureAction(new Error(
-        'missing or invalid accounts array', accounts)))
+        'missing or invalid account', account)))
       return
     }
 
-    // since assuming MetaMask, exactly one account should be returned
-    if (accounts.length !== 1) console.warn('More than one account found.', accounts)
-    dispatch(getWeb3SuccessAction(provider, accounts[0], networkId))
+    dispatch(getWeb3SuccessAction(provider, account, networkId))
     dispatch(setAccountGraph())
   }
 }

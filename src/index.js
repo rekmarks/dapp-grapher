@@ -6,6 +6,7 @@ import ReactDOM from 'react-dom'
 import { Provider } from 'react-redux'
 
 import App from './components/App'
+import Web3Gatekeeper from './components/Web3Gatekeeper'
 import registerServiceWorker from './registerServiceWorker'
 import configureStore from './redux/configureStore'
 
@@ -16,9 +17,11 @@ startApp()
 function startApp () {
 
   ReactDOM.render(
-  <Provider store={store}>
-    <App />
-  </Provider>,
+    <Provider store={store}>
+      <Web3Gatekeeper>
+        <App />
+      </Web3Gatekeeper>
+    </Provider>,
   document.getElementById('root'))
 
   registerServiceWorker()
