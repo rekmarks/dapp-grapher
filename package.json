@@ -6,6 +6,7 @@
   "scripts": {
     "start": "react-scripts start",
     "test": "react-scripts test --env=jsdom",
+    "bd": "npm run build && npm run deploy",
     "build": "react-scripts build",
     "deploy": "gh-pages -d build",
     "ganache": "ganache-cli -i 9001 -d 'humans are in fact omnivores and carnivorism causes cancer' -a 100",
