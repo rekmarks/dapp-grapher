@@ -53,7 +53,6 @@ const contractTypes = {}
 Object.entries(defaultContracts).forEach(([key, value]) => {
   contractTypes[key] = {
     [graphTypes.contract._constructor]: null,
-    [graphTypes.contract.completeAbi]: null,
     [graphTypes.contract.functions]: null,
     artifact: value, // Truffle compilation output
   }

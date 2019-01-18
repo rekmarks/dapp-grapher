@@ -5,11 +5,11 @@
   "private": true,
   "scripts": {
     "start": "react-scripts start",
+    "test": "react-scripts test --env=jsdom",
     "build": "react-scripts build",
     "deploy": "gh-pages -d build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject",
-    "ganache": "ganache-cli -i 9001 -d 'humans are in fact omnivores and carnivorism causes cancer' -a 100"
+    "ganache": "ganache-cli -i 9001 -d 'humans are in fact omnivores and carnivorism causes cancer' -a 100",
+    "eject": "react-scripts eject"
   },
   "repository": {
     "type": "git",
@@ -36,8 +36,9 @@
     "@material-ui/core": "^1.5.0",
     "@material-ui/icons": "^2.0.2",
     "ajv": "^6.5.2",
-    "chain-end": "^0.5.4",
+    "chain-end": "^0.6.2",
     "dagre": "^0.8.2",
+    "ethers": "^4.0.20",
     "graphlib": "^2.1.5",
     "immutable": "^3.8.2",
     "jointjs": "^2.2.1",

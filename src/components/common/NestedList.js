@@ -1,9 +1,10 @@
 import React, { Component, Fragment } from 'react'
 import PropTypes from 'prop-types'
+import Collapse from '@material-ui/core/Collapse'
 import List from '@material-ui/core/List'
 import ListItem from '@material-ui/core/ListItem'
 import ListItemText from '@material-ui/core/ListItemText'
-import Collapse from '@material-ui/core/Collapse'
+import Tooltip from '@material-ui/core/Tooltip'
 
 import ExpandLessIcon from '@material-ui/icons/ExpandLess'
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
@@ -27,6 +28,15 @@ export default class NestedList extends Component {
   }
 
   render () {
+
+    const listItemText = (
+      <ListItemText
+        inset
+        primary={this.props.displayText}
+        primaryTypographyProps={{noWrap: true}}
+      />
+    )
+
     return (
       <Fragment>
         <ListItem button
@@ -47,9 +57,19 @@ export default class NestedList extends Component {
               )
             : ''
           }
-          <ListItemText
-            inset
-            primary={this.props.displayText} />
+          {
+            this.props.toolTip
+            ? (
+                <Tooltip
+                  title={this.props.displayText}
+                  placement="right"
+                  enterDelay={500}
+                >
+                  {listItemText}
+                </Tooltip>
+              )
+            : listItemText
+          }
           {
             this.props.disabled || !this.props.children
             ? ''
@@ -77,4 +97,5 @@ NestedList.propTypes = {
   displayText: PropTypes.string.isRequired,
   buttonPadding: PropTypes.number,
   isOpen: PropTypes.bool,
+  toolTip: PropTypes.bool,
 }

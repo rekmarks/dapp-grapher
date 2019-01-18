@@ -99,6 +99,7 @@ class DappResourceList extends Component {
 
       return (
         <NestedList
+          classes={this.props.classes}
           key={id}
           icon={(<ExtensionIcon />)}
           displayText={dapps[id].displayName}
@@ -111,6 +112,7 @@ class DappResourceList extends Component {
             onClick={ () => this.handleDeployNewClick(id, dapps[id].dappGraphId)}
             style={{ paddingLeft: spacingUnit * 6 }} />
           <NestedList
+            classes={this.props.classes}
             icon={(<CloudQueueIcon />)}
             displayText="Deployed"
             disabled={!hasDeployed}
@@ -157,7 +159,7 @@ class DappResourceList extends Component {
 }
 
 DappResourceList.propTypes = {
-  // classes: PropTypes.object.isRequired,
+  classes: PropTypes.object.isRequired,
   dapps: PropTypes.object.isRequired,
   setGrapherMode: PropTypes.func,
   selectDisplayGraph: PropTypes.func,

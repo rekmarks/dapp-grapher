@@ -76,6 +76,7 @@ class ContractResourceList extends Component {
           icon={(<SubjectIcon />)}
           displayText={contractName}
           buttonPadding={spacingUnit * 4}
+          toolTip={true}
         >
           <ListButton
             disabled={
