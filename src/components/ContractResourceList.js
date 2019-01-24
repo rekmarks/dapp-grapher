@@ -80,8 +80,7 @@ class ContractResourceList extends Component {
         >
           <ListButton
             disabled={
-              this.props.displayGraphId &&
-              this.props.displayGraphId === currentGraphId
+              this.props.displayGraphId && this.props.displayGraphId === currentGraphId
             }
             displayText="Constructor"
             icon={(<AddCircleOutlineIcon />)}
@@ -103,10 +102,11 @@ class ContractResourceList extends Component {
             buttonPadding={spacingUnit * 6}
           >
             {
-              this.props.instanceTypes
+              this.props.instanceTypes &&
+              this.props.instanceTypes[contractName]
               ? this.getInstanceListItems(
                   contractName,
-                  this.props.instanceTypes[contractName]
+                  this.props.contractInstances
                 )
               : null
             }
@@ -146,35 +146,38 @@ class ContractResourceList extends Component {
 
     if (!instances) return null
 
-    return Object.keys(instances).sort().map(address => {
+    return Object.keys(instances).sort().map(key => {
+
+      const i = instances[key]
 
       const graphId =
-          this.props.contractTypes[contractName][graphTypes.contract.functions]
-
-      const displayAddress = getDisplayAddress(address)
+        this.props.contractTypes[contractName][graphTypes.contract.functions]
 
       return (
         <ListButton
-          key={address}
+          key={i.address}
           disabled={
             this.props.displayGraphId &&
             this.props.displayGraphId === graphId &&
             Boolean(this.props.selectedContractAddress)
-              ? this.props.selectedContractAddress === address
+              ? this.props.selectedContractAddress === i.address
               : false
           }
-          displayText={displayAddress}
+          displayText={getDisplayAddress(i.address)}
           inset={true}
           onClick={
-            () => this.props.getGraph(
-              graphId,
-              graphTypes.contract.functions,
-              contractName,
-              address
-            )
+            () => {
+              this.props.addInstance(i.id)
+              this.props.getGraph(
+                graphId,
+                graphTypes.contract.functions,
+                contractName,
+                i.address
+              )
+            }
           }
           primaryTypographyProps={{ noWrap: true }}
-          toolTip={address} />
+          toolTip={i.address} />
       )
     })
   }
@@ -183,11 +186,12 @@ class ContractResourceList extends Component {
 ContractResourceList.propTypes = {
   classes: PropTypes.object.isRequired,
   addContractType: PropTypes.func,
+  addInstance: PropTypes.func,
   contractTypes: PropTypes.object,
+  contractInstances: PropTypes.object,
   instanceTypes: PropTypes.object,
   selectContractAddress: PropTypes.func,
   selectedContractAddress: PropTypes.string,
-  addInstance: PropTypes.func,
   getCreateGraphParams: PropTypes.func,
   createGraph: PropTypes.func,
   selectDisplayGraph: PropTypes.func,

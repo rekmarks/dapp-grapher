@@ -70,6 +70,10 @@ import {
 
 import { getWeb3 } from '../redux/reducers/web3'
 
+// Misc. imports
+import { updateAccountNode } from '../utils'
+import { selectContractInstances } from '../selectors'
+
 // Style imports
 
 import './style/App.css'
@@ -89,6 +93,15 @@ class App extends Component {
   constructor (props) {
 
     super(props)
+
+    // Reloads the page if Ethereum network or accounts change
+    // TODO: handle this gracefully
+    window.ethereum.on('accountsChanged', accounts => {
+      window.location.reload()
+    })
+    window.ethereum.on('networkChanged', networkId => {
+      window.location.reload()
+    })
 
     this.props.getWeb3()
 
@@ -132,11 +145,11 @@ class App extends Component {
 
     // conversion from immutable data
     if (this.props.displayGraphObject) {
-
-      displayGraph = this.props.displayGraphObject.toJS()
-
+      displayGraph = updateAccountNode(
+        this.props.displayGraphObject.toJS(),
+        this.props.account
+      )
     } else if (this.props.insertionGraphObject) {
-
       insertionGraph = this.props.insertionGraphObject.toJS()
     }
 
@@ -447,7 +460,7 @@ App.propTypes = {
 function mapStateToProps (state) {
   return {
     // contracts
-    contractInstances: state.contracts.instances,
+    contractInstances: selectContractInstances(state),
     contractTypes: state.contracts.types,
     selectedContractAddress: state.contracts.selectedAddress,
     // dapps

@@ -179,6 +179,7 @@ export default class ResourceMenu extends Component {
             grapherMode={this.props.grapherMode}
             contractTypes={this.props.contractTypes}
             instanceTypes={this.getContractInstanceTypes()}
+            contractInstances={this.props.contractInstances}
             selectContractAddress={this.props.selectContractAddress}
             selectedContractAddress={this.props.selectedContractAddress}
             addInstance={this.props.addInstance}
@@ -197,6 +198,9 @@ export default class ResourceMenu extends Component {
   /**
    * Gets contract instance Truffle artifacts by address and contract type.
    *
+   * TODO: replace this and its returned object's related functionality in
+   * ContractResourceList with something that isn't as boneheaded.
+   *
    * @returns {object} contract type : address : truffleContract
    */
   getContractInstanceTypes = () => {
@@ -204,37 +208,21 @@ export default class ResourceMenu extends Component {
     if (
       !this.props.networkId ||
       !this.props.contractInstances ||
-      !this.props.contractInstances[this.props.networkId]
+      Object.keys(this.props.contractInstances).length === 0
     ) return null
 
     // get all instances for current account and networkId by type
-    const instanceTypes = {}
-    Object.keys(
-      this.props.contractInstances[this.props.networkId]
-    ).forEach(address => {
+    const instanceTypes = Object.values(
+      this.props.contractInstances
+    ).reduce((acc, i) => {
+      if (!acc[i.type]) acc[i.type] = {}
+      acc[i.type][i.address] = Boolean(i.truffleContract)
+      return acc
+    }, {})
 
-      const instance =
-        this.props.contractInstances[this.props.networkId][address]
-
-      if (instance.account === this.props.account) {
-
-        if (!instanceTypes[instance.type]) {
-          instanceTypes[instance.type] = {}
-        }
-
-        instanceTypes[instance.type][address] = Boolean(
-          instance.truffleContract
-        )
-      }
-    })
-
-    // TODO: Handle this with a workflow and UI notifications.
-    // Currently, this throws e.g. when instances in local storage are
-    // orphaned by restarting Ganache.
     if (Object.keys(instanceTypes).length === 0) {
-      throw new Error('no contract instances found')
+      console.error('no contract instances found')
     }
-
     return instanceTypes
   }
 }

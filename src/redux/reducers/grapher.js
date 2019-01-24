@@ -346,13 +346,11 @@ function getGraphThunk (
 
       if (!address) {
         dispatch(getLogErrorAction(
-          new Error('graph type is functions but no address was provided')
+          new Error(
+            'graph type is functions but address was not provided'
+          )
         ))
         return
-      }
-
-      if (!state.contracts.instances[state.web3.networkId][address]) {
-        dispatch(addInstance(contractName, address))
       }
 
       if (graphId) {
@@ -368,8 +366,6 @@ function getGraphThunk (
           )
         ))
       }
-
-      // TODO: unsafe? (addInstance could take too long)
       dispatch(selectContractAddress(address))
     }
   }

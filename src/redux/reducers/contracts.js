@@ -1,4 +1,6 @@
 
+import uuid from 'uuid/v4'
+
 import {
   contracts as defaultContracts, // all default contracts come from chain-end
   deploy as _deploy,
@@ -60,8 +62,19 @@ Object.entries(defaultContracts).forEach(([key, value]) => {
 
 const initialState = {
 
-  // deployed contract instances. TODO: normalize
-  instances: {},
+  // deployed contract instances
+  instances: {
+    // id: {
+    //   truffleContract,
+    //   address,
+    //   account,
+    //   type,
+    //   constructorParams,
+    //   networkId,
+    //   dappTemplateIds,
+    //   templateNodeId,
+    // }
+  },
 
   // used when deploying dapps
   deploymentQueue: null,
@@ -184,28 +197,16 @@ export default function reducer (state = initialState, action) {
 
     case ACTIONS.DEPLOYMENT_SUCCESS:
 
-      const networkId = action.data.networkId
-
-      // also adds Truffle instance
       return {
         ...state,
 
         instances: {
           ...state.instances,
 
-          [networkId]: {
-            ...state.instances[networkId],
-
-            [action.data.address]: {
-
-              account: action.data.account,
-              address: action.data.address,
-              type: action.data.contractName,
-              constructorParams: action.data.constructorParams,
-              truffleContract: action.data.truffleContract,
-              dappTemplateIds: action.data.dappTemplateIds || [],
-              templateNodeId: action.data.templateNodeId,
-            },
+          [action.id]: {
+            ...action.data,
+            id: action.id,
+            dappTemplateIds: action.data.dappTemplateIds || [],
           },
         },
       }
@@ -231,34 +232,27 @@ export default function reducer (state = initialState, action) {
 
     case ACTIONS.ADD_INSTANCE_SUCCESS:
 
-      const newInstances = { ...state.instances }
+      const instances = { ...state.instances }
 
-      // add networkId property if it doesn't exist
-      if (!newInstances[action.data.networkId]) {
-        newInstances[action.data.networkId] = {}
-      }
+      const instance = instances[action.id]
 
       // add instance property
-      if (newInstances[action.data.networkId][action.data.truffleContract.address]) {
-
-        newInstances[action.data.networkId][action.data.truffleContract.address] = {
-          ...newInstances[action.data.networkId][action.data.truffleContract.address],
+      if (instance) {
+        instances[instance.id] = {
+          ...instance,
           truffleContract: action.data.truffleContract,
         }
       } else {
-
-        newInstances[action.data.networkId][action.data.truffleContract.address] = {
-          account: action.data.account,
-          address: action.data.truffleContract.address,
-          truffleContract: action.data.truffleContract,
-          type: action.data.contractName,
+        instances[action.id] = {
+          ...action.data,
+          id: action.id,
           constructorParams: null,
         }
       }
 
       return {
         ...state,
-        instances: newInstances,
+        instances: instances,
         ready: true,
       }
 
@@ -360,9 +354,10 @@ function getResetDeploymentQueueAction () {
   }
 }
 
-function getDeploymentSuccessAction (data) {
+function getDeploymentSuccessAction (id, data) {
   return {
     type: ACTIONS.DEPLOYMENT_SUCCESS,
+    id: id,
     data: data,
   }
 }
@@ -386,9 +381,10 @@ function getAddInstanceAction () {
   }
 }
 
-function getAddInstanceSuccessAction (data) {
+function getAddInstanceSuccessAction (id, data) {
   return {
     type: ACTIONS.ADD_INSTANCE_SUCCESS,
+    id: id,
     data: data,
   }
 }
@@ -705,14 +701,17 @@ function deployQueueThunk (dappDisplayName, dappTemplateId) {
 }
 
 /**
- * Attempts to add a deployed contract instance to state.
- * Fails if contract type not yet added, if instance already exists, or if
- * no valid contract is found at the given address on the current network.
+ * Attempts to add a deployed contract instance to state. Note the separation
+ * between state instance objects and truffle-contract instance objects. The
+ * latter is a property of the former.
+ * If state instance object exists, sets its truffleContract property.
  *
+ * @param {string} instanceId the contract instance id, if generated from
+ * persisted state
  * @param {string} contractName the contract type of the instance
  * @param {string} address the address of the instance
  */
-function addInstanceThunk (contractName, address) {
+function addInstanceThunk (instanceId = null, contractName = null, address = null) {
 
   return async (dispatch, getState) => {
 
@@ -726,52 +725,80 @@ function addInstanceThunk (contractName, address) {
       return
     }
 
+    const provider = state.web3.provider
     const account = state.web3.account
     const networkId = state.web3.networkId
-    const provider = state.web3.provider
 
     dispatch(getAddInstanceAction())
 
-    // check if instance already added
-    let oldInstance
-    try {
-      oldInstance = state.contracts.instances[networkId][address].truffleContract
-    } catch (error) {} // do nothing
+    if (!instanceId) {
 
-    if (oldInstance) {
-      dispatch(getAddInstanceFailureAction(
-        new Error('instance already added')
-      ))
-     return
+      if (!(contractName && address)) {
+        dispatch(getAddInstanceFailureAction(new Error(
+          'must provide contractName and address if instanceId not provided'
+        )))
+        return
+      }
+
+      const existingInstances = Object.values(state.contracts.instances).filter(
+        i => i.networkId === networkId && i.address === address
+      )
+      if (existingInstances.length > 0) {
+        dispatch(getAddInstanceFailureAction(
+          new Error('Attempting to add duplicate instance.')
+        ))
+        return
+      }
+    } else {
+
+      const instance = state.contracts.instances[instanceId]
+
+      // defensive validity check
+      if (
+        instance.networkId !== networkId || instance.account !== account
+      ) {
+        dispatch(getAddInstanceFailureAction(
+          new Error(
+            'Attempting to add instance belonging to other network or account.'
+          )
+        ))
+        return
+      }
+      contractName = instance.type
+      address = instance.address
     }
 
+    // ensure contract type is added
     if (!state.contracts.types[contractName]) {
       dispatch(getAddInstanceFailureAction(
-        new Error('missing contract type')
+        new Error('Contract type not added.')
       ))
-     return
+      return
     }
-
-    // get contract artifact for web3 call
-    const artifact = state.contracts.types[contractName].artifact
 
     // make web3 call
     let instance
     try {
-      instance = await getInstance(artifact, provider, address, account)
+      instance = await getInstance(
+        state.contracts.types[contractName].artifact,
+        provider, address, account
+      )
     } catch (error) {
       dispatch(getAddInstanceFailureAction(error))
       return
     }
 
     // success
-    dispatch(getAddInstanceSuccessAction({
-      account: account,
-      truffleContract: instance,
-      networkId: networkId,
-      type: contractName,
-      // TODO: constructor parameters?
-    }))
+    dispatch(getAddInstanceSuccessAction(
+      instanceId || uuid(),
+      {
+        account: account,
+        truffleContract: instance,
+        networkId: networkId,
+        type: contractName,
+        // TODO: constructor parameters?
+      }
+    ))
   }
 }
 
@@ -943,13 +970,13 @@ async function deployContract (
     truffleContract: instance,
     address: instance.address,
     account: web3.account,
-    contractName: contractJson.contractName,
+    type: contractJson.contractName,
     constructorParams: constructorParams,
     networkId: web3.networkId,
     dappTemplateIds: meta.dappTemplateId ? [meta.dappTemplateId] : undefined,
     templateNodeId: meta.nodeId ? meta.nodeId : undefined,
   }
-  dispatch(getDeploymentSuccessAction(deploymentData))
+  dispatch(getDeploymentSuccessAction(uuid(), deploymentData))
   return deploymentData
 }
 

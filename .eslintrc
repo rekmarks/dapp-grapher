@@ -14,7 +14,7 @@
       "templateStrings": true,
       "classes": true,
       "jsx": true
-    },
+    }
   },
 
   "extends": ["plugin:react/recommended"],
@@ -43,8 +43,8 @@
   "settings": {
     "react": {
       "pragma": "React",
-      "version": "16.4.2",
-    },
+      "version": "16.4.2"
+    }
   },
 
   "rules": {
@@ -164,6 +164,6 @@
     "wrap-iife": [2, "any"],
     "yield-star-spacing": [2, "both"],
     "yoda": [2, "never"],
-    "prefer-const": 1,
+    "prefer-const": 1
   }
 }

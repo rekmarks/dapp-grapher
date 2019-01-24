@@ -1,7 +1,7 @@
 # misc
 temp
 temp/*
-.npmignore
+.vscode/*
 
 # Logs
 logs
