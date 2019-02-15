@@ -2,7 +2,7 @@
 
 # DappGrapher
 A universal, client-side GUI for composing, deploying, and interacting with
-systems of smart contracts on Ethereum. Still in the prototype stage.
+systems of smart contracts on Ethereum. Currently in the prototype stage.
 
 Use the default contracts or add your own. Any valid contract will work.
 All you need is the JSON output from the Solidity compiler. We recommend using [Truffle](https://www.npmjs.com/package/truffle).
@@ -50,7 +50,7 @@ and pick something below. If you have any questions or wish to contribute someth
 
 ## Immediate Goals
 
-Before more features are added, DappGrapher's foundations need work. 
+Before more features are added, DappGrapher's foundations need work.
 
 1. Refactor graph backend to use [`graphlib`](https://www.npmjs.com/package/graphlib) instead of the hacky bespoke schema currently in use
 	- **Note:** This is a **blocker** since the graph schema is fundamental to much of DappGrapher's functionality
