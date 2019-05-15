@@ -84,7 +84,7 @@ class DropdownMenu extends Component {
               secondary={
                 this.state.selectedIndex !== null
                 ? items[this.state.selectedIndex].name
-                : 'Please select a function'
+                : 'Please select a function' // TODO: turn into prop
               }
             />
           </ListItem>

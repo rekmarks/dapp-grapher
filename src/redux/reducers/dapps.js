@@ -364,7 +364,7 @@ function deploymentResultThunk (success, resultData) {
         state.grapher.graphs[
           state.dapps.templates[resultData.templateId].dappGraphId
         ].toJS(),
-        Object.values(state.contracts.instances[state.web3.networkId]).filter(
+        Object.values(state.contracts.instances).filter(
           instance => instance.dappTemplateIds.includes(resultData.templateId)
         )
       )))

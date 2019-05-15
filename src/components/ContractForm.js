@@ -306,15 +306,12 @@ class ContractForm extends Component {
       case graphTypes.contract._constructor:
 
         submitHandler = this.handleConstructorSubmit
-
         break
 
       case graphTypes.contract.functions:
 
         functionCall = true
-
         submitHandler = this.handleFunctionSubmit
-
         break
 
       case graphTypes.dapp.template:
@@ -324,7 +321,6 @@ class ContractForm extends Component {
         // this.props.selectedContractFunction
 
         submitHandler = this.handleDappFunctionSubmit
-
         break
 
       default:
@@ -344,8 +340,7 @@ class ContractForm extends Component {
         }
         {
           formData
-          ?
-            (
+          ? (
               <form
                 className={classes.container}
                 onSubmit={submitHandler(formData.web3Data)}
@@ -464,9 +459,7 @@ class ContractForm extends Component {
                 value={
                   paramData.source
                   ? this.getSourcedFieldValue(edges[paramData.edge])
-                  : this.state.fieldValues[node.id]
-                    ? this.state.fieldValues[node.id]
-                    : ''
+                  : this.state.fieldValues[node.id] || ''
                 }
                 disabled={Boolean(paramData.source)}
                 onChange={this.handleInputChange(node.id)}
@@ -520,7 +513,8 @@ class ContractForm extends Component {
     }
     if (edge.sourceAbiType === 'address') {
       return 'Deployed Contract Address'
-    } else throw new Error('unknown field value')
+    }
+    throw new Error('unknown field value')
   }
 }
 

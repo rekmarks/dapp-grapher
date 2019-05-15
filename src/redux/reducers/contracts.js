@@ -831,10 +831,16 @@ function callInstanceThunk (address, functionName, params = null, sender = null)
 
     // attempt to get instance
     let instance
-    try {
-      instance = state.contracts.instances[networkId][address].truffleContract
-    } catch (error) {
-      dispatch(getCallInstanceFailureAction(error))
+    // TODO: remove all passing of contract address as instance identifiers
+    // so that we don't have to do this
+    Object.values(state.contracts.instances).forEach(i => {
+      if (i.networkId === networkId && i.address === address) {
+        instance = i.truffleContract
+      }
+    })
+
+    if (!instance) {
+      dispatch(getCallInstanceFailureAction('instance not found'))
       return
     }
 

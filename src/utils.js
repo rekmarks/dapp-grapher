@@ -12,6 +12,7 @@ export {
 function getDisplayAddress (address) {
   return address.slice(0, 6) + '...' + address.slice(address.length - 4)
 }
+
 /**
  * Updates the current account address in the given dapp graph if it exists.
  *

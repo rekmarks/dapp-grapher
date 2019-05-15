@@ -550,8 +550,15 @@ function selectFormGraphThunk (contractName, instanceAddress) {
 
     const state = getState()
 
+    let instance
+    Object.values(state.contracts.instances).forEach(i => {
+      if (i.networkId === state.web3.networkId && i.address === instanceAddress) {
+        instance = i
+      }
+    })
+
     // get web3 instance of contract if not already added
-    if (!state.contracts.instances[state.web3.networkId][instanceAddress]) {
+    if (!instance) {
       dispatch(addInstance(contractName, instanceAddress))
     }
 
